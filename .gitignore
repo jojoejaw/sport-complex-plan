@@ -1,0 +1,16 @@
+# ไม่นำโฟลเดอร์ไลบรารีขึ้น (เพราะมีขนาดใหญ่มาก และโหลดใหม่ได้ผ่าน npm install)
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# ห้ามนำไฟล์ความลับและรหัสผ่านขึ้น GitHub เด็ดขาด
+.env
+backend/.env
+frontend/.env
+
+# ไม่นำรูปภาพสลิปที่ทดโหลดเล่น ๆ ในเครื่องขึ้น
+backend/uploads/slips/slip-*
+
+# ไฟล์ระบบของระบบปฏิบัติการ
+.DS_Store
+Thumbs.db
