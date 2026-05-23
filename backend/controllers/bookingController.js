@@ -1,26 +1,31 @@
+// =============================================================================
+// 1. โหลด Dependencies
+// =============================================================================
 const db = require('../config/db');
 
-// 1. เช็คความว่างของสนามรายชั่วโมง (10.00 น. - 22.00 น.) ในวันที่เลือก
-// URL ตัวอย่าง: GET /api/bookings/availability?court_id=1&date=2026-05-23
+// =============================================================================
+// 2. checkAvailability — ตรวจความว่างของสนามรายชั่วโมง (GET /api/bookings/availability)
+//    Flow: รับ court_id + date → ตรวจสนาม → ดึงการจอง → สร้างสล็อต 10:00–22:00 → ตอบกลับ
+// =============================================================================
 exports.checkAvailability = async (req, res) => {
   const { court_id, date } = req.query;
 
+  // --- ขั้นที่ 1: ตรวจสอบพารามิเตอร์ ---
   if (!court_id || !date) {
     return res.status(400).json({ message: 'กรุณาระบุสนามและวันที่ต้องการตรวจสอบ' });
   }
 
   try {
-    // 1. ตรวจสอบก่อนว่าสนามเปิดบริการ (active) หรือไม่
+    // --- ขั้นที่ 2: ตรวจสอบว่าสนามมีอยู่และเปิดบริการหรือไม่ ---
     const [court] = await db.query('SELECT status FROM courts WHERE id = ?', [court_id]);
     if (court.length === 0) {
       return res.status(404).json({ message: 'ไม่พบสนามนี้ในระบบ' });
     }
     if (court[0].status === 'maintenance') {
-      // หากสนามปิดปรับปรุง ให้ตอบกลับเป็นปิดปรับปรุงทั้งหมด
       return res.json({ court_status: 'maintenance', slots: [] });
     }
 
-    // 2. ดึงประวัติการจองทั้งหมดของสนามนี้ในวันที่เลือก (ไม่เอาคิวที่ยกเลิกไปแล้ว)
+    // --- ขั้นที่ 3: ดึงการจองของวันนั้น (ไม่รวมที่ยกเลิกแล้ว) ---
     const [bookings] = await db.query(
       `SELECT start_time, end_time, status, created_at, updated_at 
        FROM bookings 
@@ -28,43 +33,39 @@ exports.checkAvailability = async (req, res) => {
       [court_id, date]
     );
 
-    // 3. สร้างช่วงเวลาที่ระบบกำหนด (10:00 - 22:00 น.) รายชั่วโมง (ทั้งหมด 12 สล็อต)
+    // --- ขั้นที่ 4: สร้างสล็อตรายชั่วโมง 10:00–22:00 (12 ช่อง) และกำหนดสถานะแต่ละช่อง ---
     const slots = [];
     for (let hour = 10; hour < 22; hour++) {
       const startTimeStr = `${hour.toString().padStart(2, '0')}:00:00`;
       const endTimeStr = `${(hour + 1).toString().padStart(2, '0')}:00:00`;
       const displayLabel = `${hour.toString().padStart(2, '0')}.00-${(hour + 1).toString().padStart(2, '0')}.00`;
 
-      // ค้นหาว่าช่วงเวลานี้ชนกับใบจองไหนใน DB หรือไม่
-      let status = 'available'; // สเตตัสเริ่มต้นคือ ว่าง (🟢)
+      let status = 'available';
       let bookingDetail = null;
 
       for (const booking of bookings) {
-        // เงื่อนไขเวลาชนกัน: start_time ของสล็อต อยู่ระหว่างช่วงจองของเขา
         if (startTimeStr >= booking.start_time && startTimeStr < booking.end_time) {
-          
+
           if (booking.status === 'approved') {
-            status = 'unavailable'; // จองแล้วสำเร็จ (🔴)
-          } 
+            status = 'unavailable';
+          }
           else if (booking.status === 'pending_approval') {
-            status = 'pending_approval'; // ลูกค้าแนบสลิปแล้ว รออนุมัติ (🟡)
-          } 
+            status = 'pending_approval';
+          }
           else if (booking.status === 'pending_payment') {
-            // เช็คว่าการจองยังไม่เกิน 15 นาที (ล็อกชั่วคราว 🟡)
-            const timeDiff = (new Date() - new Date(booking.created_at)) / 1000 / 60; // นาที
+            const timeDiff = (new Date() - new Date(booking.created_at)) / 1000 / 60;
             if (timeDiff <= 15) {
-              status = 'locked'; // รอชำระเงิน/ล็อกชั่วคราว
+              status = 'locked';
             }
-          } 
+          }
           else if (booking.status === 'rejected') {
-            // เช็คว่าหลังจากแอดมินปฏิเสธ ยังไม่เกิน 15 นาทีสำหรับการโอนใหม่ (Grace Period 🟡)
             const timeDiff = (new Date() - new Date(booking.updated_at)) / 1000 / 60;
             if (timeDiff <= 15) {
-              status = 'locked'; // รอชำระเงินใหม่
+              status = 'locked';
             }
           }
           bookingDetail = booking;
-          break; // เมื่อพบช่วงเวลาที่จองแล้วให้หยุดค้นหาใบอื่นในชั่วโมงนั้น
+          break;
         }
       }
 
@@ -76,6 +77,7 @@ exports.checkAvailability = async (req, res) => {
       });
     }
 
+    // --- ขั้นที่ 5: ตอบกลับรายการสล็อต ---
     res.json({ court_status: 'active', slots });
   } catch (error) {
     console.error('CheckAvailability Error:', error);
@@ -83,17 +85,21 @@ exports.checkAvailability = async (req, res) => {
   }
 };
 
-// 2. สร้างรายการจองสนามใหม่ (ล็อกสนามชั่วคราว 15 นาที)
+// =============================================================================
+// 3. createBooking — สร้างการจองใหม่ ล็อกสนาม 15 นาที (POST /api/bookings)
+//    Flow: รับข้อมูล → ตรวจครบ → กฎ 1–4 → บันทึก pending_payment → ตอบกลับ
+// =============================================================================
 exports.createBooking = async (req, res) => {
   const { court_id, booking_date, start_time, end_time, contact_phone } = req.body;
-  const user_id = req.user.id; // ดึงมาจาก JWT Token ที่ผ่าน Middleware
+  const user_id = req.user.id;
 
+  // --- ขั้นที่ 1: ตรวจสอบความครบถ้วนของข้อมูล ---
   if (!court_id || !booking_date || !start_time || !end_time || !contact_phone) {
     return res.status(400).json({ message: 'กรุณากรอกข้อมูลการจองให้ครบถ้วน' });
   }
 
   try {
-    // กฎข้อที่ 1: จำกัดระยะเวลาการจองสูงสุดไม่เกิน 3 ชั่วโมง
+    // --- ขั้นที่ 2: กฎข้อที่ 1 — จำกัดการจองไม่เกิน 3 ชั่วโมงติดต่อกัน ---
     const startHour = parseInt(start_time.split(':')[0]);
     const endHour = parseInt(end_time.split(':')[0]);
     const totalHours = endHour - startHour;
@@ -102,7 +108,7 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'คุณสามารถจองสนามได้สูงสุดครั้งละไม่เกิน 3 ชั่วโมงติดต่อกัน' });
     }
 
-    // กฎข้อที่ 2: ป้องกันผู้ใช้สแปม (ต้องไม่มีรายการ pending_payment ที่ยังไม่หมดอายุ 15 นาทีค้างอยู่ในระบบ)
+    // --- ขั้นที่ 3: กฎข้อที่ 2 — ป้องกันสแปม (ห้ามมี pending_payment ค้างภายใน 15 นาที) ---
     const [spamCheck] = await db.query(
       `SELECT id FROM bookings 
        WHERE user_id = ? 
@@ -112,12 +118,12 @@ exports.createBooking = async (req, res) => {
     );
 
     if (spamCheck.length > 0) {
-      return res.status(400).json({ 
-        message: 'คุณมีรายการจองเก่าที่ยังไม่ได้ชำระเงินค้างอยู่ กรุณายกเลิกของเก่าหรือรอให้ระบบปลดล็อก (15 นาที) ก่อนทำการจองใหม่' 
+      return res.status(400).json({
+        message: 'คุณมีรายการจองเก่าที่ยังไม่ได้ชำระเงินค้างอยู่ กรุณายกเลิกของเก่าหรือรอให้ระบบปลดล็อก (15 นาที) ก่อนทำการจองใหม่'
       });
     }
 
-    // กฎข้อที่ 3: เช็คว่าเวลาที่จะจองนี้ถูกผู้อื่นล็อกหรือจองไปแล้วหรือยัง
+    // --- ขั้นที่ 4: กฎข้อที่ 3 — เช็คช่วงเวลาชนกับการจองอื่น ---
     const [overlapCheck] = await db.query(
       `SELECT status, created_at, updated_at FROM bookings 
        WHERE court_id = ? 
@@ -145,7 +151,7 @@ exports.createBooking = async (req, res) => {
       }
     }
 
-    // กฎข้อที่ 4: ดึงราคาสนามต่อชั่วโมงมาคำนวณยอดสุทธิ
+    // --- ขั้นที่ 5: กฎข้อที่ 4 — ดึงราคาสนามและคำนวณยอดรวม ---
     const [court] = await db.query('SELECT price_per_hour, status FROM courts WHERE id = ?', [court_id]);
     if (court.length === 0) {
       return res.status(404).json({ message: 'ไม่พบสนามนี้' });
@@ -157,13 +163,14 @@ exports.createBooking = async (req, res) => {
     const pricePerHour = court[0].price_per_hour;
     const totalPrice = pricePerHour * totalHours;
 
-    // 4. บันทึกข้อมูลการจองลง MySQL (สถานะเริ่มต้นคือ pending_payment ล็อกสนาม 15 นาที)
+    // --- ขั้นที่ 6: บันทึกการจอง (สถานะเริ่มต้น = pending_payment) ---
     const [result] = await db.query(
       `INSERT INTO bookings (user_id, court_id, booking_date, start_time, end_time, total_price, contact_phone, status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_payment')`,
       [user_id, court_id, booking_date, start_time, end_time, totalPrice, contact_phone]
     );
 
+    // --- ขั้นที่ 7: ตอบกลับ bookingId และยอดชำระ ---
     res.status(201).json({
       message: 'สร้างการจองสำเร็จ! กรุณาโอนเงินเพื่อยืนยันภายใน 15 นาที',
       bookingId: result.insertId,
@@ -175,124 +182,137 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-// 3. ดึงประวัติการจองของผู้ใช้งานล็อกอินอยู่ (ดูของตนเอง) - GET /api/bookings/my-bookings
+// =============================================================================
+// 4. getMyBookings — ดูประวัติการจองของตนเอง (GET /api/bookings/my-bookings)
+//    Flow: ดึง user_id จาก Token → query รวมข้อมูลสนาม/กีฬา/สลิป → ตอบกลับ
+// =============================================================================
 exports.getMyBookings = async (req, res) => {
-    const user_id = req.user.id;
-  
-    try {
-      const [myBookings] = await db.query(
-        `SELECT b.*, c.name AS court_name, s.name AS sport_name, p.slip_image_path, p.transfer_time
-         FROM bookings b
-         INNER JOIN courts c ON b.court_id = c.id
-         INNER JOIN sports s ON c.sport_id = s.id
-         LEFT JOIN payments p ON b.id = p.booking_id
-         WHERE b.user_id = ?
-         ORDER BY b.created_at DESC`,
-        [user_id]
-      );
-      res.json(myBookings);
-    } catch (error) {
-      console.error('getMyBookings Error:', error);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงประวัติการจอง' });
-    }
-  };
-  
-  // 4. ลูกค้ากดยกเลิกการจองเองก่อนโอนเงิน (เฉพาะสถานะ pending_payment เท่านั้น) - PUT /api/bookings/:id/cancel
-  //    หรือ แอดมินกดยกเลิกในกรณีเกิดเหตุสุดวิสัย (ยกเลิกได้ทุกสถานะ)
-  exports.cancelBooking = async (req, res) => {
-    const { id } = req.params;
-    const user_id = req.user.id;
-    const user_role = req.user.role; // 🆕 ดึงสิทธิ์ผู้ใช้งานมาตรวจสอบ
-  
-    try {
-      const [bookings] = await db.query('SELECT status, user_id FROM bookings WHERE id = ?', [id]);
-      if (bookings.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
-      }
-  
-      // 🆕 สิทธิ์พิเศษสำหรับแอดมิน: สามารถยกเลิกได้ทุกใบจองและทุกสถานะ (กรณีเกิดเหตุสุดวิสัย)
-      if (user_role === 'admin') {
-        if (bookings[0].status === 'cancelled') {
-          return res.status(400).json({ message: 'รายการจองนี้ถูกยกเลิกไปก่อนหน้านี้แล้ว' });
-        }
-        await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
-        return res.json({ message: 'แอดมินยกเลิกรายการจองสำเร็จ (คืนสิทธิ์สนามว่างเรียบร้อย)' });
-      }
-  
-      // --- สิทธิ์สำหรับลูกค้าทั่วไป ---
-      // ต้องเป็นผู้จองเองถึงจะสั่งยกเลิกได้
-      if (bookings[0].user_id !== user_id) {
-        return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ยกเลิกใบจองนี้' });
-      }
-  
-      // ต้องมีสถานะเป็นรอโอนเงิน (pending_payment) เท่านั้นจึงจะกดยกเลิกเองได้
-      if (bookings[0].status !== 'pending_payment') {
-        return res.status(400).json({ message: 'ไม่สามารถยกเลิกได้ เนื่องจากมีการชำระเงินหรือสถานะเปลี่ยนไปแล้ว' });
-      }
-  
-      await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
-      res.json({ message: 'ยกเลิกรายการจองสำเร็จแล้ว คืนสิทธิ์สนามว่างเรียบร้อย' });
-    } catch (error) {
-      console.error('CancelBooking Error:', error);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยกเลิกการจอง' });
-    }
-  };
-  
-  // 5. แอดมินตรวจสอบสลิปและกดยืนยัน (Approve) หรือปฏิเสธ (Reject) - PUT /api/bookings/:id/verify
-  exports.verifyBooking = async (req, res) => {
-    const { id } = req.params;
-    const { status, reject_reason } = req.body; // status: 'approved' หรือ 'rejected'
-    const admin_role = req.user.role;
-  
-    // ตรวจสอบสิทธิ์ว่าต้องเป็น Admin เท่านั้น
-    if (admin_role !== 'admin') {
-      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
-    }
-  
-    if (!status || (status !== 'approved' && status !== 'rejected')) {
-      return res.status(400).json({ message: 'กรุณาระบุสถานะที่ต้องการเปลี่ยน (approved หรือ rejected)' });
-    }
-  
-    if (status === 'rejected' && !reject_reason) {
-      return res.status(400).json({ message: 'หากปฏิเสธการจอง กรุณากรอกเหตุผลด้วยครับ' });
-    }
-  
-    try {
-      const [bookings] = await db.query('SELECT status FROM bookings WHERE id = ?', [id]);
-      if (bookings.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
-      }
-  
-      if (bookings[0].status !== 'pending_approval') {
-        return res.status(400).json({ message: 'รายการจองนี้ไม่อยู่ในสถานะรอแอดมินอนุมัติ' });
-      }
-  
-      if (status === 'approved') {
-        await db.query("UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?", [id]);
-        res.json({ message: 'อนุมัติการจองสำเร็จและแจ้งสิทธิ์การใช้งานแล้ว!' });
-      } else {
-        await db.query(
-          "UPDATE bookings SET status = 'rejected', reject_reason = ? WHERE id = ?",
-          [reject_reason, id]
-        );
-        res.json({ message: 'ปฏิเสธการจองและบันทึกเหตุผลเรียบร้อยแล้ว ส่งโอกาสให้ลูกค้าแนบสลิปใหม่ใน 15 นาที' });
-      }
-    } catch (error) {
-      console.error('VerifyBooking Error:', error);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ' });
-    }
-  };
+  const user_id = req.user.id;
 
-  // 6. แอดมินดึงรายการจองทั้งหมดในระบบ (รวมถึงรายละเอียดผู้ใช้ สนาม และสลิป) - GET /api/bookings/admin/list
+  try {
+    const [myBookings] = await db.query(
+      `SELECT b.*, c.name AS court_name, s.name AS sport_name, p.slip_image_path, p.transfer_time
+       FROM bookings b
+       INNER JOIN courts c ON b.court_id = c.id
+       INNER JOIN sports s ON c.sport_id = s.id
+       LEFT JOIN payments p ON b.id = p.booking_id
+       WHERE b.user_id = ?
+       ORDER BY b.created_at DESC`,
+      [user_id]
+    );
+    res.json(myBookings);
+  } catch (error) {
+    console.error('getMyBookings Error:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงประวัติการจอง' });
+  }
+};
+
+// =============================================================================
+// 5. cancelBooking — ยกเลิกการจอง (PUT /api/bookings/:id/cancel)
+//    Flow: ค้นหาใบจอง → แยกสิทธิ์ admin / ลูกค้า → อัปเดต cancelled → ตอบกลับ
+// =============================================================================
+exports.cancelBooking = async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.user.id;
+  const user_role = req.user.role;
+
+  try {
+    // --- ขั้นที่ 1: ค้นหารายการจอง ---
+    const [bookings] = await db.query('SELECT status, user_id FROM bookings WHERE id = ?', [id]);
+    if (bookings.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
+    }
+
+    // --- ขั้นที่ 2: กรณีแอดมิน — ยกเลิกได้ทุกสถานะ (ยกเว้นที่ยกเลิกแล้ว) ---
+    if (user_role === 'admin') {
+      if (bookings[0].status === 'cancelled') {
+        return res.status(400).json({ message: 'รายการจองนี้ถูกยกเลิกไปก่อนหน้านี้แล้ว' });
+      }
+      await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
+      return res.json({ message: 'แอดมินยกเลิกรายการจองสำเร็จ (คืนสิทธิ์สนามว่างเรียบร้อย)' });
+    }
+
+    // --- ขั้นที่ 3: กรณีลูกค้า — ต้องเป็นเจ้าของและสถานะ pending_payment เท่านั้น ---
+    if (bookings[0].user_id !== user_id) {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ยกเลิกใบจองนี้' });
+    }
+
+    if (bookings[0].status !== 'pending_payment') {
+      return res.status(400).json({ message: 'ไม่สามารถยกเลิกได้ เนื่องจากมีการชำระเงินหรือสถานะเปลี่ยนไปแล้ว' });
+    }
+
+    await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
+    res.json({ message: 'ยกเลิกรายการจองสำเร็จแล้ว คืนสิทธิ์สนามว่างเรียบร้อย' });
+  } catch (error) {
+    console.error('CancelBooking Error:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยกเลิกการจอง' });
+  }
+};
+
+// =============================================================================
+// 6. verifyBooking — แอดมินอนุมัติ/ปฏิเสธสลิป (PUT /api/bookings/:id/verify)
+//    Flow: ตรวจสิทธิ์ admin → ตรวจ status ใน body → ค้นหาใบจอง → อัปเดต → ตอบกลับ
+// =============================================================================
+exports.verifyBooking = async (req, res) => {
+  const { id } = req.params;
+  const { status, reject_reason } = req.body;
+  const admin_role = req.user.role;
+
+  // --- ขั้นที่ 1: ตรวจสอบสิทธิ์และข้อมูลที่ส่งมา ---
+  if (admin_role !== 'admin') {
+    return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
+  }
+
+  if (!status || (status !== 'approved' && status !== 'rejected')) {
+    return res.status(400).json({ message: 'กรุณาระบุสถานะที่ต้องการเปลี่ยน (approved หรือ rejected)' });
+  }
+
+  if (status === 'rejected' && !reject_reason) {
+    return res.status(400).json({ message: 'หากปฏิเสธการจอง กรุณากรอกเหตุผลด้วยครับ' });
+  }
+
+  try {
+    // --- ขั้นที่ 2: ค้นหาใบจองและตรวจว่าอยู่ในสถานะ pending_approval ---
+    const [bookings] = await db.query('SELECT status FROM bookings WHERE id = ?', [id]);
+    if (bookings.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
+    }
+
+    if (bookings[0].status !== 'pending_approval') {
+      return res.status(400).json({ message: 'รายการจองนี้ไม่อยู่ในสถานะรอแอดมินอนุมัติ' });
+    }
+
+    // --- ขั้นที่ 3: อัปเดตสถานะตามที่แอดมินเลือก ---
+    if (status === 'approved') {
+      await db.query("UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?", [id]);
+      res.json({ message: 'อนุมัติการจองสำเร็จและแจ้งสิทธิ์การใช้งานแล้ว!' });
+    } else {
+      await db.query(
+        "UPDATE bookings SET status = 'rejected', reject_reason = ? WHERE id = ?",
+        [reject_reason, id]
+      );
+      res.json({ message: 'ปฏิเสธการจองและบันทึกเหตุผลเรียบร้อยแล้ว ส่งโอกาสให้ลูกค้าแนบสลิปใหม่ใน 15 นาที' });
+    }
+  } catch (error) {
+    console.error('VerifyBooking Error:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ' });
+  }
+};
+
+// =============================================================================
+// 7. getAdminBookings — แอดมินดูรายการจองทั้งหมด (GET /api/bookings/admin/list)
+//    Flow: ตรวจสิทธิ์ admin → query รวมข้อมูลผู้ใช้/สนาม/สลิป → ตอบกลับ
+// =============================================================================
 exports.getAdminBookings = async (req, res) => {
   const admin_role = req.user.role;
 
-  // ตรวจสอบสิทธิ์ว่าต้องเป็น Admin เท่านั้น
+  // --- ขั้นที่ 1: ตรวจสอบสิทธิ์แอดมิน ---
   if (admin_role !== 'admin') {
     return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้' });
   }
 
   try {
+    // --- ขั้นที่ 2: ดึงรายการจองทั้งหมดพร้อมรายละเอียดที่เกี่ยวข้อง ---
     const [allBookings] = await db.query(
       `SELECT b.*, 
               u.username, u.email, 

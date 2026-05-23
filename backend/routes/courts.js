@@ -1,13 +1,24 @@
+// =============================================================================
+// 1. โหลด Dependencies
+// =============================================================================
 const express = require('express');
 const router = express.Router();
 const courtController = require('../controllers/courtController');
 
-// เส้นทางสำหรับลูกค้าดูข้อมูล
+// =============================================================================
+// 2. Public Routes (ลูกค้าดูข้อมูล — ไม่ต้องล็อกอิน)
+// =============================================================================
 router.get('/sports', courtController.getSports);
 router.get('/courts', courtController.getCourts);
-// 🆕 เพิ่มเส้นทางสำหรับแอดมินจัดการสนาม
-router.post('/courts', courtController.createCourt);       // เพิ่มสนาม
-router.put('/courts/:id', courtController.updateCourt);    // แก้ไขสนาม (รวมถึงสวิตช์ปิด/เปิด)
-router.delete('/courts/:id', courtController.deleteCourt); // ลบสนาม
 
+// =============================================================================
+// 3. Admin Routes (จัดการสนาม — เพิ่ม / แก้ไข / ลบ)
+// =============================================================================
+router.post('/courts', courtController.createCourt);
+router.put('/courts/:id', courtController.updateCourt);
+router.delete('/courts/:id', courtController.deleteCourt);
+
+// =============================================================================
+// 4. ส่งออก Router ให้ server.js ใช้งาน
+// =============================================================================
 module.exports = router;

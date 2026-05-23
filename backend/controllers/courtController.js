@@ -1,6 +1,12 @@
+// =============================================================================
+// 1. โหลด Dependencies
+// =============================================================================
 const db = require('../config/db');
 
-// 1. ดึงประเภทกีฬาทั้งหมด (สำหรับหน้าแรกแสดง กีฬาฟุตบอล, บาสเกสบอล, แบดมินตัน, วอลเลย์บอล)
+// =============================================================================
+// 2. getSports — ดึงประเภทกีฬาทั้งหมด (GET /api/sports)
+//    Flow: query ตาราง sports → ตอบกลับ
+// =============================================================================
 exports.getSports = async (req, res) => {
   try {
     const [sports] = await db.query('SELECT * FROM sports');
@@ -11,21 +17,24 @@ exports.getSports = async (req, res) => {
   }
 };
 
-// 2. ดึงข้อมูลสนามทั้งหมด หรือกรองตามประเภทกีฬา (เช่น เลือกดูเฉพาะสนามแบดมินตัน)
-// URL ตัวอย่าง: /api/courts?sport_id=3
+// =============================================================================
+// 3. getCourts — ดึงรายการสนามทั้งหมดหรือกรองตามกีฬา (GET /api/courts?sport_id=)
+//    Flow: รับ sport_id (ถ้ามี) → สร้าง SQL → query → ตอบกลับ
+// =============================================================================
 exports.getCourts = async (req, res) => {
-  const { sport_id } = req.query; // ดึงค่า Parameter ที่ส่งมาหลังเครื่องหมาย ?
+  const { sport_id } = req.query;
 
   try {
+    // --- ขั้นที่ 1: สร้างคำสั่ง SQL (กรองตาม sport_id ถ้ามีการส่งมา) ---
     let sql = 'SELECT * FROM courts';
     const params = [];
 
-    // หากมีการส่ง sport_id มา ให้ดึงเฉพาะสนามของกีฬานั้นๆ
     if (sport_id) {
       sql += ' WHERE sport_id = ?';
       params.push(sport_id);
     }
 
+    // --- ขั้นที่ 2: ดึงข้อมูลและตอบกลับ ---
     const [courts] = await db.query(sql, params);
     res.json(courts);
   } catch (error) {
@@ -34,74 +43,89 @@ exports.getCourts = async (req, res) => {
   }
 };
 
-// 3. เพิ่มสนามใหม่ (Create) - POST /api/courts
+// =============================================================================
+// 4. createCourt — เพิ่มสนามใหม่ (POST /api/courts)
+//    Flow: รับข้อมูล → ตรวจครบ → INSERT (status = active) → ตอบกลับ
+// =============================================================================
 exports.createCourt = async (req, res) => {
-    const { sport_id, name, price_per_hour } = req.body;
-  
-    if (!sport_id || !name || !price_per_hour) {
-      return res.status(400).json({ message: 'กรุณากรอกข้อมูลสนามให้ครบถ้วน' });
+  const { sport_id, name, price_per_hour } = req.body;
+
+  // --- ขั้นที่ 1: ตรวจสอบความครบถ้วนของข้อมูล ---
+  if (!sport_id || !name || !price_per_hour) {
+    return res.status(400).json({ message: 'กรุณากรอกข้อมูลสนามให้ครบถ้วน' });
+  }
+
+  try {
+    // --- ขั้นที่ 2: บันทึกสนามใหม่ ---
+    const [result] = await db.query(
+      'INSERT INTO courts (sport_id, name, price_per_hour, status) VALUES (?, ?, ?, ?)',
+      [sport_id, name, price_per_hour, 'active']
+    );
+
+    // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
+    res.status(201).json({ message: 'เพิ่มสนามใหม่สำเร็จ!', courtId: result.insertId });
+  } catch (error) {
+    console.error('createCourt Error:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มสนาม' });
+  }
+};
+
+// =============================================================================
+// 5. updateCourt — แก้ไขข้อมูลสนาม (PUT /api/courts/:id)
+//    Flow: รับ id + ข้อมูลใหม่ → ตรวจว่ามีสนาม → UPDATE → ตอบกลับ
+// =============================================================================
+exports.updateCourt = async (req, res) => {
+  const { id } = req.params;
+  const { name, price_per_hour, status } = req.body;
+
+  try {
+    // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบ ---
+    const [existing] = await db.query('SELECT id FROM courts WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบข้อมูลสนามที่ต้องการแก้ไข' });
     }
-  
-    try {
-      const [result] = await db.query(
-        'INSERT INTO courts (sport_id, name, price_per_hour, status) VALUES (?, ?, ?, ?)',
-        [sport_id, name, price_per_hour, 'active']
-      );
-      res.status(201).json({ message: 'เพิ่มสนามใหม่สำเร็จ!', courtId: result.insertId });
-    } catch (error) {
-      console.error('createCourt Error:', error);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มสนาม' });
+
+    // --- ขั้นที่ 2: อัปเดตข้อมูลสนาม ---
+    await db.query(
+      'UPDATE courts SET name = ?, price_per_hour = ?, status = ? WHERE id = ?',
+      [name, price_per_hour, status, id]
+    );
+
+    // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
+    res.json({ message: 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว!' });
+  } catch (error) {
+    console.error('updateCourt Error:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลสนาม' });
+  }
+};
+
+// =============================================================================
+// 6. deleteCourt — ลบสนาม (DELETE /api/courts/:id)
+//    Flow: รับ id → ตรวจว่ามีสนาม → DELETE → ตอบกลับ (หรือแจ้งถ้ามี FK อ้างอิง)
+// =============================================================================
+exports.deleteCourt = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบ ---
+    const [existing] = await db.query('SELECT id FROM courts WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบข้อมูลสนามที่ต้องการลบ' });
     }
-  };
-  
-  // 4. แก้ไขข้อมูลสนาม (Update) - PUT /api/courts/:id
-  exports.updateCourt = async (req, res) => {
-    const { id } = req.params;
-    const { name, price_per_hour, status } = req.body; // รับค่าฟิลด์ที่จะแก้ไข
-  
-    try {
-      // ตรวจสอบก่อนว่ามีสนาม ID นี้อยู่จริงไหม
-      const [existing] = await db.query('SELECT id FROM courts WHERE id = ?', [id]);
-      if (existing.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบข้อมูลสนามที่ต้องการแก้ไข' });
-      }
-  
-      // เขียนคำสั่ง SQL อัปเดตข้อมูล
-      await db.query(
-        'UPDATE courts SET name = ?, price_per_hour = ?, status = ? WHERE id = ?',
-        [name, price_per_hour, status, id]
-      );
-  
-      res.json({ message: 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว!' });
-    } catch (error) {
-      console.error('updateCourt Error:', error);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลสนาม' });
+
+    // --- ขั้นที่ 2: ลบสนาม (ถ้ามีประวัติจอง FK จะบล็อกการลบ) ---
+    await db.query('DELETE FROM courts WHERE id = ?', [id]);
+    res.json({ message: 'ลบสนามสำเร็จแล้ว!' });
+  } catch (error) {
+    console.error('deleteCourt Error:', error);
+
+    // --- ขั้นที่ 3: กรณีมีประวัติการจองอ้างอิง (Foreign Key RESTRICT) ---
+    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+      return res.status(400).json({
+        message: 'ไม่สามารถลบสนามนี้ได้เนื่องจากมีประวัติการจองอยู่แล้ว แนะนำให้เปลี่ยนสถานะเป็นปิดปรับปรุง (maintenance) แทน'
+      });
     }
-  };
-  
-  // 5. ลบสนาม (Delete) - DELETE /api/courts/:id
-  exports.deleteCourt = async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      const [existing] = await db.query('SELECT id FROM courts WHERE id = ?', [id]);
-      if (existing.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบข้อมูลสนามที่ต้องการลบ' });
-      }
-  
-      await db.query('DELETE FROM courts WHERE id = ?', [id]);
-      res.json({ message: 'ลบสนามสำเร็จแล้ว!' });
-    } catch (error) {
-      console.error('deleteCourt Error:', error);
-      
-      // 💡 ข้อสำคัญ: หากสนามนี้ถูกจองไปแล้วในตาราง bookings 
-      // ตัวต่างประเทศ (Foreign Key - ON DELETE RESTRICT) จะป้องกันไม่ให้กดลบได้
-      if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-        return res.status(400).json({ 
-          message: 'ไม่สามารถลบสนามนี้ได้เนื่องจากมีประวัติการจองอยู่แล้ว แนะนำให้เปลี่ยนสถานะเป็นปิดปรับปรุง (maintenance) แทน' 
-        });
-      }
-      
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบสนาม' });
-    }
-  };
+
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบสนาม' });
+  }
+};
