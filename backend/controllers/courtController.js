@@ -48,6 +48,12 @@ exports.getCourts = async (req, res) => {
 //    Flow: รับข้อมูล → ตรวจครบ → INSERT (status = active) → ตอบกลับ
 // =============================================================================
 exports.createCourt = async (req, res) => {
+  const admin_role = req.user.role;                    
+
+  if (admin_role !== 'admin') {                        
+    return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
+  }
+
   const { sport_id, name, price_per_hour } = req.body;
 
   // --- ขั้นที่ 1: ตรวจสอบความครบถ้วนของข้อมูล ---
@@ -75,6 +81,12 @@ exports.createCourt = async (req, res) => {
 //    Flow: รับ id + ข้อมูลใหม่ → ตรวจว่ามีสนาม → UPDATE → ตอบกลับ
 // =============================================================================
 exports.updateCourt = async (req, res) => {
+  const admin_role = req.user.role;             
+
+  if (admin_role !== 'admin') {                
+    return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
+  }
+  
   const { id } = req.params;
   const { name, price_per_hour, status } = req.body;
 
@@ -104,6 +116,12 @@ exports.updateCourt = async (req, res) => {
 //    Flow: รับ id → ตรวจว่ามีสนาม → DELETE → ตอบกลับ (หรือแจ้งถ้ามี FK อ้างอิง)
 // =============================================================================
 exports.deleteCourt = async (req, res) => {
+  const admin_role = req.user.role;             
+
+  if (admin_role !== 'admin') {                  
+    return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
+  }
+
   const { id } = req.params;
 
   try {
