@@ -103,13 +103,12 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
     }
 
-    // --- ขั้นที่ 7: ยิงตรวจสอบสลิปโอนเงินผ่าน API ของ Thunder Solution ---
-    const expectedAmount = parseFloat(booking.total_price); // ยอดรวมที่ต้องจ่ายจริง
+    // --- ขั้นที่ 7: ตรวจสอบความถูกต้องของสลิปโอนเงินผ่าน API ---
+    const expectedAmount = parseFloat(booking.total_price);
 
     const formData = new FormData();
-    formData.append('image', fs.createReadStream(req.file.path)); // แนบไฟล์ภาพสลิปส่งไปด้วยคีย์ 'image'
+    formData.append('image', fs.createReadStream(req.file.path));
 
-    // ส่งภาพไปสแกนที่ API ปลายทางจริงของ Thunder Solution
     const thunderResponse = await axios.post(
       'https://api.thunder.in.th/v2/verify/bank',
       formData,
@@ -122,51 +121,66 @@ exports.submitPayment = async (req, res) => {
     );
 
     const apiResult = thunderResponse.data;
-
-    // ตรวจสอบความถูกต้องเบื้องต้นจากผลลัพธ์ของ API
-    if (!apiResult.success) {
-      fs.unlinkSync(req.file.path); // ลบไฟล์สลิปทิ้งทันทีหากตรวจสอบไม่ผ่าน
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้' });
+    if (!apiResult || !apiResult.success || !apiResult.data) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
     }
 
     const slipData = apiResult.data;
-    const transferredAmount = parseFloat(slipData.amount); // ยอดโอนเงินจริง
-    const transactionRef = slipData.transRef;              // รหัสอ้างอิงธุรกรรมธนาคาร
 
-    // ดึงวันเวลาโอนจริงจากสลิปที่ธนาคารสลักไว้ และจัดรูปแบบให้เข้ากับฐานข้อมูล MySQL (YYYY-MM-DD HH:mm:ss)
-    const rawDate = slipData.transDate; // เช่น "20260609"
-    const rawTime = slipData.transTime; // เช่น "23:12:00"
-    const formattedTransferTime = `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)} ${rawTime}`;
+    // 1. ตรวจสอบยอดเงินโอน
+    const transferredAmount = typeof slipData.amount === 'object' && slipData.amount !== null
+      ? parseFloat(slipData.amount.amount)
+      : parseFloat(slipData.amount);
 
-    // --- ขั้นที่ 8: ตรวจสอบเวลาโอน — ต้องโอนหลังเวลากดจองสนามจริง ---
+    if (transferredAmount !== expectedAmount) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'ยอดเงินไม่ตรง' });
+    }
+
+    // 2. ตรวจสอบบัญชีผู้รับเงินและชื่อบัญชี
+    const myBankAccount = "4120702495";
+    const myAccountName = "ณรงฤทธิ์ โจทจันทร์";
+
+    const receiverName = (slipData.receiver && slipData.receiver.account && slipData.receiver.account.name)
+      ? (slipData.receiver.account.name.th || slipData.receiver.account.name.en || '')
+      : ((slipData.receiver && slipData.receiver.displayName) || '');
+
+    const receiverAccount = (slipData.receiver && slipData.receiver.account)
+      ? (
+          (slipData.receiver.account.bank && slipData.receiver.account.bank.account) ||
+          (slipData.receiver.account.proxy && slipData.receiver.account.proxy.account) ||
+          slipData.receiver.account.value ||
+          ''
+        )
+      : '';
+
+    if (receiverAccount !== myBankAccount || !receiverName.includes(myAccountName)) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง' });
+    }
+
+    // 3. ตรวจสอบเวลาโอนเงินในสลิป
+    if (!slipData.date) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
+    }
+
     const bookingCreatedAt = new Date(booking.created_at);
-    const actualTransferTime = new Date(formattedTransferTime);
+    const actualTransferTime = new Date(slipData.date);
 
     if (actualTransferTime < bookingCreatedAt) {
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({
-        message: 'วันเวลาที่โอนเงินในสลิปผิดพลาด (สลิปโอนเงินต้องทำรายการหลังจากการกดจองสนามในระบบเท่านั้น)'
-      });
+      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง' });
     }
 
-    // --- ขั้นที่ 9: ตรวจสอบความถูกต้องของจำนวนเงินโอน ---
-    if (transferredAmount !== expectedAmount) {
+    // 4. ตรวจสอบป้องกันการส่งสลิปโอนเงินซ้ำ
+    const transactionRef = slipData.transRef;
+    if (!transactionRef) {
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({
-        message: `ยอดเงินโอนไม่ถูกต้อง ยอดโอนตามสลิปคือ ${transferredAmount} บาท แต่ยอดที่ต้องการชำระจริงคือ ${expectedAmount} บาท`
-      });
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
     }
 
-    // --- ขั้นที่ 10: ตรวจสอบเลขบัญชีและชื่อผู้รับโอนคู่กันเพื่อความปลอดภัยสูงสุด ---
-    const myBankAccount = "4120702495";
-    const myAccountName = "ณรงฤทธิ์ โจทจันทร์";
-    const receiverName = slipData.receiver.displayName;
-    if (slipData.receiver.account.value !== myBankAccount || !receiverName.includes(myAccountName)) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'บัญชีผู้รับเงินในสลิปไม่ตรงกับบัญชีของสนามกีฬา' });
-    }
-
-    // --- ขั้นที่ 11: ตรวจสอบป้องกันการส่งสลิปโอนเงินใบเก่ามาวนใช้ซ้ำ (เช็คจาก Unique Key ที่เราเพิ่มใน MySQL) ---
     const [duplicateSlip] = await db.query(
       'SELECT id FROM payments WHERE transaction_ref = ?',
       [transactionRef]
@@ -174,8 +188,10 @@ exports.submitPayment = async (req, res) => {
 
     if (duplicateSlip.length > 0) {
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินนี้เคยถูกใช้งานชำระเงินในระบบไปแล้ว' });
+      return res.status(400).json({ message: 'สลิปนี้ถูกใช้งานไปแล้ว' });
     }
+
+    const formattedTransferTime = slipData.date.replace('T', ' ').substring(0, 19);
 
     // --- ขั้นที่ 12: บันทึกหลักฐานสลิปลงตาราง payments (และล้างสแลช \ สากล) ---
     const normalizedPath = req.file.path.replace(/\\/g, '/');
