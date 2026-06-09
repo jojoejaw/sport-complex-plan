@@ -50,10 +50,10 @@ exports.upload = multer({
 
 // =============================================================================
 // 5. submitPayment — บันทึกหลักฐานการชำระเงิน (POST /api/payments/upload)
-//    Flow: รับไฟล์+ข้อมูล → ตรวจครบ → ตรวจสิทธิ์ใบจอง → ตรวจ 15 นาที → ตรวจเวลาโอน → บันทึก payments → อัปเดต pending_approval
+//    Flow: รับไฟล์+ข้อมูล → ตรวจครบ → ตรวจสิทธิ์ใบจอง → ตรวจ 15 นาที → ตรวจสลิปเรียลไทม์ → บันทึก payments → อัปเดต approved
 // =============================================================================
 exports.submitPayment = async (req, res) => {
-  const { booking_id, transfer_time } = req.body;
+  const { booking_id } = req.body; // <-- ลูกค้าส่งแค่ booking_id มา ไม่ต้องกรอกเวลาแล้ว
   const user_id = req.user.id;
 
   // --- ขั้นที่ 1: ตรวจสอบว่ามีไฟล์สลิป ---
@@ -61,10 +61,10 @@ exports.submitPayment = async (req, res) => {
     return res.status(400).json({ message: 'กรุณาอัปโหลดรูปภาพสลิปโอนเงิน' });
   }
 
-  // --- ขั้นที่ 2: ตรวจสอบความครบถ้วนของข้อมูล ---
-  if (!booking_id || !transfer_time) {
+  // --- ขั้นที่ 2: ตรวจสอบความครบถ้วนของข้อมูลการจอง ---
+  if (!booking_id) {
     fs.unlinkSync(req.file.path);
-    return res.status(400).json({ message: 'กรุณากรอกข้อมูล booking_id และวันเวลาที่โอนเงิน' });
+    return res.status(400).json({ message: 'กรุณากรอกข้อมูล booking_id' });
   }
 
   try {
@@ -103,24 +103,13 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
     }
 
-    // --- ขั้นที่ 7: ตรวจสอบเวลาโอน — ต้องโอนหลังเวลากดจอง ---
-    const bookingCreatedAt = new Date(booking.created_at);
-    const actualTransferTime = new Date(transfer_time);
-
-    if (actualTransferTime < bookingCreatedAt) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({
-        message: 'วันเวลาที่โอนเงินในสลิปผิดพลาด (สลิปโอนเงินต้องทำรายการหลังจากการกดจองสนามในระบบเท่านั้น)'
-      });
-    }
-
-    // --- ขั้นที่ 8: ยิงตรวจสอบสลิปโอนเงินผ่าน API ของ Thunder Solution ---
+    // --- ขั้นที่ 7: ยิงตรวจสอบสลิปโอนเงินผ่าน API ของ Thunder Solution ---
     const expectedAmount = parseFloat(booking.total_price); // ยอดรวมที่ต้องจ่ายจริง
 
     const formData = new FormData();
-    formData.append('image', fs.createReadStream(req.file.path)); // 1. เปลี่ยนคีย์จาก 'file' เป็น 'image'
+    formData.append('image', fs.createReadStream(req.file.path)); // แนบไฟล์ภาพสลิปส่งไปด้วยคีย์ 'image'
 
-    // 2. เปลี่ยน URL ปลายทางเป็น URL จริงของทาง Thunder Solution
+    // ส่งภาพไปสแกนที่ API ปลายทางจริงของ Thunder Solution
     const thunderResponse = await axios.post(
       'https://api.thunder.in.th/v2/verify/bank',
       formData,
@@ -144,7 +133,23 @@ exports.submitPayment = async (req, res) => {
     const transferredAmount = parseFloat(slipData.amount); // ยอดโอนเงินจริง
     const transactionRef = slipData.transRef;              // รหัสอ้างอิงธุรกรรมธนาคาร
 
-    // ตรวจสอบความถูกต้องของจำนวนเงินโอน
+    // ดึงวันเวลาโอนจริงจากสลิปที่ธนาคารสลักไว้ และจัดรูปแบบให้เข้ากับฐานข้อมูล MySQL (YYYY-MM-DD HH:mm:ss)
+    const rawDate = slipData.transDate; // เช่น "20260609"
+    const rawTime = slipData.transTime; // เช่น "23:12:00"
+    const formattedTransferTime = `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)} ${rawTime}`;
+
+    // --- ขั้นที่ 8: ตรวจสอบเวลาโอน — ต้องโอนหลังเวลากดจองสนามจริง ---
+    const bookingCreatedAt = new Date(booking.created_at);
+    const actualTransferTime = new Date(formattedTransferTime);
+
+    if (actualTransferTime < bookingCreatedAt) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        message: 'วันเวลาที่โอนเงินในสลิปผิดพลาด (สลิปโอนเงินต้องทำรายการหลังจากการกดจองสนามในระบบเท่านั้น)'
+      });
+    }
+
+    // --- ขั้นที่ 9: ตรวจสอบความถูกต้องของจำนวนเงินโอน ---
     if (transferredAmount !== expectedAmount) {
       fs.unlinkSync(req.file.path);
       return res.status(400).json({
@@ -152,7 +157,7 @@ exports.submitPayment = async (req, res) => {
       });
     }
 
-    // ตรวจสอบเลขบัญชีและชื่อผู้รับโอนคู่กันเพื่อความปลอดภัยสูงสุด
+    // --- ขั้นที่ 10: ตรวจสอบเลขบัญชีและชื่อผู้รับโอนคู่กันเพื่อความปลอดภัยสูงสุด ---
     const myBankAccount = "4120702495";
     const myAccountName = "ณรงฤทธิ์ โจทจันทร์";
     const receiverName = slipData.receiver.displayName;
@@ -161,7 +166,7 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'บัญชีผู้รับเงินในสลิปไม่ตรงกับบัญชีของสนามกีฬา' });
     }
 
-    // ตรวจสอบป้องกันการส่งสลิปโอนเงินใบเก่ามาวนใช้ซ้ำ (เช็คจาก Unique Key ที่เราเพิ่มใน MySQL)
+    // --- ขั้นที่ 11: ตรวจสอบป้องกันการส่งสลิปโอนเงินใบเก่ามาวนใช้ซ้ำ (เช็คจาก Unique Key ที่เราเพิ่มใน MySQL) ---
     const [duplicateSlip] = await db.query(
       'SELECT id FROM payments WHERE transaction_ref = ?',
       [transactionRef]
@@ -172,35 +177,36 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'สลิปโอนเงินนี้เคยถูกใช้งานชำระเงินในระบบไปแล้ว' });
     }
 
-    // --- ขั้นที่ 9: บันทึกหลักฐานสลิปลงตาราง payments (และล้างสแลช \ สากล) ---
+    // --- ขั้นที่ 12: บันทึกหลักฐานสลิปลงตาราง payments (และล้างสแลช \ สากล) ---
     const normalizedPath = req.file.path.replace(/\\/g, '/');
     await db.query(
       `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
-           VALUES (?, ?, ?, ?) 
-           ON DUPLICATE KEY UPDATE 
-              slip_image_path = VALUES(slip_image_path), 
-              transfer_time = VALUES(transfer_time),
-              transaction_ref = VALUES(transaction_ref)`,
-      [booking_id, normalizedPath, transfer_time, transactionRef]
+       VALUES (?, ?, ?, ?) 
+       ON DUPLICATE KEY UPDATE 
+          slip_image_path = VALUES(slip_image_path), 
+          transfer_time = VALUES(transfer_time),
+          transaction_ref = VALUES(transaction_ref)`,
+      [booking_id, normalizedPath, formattedTransferTime, transactionRef]
     );
 
-    // --- ขั้นที่ 10: อัปเดตสถานะการจองเป็นอนุมัติ (approved) ทันทีแบบเรียลไทม์ ---
+    // --- ขั้นที่ 13: อัปเดตสถานะการจองเป็นอนุมัติ (approved) ทันทีแบบเรียลไทม์ ---
     await db.query(
       `UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?`,
       [booking_id]
     );
 
-    // --- ขั้นที่ 11: ส่งข้อมูลตอบกลับชำระเงินสำเร็จ ---
+    // --- ขั้นที่ 14: ส่งข้อมูลตอบกลับชำระเงินสำเร็จ ---
     res.json({ message: 'ชำระเงินสำเร็จเรียบร้อยแล้ว! ระบบอนุมัติการจองของท่านอัตโนมัติ' });
   } catch (error) {
     console.error('SubmitPayment Error:', error);
     if (req.file) fs.unlinkSync(req.file.path);
-    // ดักจับกรณีที่เซิร์ฟเวอร์ Thunder API ตีกลับข้อมูลข้อผิดพลาดมา (เช่น รหัส 400 สลิปปลอม)
+
+    // ดักจับและนำข้อผิดพลาดของ Thunder API (เช่น การสแกนสลิปปลอม) ไปแสดงให้ลูกค้าเห็นอย่างชัดเจนในหน้าจอ
     if (error.response && error.response.data && error.response.data.success === false) {
-      // ส่งข้อความแจ้งเตือนที่ได้จากระบบตรวจสลิปกลับไปหาหน้าจอของลูกค้าตรงๆ
       const apiErrorMessage = error.response.data.error.message || 'สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้';
       return res.status(error.response.status).json({ message: apiErrorMessage });
     }
+
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
   }
 };
