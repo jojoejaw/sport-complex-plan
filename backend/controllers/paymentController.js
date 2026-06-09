@@ -5,6 +5,8 @@ const db = require('../config/db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
+const FormData = require('form-data');
 
 // =============================================================================
 // 2. ตั้งค่า Multer — ที่เก็บไฟล์และตั้งชื่อไฟล์สลิป
@@ -68,7 +70,7 @@ exports.submitPayment = async (req, res) => {
   try {
     // --- ขั้นที่ 3: ดึงข้อมูลการจองมาตรวจสอบ ---
     const [bookings] = await db.query(
-      'SELECT status, created_at, updated_at, user_id FROM bookings WHERE id = ?',
+      'SELECT status, created_at, updated_at, user_id, total_price FROM bookings WHERE id = ?',
       [booking_id]
     );
 
@@ -112,22 +114,84 @@ exports.submitPayment = async (req, res) => {
       });
     }
 
-    // --- ขั้นที่ 8: บันทึกหลักฐานสลิปลงตาราง payments ---
-    await db.query(
-      `INSERT INTO payments (booking_id, slip_image_path, transfer_time) 
-       VALUES (?, ?, ?) 
-       ON DUPLICATE KEY UPDATE slip_image_path = VALUES(slip_image_path), transfer_time = VALUES(transfer_time)`,
-      [booking_id, req.file.path, transfer_time]
+    // --- ขั้นที่ 8: ยิงตรวจสอบสลิปโอนเงินผ่าน API ของ Thunder Solution ---
+    const expectedAmount = parseFloat(booking.total_price); // ยอดรวมที่ต้องจ่ายจริง
+
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(req.file.path)); // แนบไฟล์ภาพสลิปที่ลูกค้าเพิ่งส่งมา
+
+    // ส่งภาพไปสแกนที่ API ปลายทาง (กรุณาเช็ค URL ที่ระบุในคู่มือของท่านอีกครั้ง)
+    const thunderResponse = await axios.post(
+      'https://thunder.in.th/services/api/verify',
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
+        }
+      }
     );
 
-    // --- ขั้นที่ 9: อัปเดตสถานะการจองเป็น pending_approval ---
+    const apiResult = thunderResponse.data;
+
+    // ตรวจสอบความถูกต้องเบื้องต้นจากผลลัพธ์ของ API
+    if (!apiResult.success) {
+      fs.unlinkSync(req.file.path); // ลบไฟล์สลิปทิ้งทันทีหากตรวจสอบไม่ผ่าน
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้' });
+    }
+
+    const slipData = apiResult.data;
+    const transferredAmount = parseFloat(slipData.amount); // ยอดโอนเงินจริง
+    const transactionRef = slipData.transRef;              // รหัสอ้างอิงธุรกรรมธนาคาร
+
+    // ตรวจสอบความถูกต้องของจำนวนเงินโอน
+    if (transferredAmount !== expectedAmount) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        message: `ยอดเงินโอนไม่ถูกต้อง ยอดโอนตามสลิปคือ ${transferredAmount} บาท แต่ยอดที่ต้องการชำระจริงคือ ${expectedAmount} บาท`
+      });
+    }
+
+    // ตรวจสอบเลขบัญชีและชื่อผู้รับโอนคู่กันเพื่อความปลอดภัยสูงสุด
+    const myBankAccount = "4120702495";
+    const myAccountName = "ณรงฤทธิ์ โจทจันทร์";
+    const receiverName = slipData.receiver.displayName;
+    if (slipData.receiver.account.value !== myBankAccount || !receiverName.includes(myAccountName)) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'บัญชีผู้รับเงินในสลิปไม่ตรงกับบัญชีของสนามกีฬา' });
+    }
+
+    // ตรวจสอบป้องกันการส่งสลิปโอนเงินใบเก่ามาวนใช้ซ้ำ (เช็คจาก Unique Key ที่เราเพิ่มใน MySQL)
+    const [duplicateSlip] = await db.query(
+      'SELECT id FROM payments WHERE transaction_ref = ?',
+      [transactionRef]
+    );
+
+    if (duplicateSlip.length > 0) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินนี้เคยถูกใช้งานชำระเงินในระบบไปแล้ว' });
+    }
+
+    // --- ขั้นที่ 9: บันทึกหลักฐานสลิปลงตาราง payments (และล้างสแลช \ สากล) ---
+    const normalizedPath = req.file.path.replace(/\\/g, '/');
     await db.query(
-      `UPDATE bookings SET status = 'pending_approval', reject_reason = NULL WHERE id = ?`,
+      `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
+           VALUES (?, ?, ?, ?) 
+           ON DUPLICATE KEY UPDATE 
+              slip_image_path = VALUES(slip_image_path), 
+              transfer_time = VALUES(transfer_time),
+              transaction_ref = VALUES(transaction_ref)`,
+      [booking_id, normalizedPath, transfer_time, transactionRef]
+    );
+
+    // --- ขั้นที่ 10: อัปเดตสถานะการจองเป็นอนุมัติ (approved) ทันทีแบบเรียลไทม์ ---
+    await db.query(
+      `UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?`,
       [booking_id]
     );
 
-    // --- ขั้นที่ 10: ตอบกลับสำเร็จ ---
-    res.json({ message: 'อัปโหลดสลิปและส่งหลักฐานชำระเงินเรียบร้อยแล้ว รอแอดมินตรวจสอบ' });
+    // --- ขั้นที่ 11: ส่งข้อมูลตอบกลับชำระเงินสำเร็จ ---
+    res.json({ message: 'ชำระเงินสำเร็จเรียบร้อยแล้ว! ระบบอนุมัติการจองของท่านอัตโนมัติ' });
   } catch (error) {
     console.error('SubmitPayment Error:', error);
     if (req.file) fs.unlinkSync(req.file.path);

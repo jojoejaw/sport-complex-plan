@@ -278,8 +278,9 @@ exports.verifyBooking = async (req, res) => {
       return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
     }
 
-    if (bookings[0].status !== 'pending_approval') {
-      return res.status(400).json({ message: 'รายการจองนี้ไม่อยู่ในสถานะรอแอดมินอนุมัติ' });
+    // ยอมให้อนุมัติได้ทั้งกรณีมีสลิปเข้าระบบ (pending_approval) หรือกรณีค้างจ่าย/เงินสดหน้าร้าน (pending_payment)
+    if (!['pending_approval', 'pending_payment'].includes(bookings[0].status)) {
+      return res.status(400).json({ message: 'รายการจองนี้ไม่อยู่ในสถานะที่สามารถทำการอนุมัติได้' });
     }
 
     // --- ขั้นที่ 3: อัปเดตสถานะตามที่แอดมินเลือก ---
