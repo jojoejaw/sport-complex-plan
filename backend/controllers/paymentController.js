@@ -118,11 +118,11 @@ exports.submitPayment = async (req, res) => {
     const expectedAmount = parseFloat(booking.total_price); // ยอดรวมที่ต้องจ่ายจริง
 
     const formData = new FormData();
-    formData.append('file', fs.createReadStream(req.file.path)); // แนบไฟล์ภาพสลิปที่ลูกค้าเพิ่งส่งมา
+    formData.append('image', fs.createReadStream(req.file.path)); // 1. เปลี่ยนคีย์จาก 'file' เป็น 'image'
 
-    // ส่งภาพไปสแกนที่ API ปลายทาง (กรุณาเช็ค URL ที่ระบุในคู่มือของท่านอีกครั้ง)
+    // 2. เปลี่ยน URL ปลายทางเป็น URL จริงของทาง Thunder Solution
     const thunderResponse = await axios.post(
-      'https://thunder.in.th/services/api/verify',
+      'https://api.thunder.in.th/v2/verify/bank',
       formData,
       {
         headers: {
@@ -195,6 +195,12 @@ exports.submitPayment = async (req, res) => {
   } catch (error) {
     console.error('SubmitPayment Error:', error);
     if (req.file) fs.unlinkSync(req.file.path);
+    // ดักจับกรณีที่เซิร์ฟเวอร์ Thunder API ตีกลับข้อมูลข้อผิดพลาดมา (เช่น รหัส 400 สลิปปลอม)
+    if (error.response && error.response.data && error.response.data.success === false) {
+      // ส่งข้อความแจ้งเตือนที่ได้จากระบบตรวจสลิปกลับไปหาหน้าจอของลูกค้าตรงๆ
+      const apiErrorMessage = error.response.data.error.message || 'สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้';
+      return res.status(error.response.status).json({ message: apiErrorMessage });
+    }
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
   }
 };
