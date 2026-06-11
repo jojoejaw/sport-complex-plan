@@ -53,132 +53,139 @@ exports.upload = multer({
 //    Flow: รับไฟล์+ข้อมูล → ตรวจครบ → ตรวจสิทธิ์ใบจอง → ตรวจ 15 นาที → ตรวจสลิปเรียลไทม์ → บันทึก payments → อัปเดต approved
 // =============================================================================
 exports.submitPayment = async (req, res) => {
-  const { booking_id } = req.body; // <-- ลูกค้าส่งแค่ booking_id มา ไม่ต้องกรอกเวลาแล้ว
+  const { booking_id } = req.body;
   const user_id = req.user.id;
 
-  // --- ขั้นที่ 1: ตรวจสอบว่ามีไฟล์สลิป ---
+  // --- ขั้นที่ 1: ตรวจสอบพารามิเตอร์และรูปภาพที่อัปโหลด ---
   if (!req.file) {
     return res.status(400).json({ message: 'กรุณาอัปโหลดรูปภาพสลิปโอนเงิน' });
   }
 
-  // --- ขั้นที่ 2: ตรวจสอบความครบถ้วนของข้อมูลการจอง ---
   if (!booking_id) {
-    fs.unlinkSync(req.file.path);
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     return res.status(400).json({ message: 'กรุณากรอกข้อมูล booking_id' });
   }
 
   try {
-    // --- ขั้นที่ 3: ดึงข้อมูลการจองมาตรวจสอบ ---
+    // --- ขั้นที่ 2: ดึงรายละเอียดการจองเพื่อนำมาตรวจสอบสิทธิ์และสถานะ ---
     const [bookings] = await db.query(
       'SELECT status, created_at, updated_at, user_id, total_price FROM bookings WHERE id = ?',
       [booking_id]
     );
 
     if (bookings.length === 0) {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: 'ไม่พบรายการจองนี้ในระบบ' });
     }
 
     const booking = bookings[0];
 
-    // --- ขั้นที่ 4: ตรวจสอบสิทธิ์ — ต้องเป็นเจ้าของการจอง ---
+    // --- ขั้นที่ 3: ตรวจสอบสิทธิ์ (ต้องเป็นเจ้าของที่ล็อกอินเข้ามาเท่านั้น) ---
     if (booking.user_id !== user_id) {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ทำรายการในใบจองนี้' });
     }
 
-    // --- ขั้นที่ 5: ตรวจสอบสถานะ — ต้องเป็น pending_payment หรือ rejected ---
+    // --- ขั้นที่ 4: ตรวจสอบสถานะการจอง (ต้องอยู่ในสถานะค้างชำระเงิน หรือ ถูกปฏิเสธสลิปเก่า) ---
     if (booking.status !== 'pending_payment' && booking.status !== 'rejected') {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'รายการจองนี้ได้รับการชำระเงินหรืออนุมัติไปแล้ว' });
     }
 
-    // --- ขั้นที่ 6: ตรวจสอบเวลาหมดเขต 15 นาที ---
+    // --- ขั้นที่ 5: ตรวจสอบเวลาหมดอายุ 15 นาที ---
     const baseTime = booking.status === 'rejected' ? booking.updated_at : booking.created_at;
     const timeDiff = (new Date() - new Date(baseTime)) / 1000 / 60;
 
     if (timeDiff > 15) {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [booking_id]);
       return res.status(400).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
     }
 
-    // --- ขั้นที่ 7: ตรวจสอบความถูกต้องของสลิปโอนเงินผ่าน API ---
-    const expectedAmount = parseFloat(booking.total_price);
-
+    // --- ขั้นที่ 6: เรียกใช้งาน Thunder API v2 เพื่อทำการสแกนตรวจสอบสลิป ---
     const formData = new FormData();
     formData.append('image', fs.createReadStream(req.file.path));
+    formData.append('matchAccount', 'true');
 
-    const thunderResponse = await axios.post(
-      'https://api.thunder.in.th/v2/verify/bank',
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
+    let apiResult;
+    try {
+      const thunderResponse = await axios.post(
+        'https://api.thunder.in.th/v2/verify/bank',
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            'Authorization': `Bearer ${process.env.THUNDER_API_KEY}`
+          }
         }
-      }
-    );
+      );
+      apiResult = thunderResponse.data;
+    } catch (apiError) {
+      console.error('Thunder API Call Fail:', apiError.message);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
-    const apiResult = thunderResponse.data;
+      // กรณี Thunder API ส่งข้อมูลข้อผิดพลาดกลับมา
+      if (apiError.response && apiError.response.data && apiError.response.data.success === false) {
+        const rawMessage = apiError.response.data.error.message || '';
+        const apiErrorMessage = rawMessage.includes("Please provide")
+          ? "รูปภาพไม่ถูกต้อง หรือไม่พบข้อมูล QR Code ในสลิปโอนเงิน"
+          : (rawMessage || "สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้");
+        return res.status(apiError.response.status).json({ message: apiErrorMessage });
+      }
+      return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสลิปผ่านเซิร์ฟเวอร์ภายนอก' });
+    }
+
     if (!apiResult || !apiResult.success || !apiResult.data) {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
     }
 
-    const slipData = apiResult.data;
+    // ข้อมูลดิบที่ผ่านการสแกนและตรวจสอบของสลิปจะอยู่ในอ็อบเจกต์ rawSlip ของ v2
+    const slipData = apiResult.data.rawSlip;
+    if (!slipData) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบข้อมูลในระบบ)' });
+    }
 
-    // 1. ตรวจสอบยอดเงินโอน
+    // --- ขั้นที่ 7: ตรวจสอบความถูกต้องของข้อมูลสลิป (Data Consistency Checks) ---
+
+    // 7.1 ตรวจสอบยอดเงินโอน (ปลอดภัยกับทั้งประเภท Object หรือตัวเลขตรงตัว)
+    const expectedAmount = parseFloat(booking.total_price);
     const transferredAmount = typeof slipData.amount === 'object' && slipData.amount !== null
       ? parseFloat(slipData.amount.amount)
       : parseFloat(slipData.amount);
 
-    if (transferredAmount !== expectedAmount) {
-      fs.unlinkSync(req.file.path);
+    if (isNaN(transferredAmount) || transferredAmount !== expectedAmount) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'ยอดเงินไม่ตรง' });
     }
 
-    // 2. ตรวจสอบบัญชีผู้รับเงินและชื่อบัญชี
-    const myBankAccount = "4120702495";
-    const myAccountName = "ณรงฤทธิ์ โจทจันทร์";
-
-    const receiverName = (slipData.receiver && slipData.receiver.account && slipData.receiver.account.name)
-      ? (slipData.receiver.account.name.th || slipData.receiver.account.name.en || '')
-      : ((slipData.receiver && slipData.receiver.displayName) || '');
-
-    const receiverAccount = (slipData.receiver && slipData.receiver.account)
-      ? (
-          (slipData.receiver.account.bank && slipData.receiver.account.bank.account) ||
-          (slipData.receiver.account.proxy && slipData.receiver.account.proxy.account) ||
-          slipData.receiver.account.value ||
-          ''
-        )
-      : '';
-
-    if (receiverAccount !== myBankAccount || !receiverName.includes(myAccountName)) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง' });
+    // 7.2 ตรวจสอบบัญชีผู้รับเงินผ่านการจับคู่บัญชีของ Thunder API (matchAccount) และต้องเป็นพร้อมเพย์เท่านั้น
+    if (!apiResult.data.matchedAccount || apiResult.data.matchedAccount.bank.code !== 'PROMPTPAY') {
+      console.log('Slip receiver account does not match registered PromptPay account.');
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง (ต้องโอนผ่านพร้อมเพย์เท่านั้น)' });
     }
 
-    // 3. ตรวจสอบเวลาโอนเงินในสลิป
+    // 7.3 ตรวจสอบเวลาโอนเงินในสลิป (ป้องกันการเอาสลิปโอนก่อนการสร้างการจองมาใช้)
     if (!slipData.date) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบวันที่ทำรายการ)' });
     }
 
     const bookingCreatedAt = new Date(booking.created_at);
     const actualTransferTime = new Date(slipData.date);
 
     if (actualTransferTime < bookingCreatedAt) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง' });
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง (สลิปนี้ทำรายการโอนก่อนการกดจองสนาม)' });
     }
 
-    // 4. ตรวจสอบป้องกันการส่งสลิปโอนเงินซ้ำ
+    // 7.4 ตรวจสอบความซ้ำซ้อนของเลขธุรกรรมเพื่อป้องกันการส่งสลิปซ้ำ (Duplicate Prevention)
     const transactionRef = slipData.transRef;
     if (!transactionRef) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบเลขธุรกรรมอ้างอิง)' });
     }
 
     const [duplicateSlip] = await db.query(
@@ -187,14 +194,15 @@ exports.submitPayment = async (req, res) => {
     );
 
     if (duplicateSlip.length > 0) {
-      fs.unlinkSync(req.file.path);
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'สลิปนี้ถูกใช้งานไปแล้ว' });
     }
 
+    // --- ขั้นที่ 8: บันทึกข้อมูลและอัปเดตสถานะในฐานข้อมูล ---
     const formattedTransferTime = slipData.date.replace('T', ' ').substring(0, 19);
-
-    // --- ขั้นที่ 12: บันทึกหลักฐานสลิปลงตาราง payments (และล้างสแลช \ สากล) ---
     const normalizedPath = req.file.path.replace(/\\/g, '/');
+
+    // บันทึกหลักฐานสลิป
     await db.query(
       `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
        VALUES (?, ?, ?, ?) 
@@ -205,24 +213,18 @@ exports.submitPayment = async (req, res) => {
       [booking_id, normalizedPath, formattedTransferTime, transactionRef]
     );
 
-    // --- ขั้นที่ 13: อัปเดตสถานะการจองเป็นอนุมัติ (approved) ทันทีแบบเรียลไทม์ ---
+    // อัปเดตสถานะการจองเป็น approved
     await db.query(
       `UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?`,
       [booking_id]
     );
 
-    // --- ขั้นที่ 14: ส่งข้อมูลตอบกลับชำระเงินสำเร็จ ---
     res.json({ message: 'ชำระเงินสำเร็จเรียบร้อยแล้ว! ระบบอนุมัติการจองของท่านอัตโนมัติ' });
   } catch (error) {
-    console.error('SubmitPayment Error:', error);
-    if (req.file) fs.unlinkSync(req.file.path);
-
-    // ดักจับและนำข้อผิดพลาดของ Thunder API (เช่น การสแกนสลิปปลอม) ไปแสดงให้ลูกค้าเห็นอย่างชัดเจนในหน้าจอ
-    if (error.response && error.response.data && error.response.data.success === false) {
-      const apiErrorMessage = error.response.data.error.message || 'สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้';
-      return res.status(error.response.status).json({ message: apiErrorMessage });
+    console.error('SubmitPayment Unexpected Error:', error);
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
     }
-
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
   }
 };

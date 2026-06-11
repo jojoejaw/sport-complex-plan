@@ -52,4 +52,8 @@ app.get('/', (req, res) => {
 // =============================================================================
 app.listen(PORT, () => {
   console.log(`🚀 เซิร์ฟเวอร์ทำงานที่พอร์ต http://localhost:${PORT}`);
+  
+  // เริ่มการทำงานของระบบล้างรายการจองที่หมดอายุในเบื้องหลัง
+  const { startBookingCleanup } = require('./utils/bookingCleanup');
+  startBookingCleanup();
 });
