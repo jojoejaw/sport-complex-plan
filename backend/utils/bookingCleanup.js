@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 function startBookingCleanup() {
-  // รันทุกๆ 1 นาที (60000 มิลลิวินาที)
+  // รันทุกๆ 1 นาที (60000 มิลลิวินาที)เพื่อเช็คการจองที่เลยกำหนดเวลาชำระเงิน แล้วยกเลิกอัตโนมัติ
   setInterval(async () => {
     try {
       const query = `
