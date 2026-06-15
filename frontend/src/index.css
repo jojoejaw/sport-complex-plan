@@ -1,0 +1,10 @@
+/* นำเข้าฟอนต์ Kanit และ Outfit */
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ล้างค่าระยะขอบเริ่มต้น และสั่งให้ทุกอย่างใช้ฟอนต์ Outfit + Kanit */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Outfit', 'Kanit', sans-serif;
+}
