@@ -1,8 +1,20 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import MyBookings from './pages/MyBookings';
+
 function App() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f4f6f9', color: '#0f172a' }}>
-      <h1>เริ่มต้นพัฒนาโปรเจกต์ระบบจองสนามใหม่!</h1>
-    </div>
+    <Router>
+      <Routes>
+        {/* ผูกเส้นทาง URL เข้ากับหน้าจอที่ดึงมาแสดงผล */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+      </Routes>
+    </Router>
   );
 }
 
