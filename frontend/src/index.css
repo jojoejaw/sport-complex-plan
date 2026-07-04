@@ -413,3 +413,190 @@ body {
     height: 40px;
   }
 }
+
+/* =============================================================================
+   8. สไตล์สำหรับหน้าสมัครสมาชิกและเข้าสู่ระบบ (Authentication Styles)
+   ============================================================================= */
+.auth-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 120px 20px 60px 20px; /* เว้นระยะจากแถบเมนูด้านบนลอยตัว */
+  background-color: var(--bg-body);
+}
+
+.auth-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  padding: 40px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.auth-header p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155; /* slate-700 */
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  height: 46px;
+  padding: 0 44px; /* กันชนไอคอนซ้ายและปุ่มเปิดปิดตารหัสผ่านด้านขวา */
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-dark);
+  outline: none;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.input-wrapper input:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ปุ่มเปิด-ปิดตาสำหรับแสดงรหัสผ่าน */
+.btn-toggle-eye {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.btn-toggle-eye:hover {
+  color: #475569;
+  background-color: #f1f5f9;
+}
+
+/* ปุ่มส่งแบบฟอร์ม */
+.btn-auth-submit {
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+}
+
+.btn-auth-submit:hover:not(:disabled) {
+  background-color: #059669;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-auth-submit:disabled {
+  background-color: #a7f3d0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ท้ายฟอร์มลิงก์สลับหน้า */
+.auth-footer {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.auth-footer p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.auth-link {
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #059669;
+  text-decoration: underline;
+}
+
+/* จัดหน้าจอตอนมือถือ */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px 20px;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+  }
+  
+  .auth-page-container {
+    padding-top: 90px;
+  }
+}

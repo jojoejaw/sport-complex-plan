@@ -72,7 +72,7 @@ export default function Navbar() {
                 <div className="user-profile">
                   <User size={18} className="profile-icon" />
                   <span>
-                    สวัสดี, {user.username} {user.role === 'admin' && <span className="admin-badge">(Admin)</span>}
+                    สวัสดี, {user?.username || 'ผู้ใช้งาน'} {user?.role === 'admin' && <span className="admin-badge">(Admin)</span>}
                   </span>
                 </div>
                 <button onClick={handleLogout} className="btn btn-outline-light btn-logout">

@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MyBookings from './pages/MyBookings';
+import Booking from './pages/Booking';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       {/* สลับหน้าตามเส้นทาง URL */}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/booking" element={<Booking />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/my-bookings" element={<MyBookings />} />
