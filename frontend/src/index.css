@@ -1,10 +1,415 @@
-/* นำเข้าฟอนต์ Kanit และ Outfit */
+/* =============================================================================
+   1. นำเข้า Google Font "Outfit" และ "Kanit" (ฟอนต์สไตล์โมเดิร์น สปอร์ต สะอาดตา)
+   ============================================================================= */
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-/* ล้างค่าระยะขอบเริ่มต้น และสั่งให้ทุกอย่างใช้ฟอนต์ Outfit + Kanit */
+/* =============================================================================
+   2. ประกาศตัวแปรสีและธีมหลัก (Premium Modern Clean Style)
+   ============================================================================= */
+:root {
+  /* โทนสีพื้นหลังหลัก */
+  --bg-body: #f4f6f9;           /* สีพื้นหลังเว็บสะอาดตา */
+  --bg-white: #ffffff;          /* สีการ์ดและอินพุต */
+  --bg-dark-header: rgba(11, 19, 43, 0.94); /* สีกรมท่าสำหรับ Navbar (โปร่งแสงหรูหรา) */
+  --bg-dark-footer: #0a1128;    /* สีกรมท่าเข้มสำหรับ Footer */
+
+  /* สีหลักสำหรับแบรนด์และปุ่ม (เขียวมรกตเด่นตามแบบ) */
+  --color-primary: #15803d;     
+  --color-primary-hover: #166534;
+  --color-primary-light: #dcfce7;
+  
+  /* สีสถานะใบจอง */
+  --color-status-success-bg: #dcfce7;
+  --color-status-success-text: #166534;
+  --color-status-danger-bg: #fee2e2;
+  --color-status-danger-text: #991b1b;
+  
+  /* สีไอคอนประจำประเภทกีฬา */
+  --color-sport-football: #16a34a;
+  --color-sport-basketball: #ea580c;
+  --color-sport-badminton: #2563eb;
+  --color-sport-volleyball: #eab308;
+
+  /* สีเส้นขอบและเงา */
+  --border-subtle: #e2e8f0;
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.08);
+
+  /* สีข้อความ */
+  --text-dark: #0f172a;         /* ข้อความสีเข้ม */
+  --text-muted: #64748b;        /* ข้อความสีเทาสำหรับรายละเอียด */
+  --text-light: #ffffff;        /* ข้อความสีขาวสำหรับแถบหัว/ท้าย */
+  
+  /* เอฟเฟกต์ */
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================================================================
+   3. รีเซ็ตสไตล์ดั้งเดิม (Reset CSS)
+   ============================================================================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: 'Outfit', 'Kanit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* =============================================================================
+   4. โครงสร้าง Layout และ Grid
+   ============================================================================= */
+.container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* =============================================================================
+   5. สไตล์ของปุ่ม (Buttons)
+   ============================================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-smooth);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--text-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline-light {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-light);
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* =============================================================================
+   6. แถบเมนูด้านบน (Floating Glass Island Navbar)
+   ============================================================================= */
+.navbar {
+  position: fixed;
+  top: 15px; /* ลอยตัวห่างจากขอบบนเพื่อความล้ำสมัย */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px); /* เว้นช่องไฟขอบซ้ายขวา */
+  max-width: 1200px;
+  height: 66px;
+  background-color: rgba(15, 23, 42, 0.8); /* สี slate-900 แบบกระจกฝ้าโปร่งแสง */
+  backdrop-filter: blur(12px);               /* ความเบลอกระจกหรูหรา */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08); /* กรอบกระจกบางเฉียบรอบทิศทาง */
+  border-radius: 18px; /* ขอบโค้งมนแบบเกาะลอย */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25); /* เงาลอยนุ่มนวลมีมิติ */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-container {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* โลโก้พร้อมอนิเมชันตอนชี้เมาส์ */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  transition: var(--transition-smooth);
+}
+
+.nav-logo:hover {
+  transform: translateY(-1px);
+}
+
+.logo-icon {
+  color: #3b82f6;
+  transition: transform 0.3s ease;
+}
+
+.nav-logo:hover .logo-icon {
+  transform: rotate(10deg); /* หมุนไอคอนโล่เล็กน้อยเวลาจี้เมาส์ */
+}
+
+/* คอนเทนเนอร์หุ้มเมนูทั้งหมดสำหรับ Desktop */
+.nav-menu-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  margin-left: 40px;
+}
+
+/* ลิงก์เมนูตรงกลาง */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* กระชับเมนูให้สวยงามขึ้น */
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 10px;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.nav-link:hover {
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.05); /* ขึ้นแถบไฮไลต์จางๆ */
+}
+
+/* เมนูที่กำลังใช้งานอยู่ (มีขีดสั้นโค้งมนสไตล์โมเดิร์น) */
+.nav-link.active {
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px; /* ขีดสั้นกึ่งกลาง หรูหราทันสมัยตามสไตล์ Apple/Stripe */
+  height: 3px;
+  background-color: #10b981;
+  border-radius: 4px;
+}
+
+/* พื้นที่ผู้ใช้งานและปุ่มจัดการข้อมูล */
+.nav-user-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* การ์ดข้อมูลผู้ใช้แบบแคปซูล (Pill Profile Badge) */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  font-size: 13.5px;
+  transition: var(--transition-smooth);
+}
+
+.user-profile:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.profile-icon {
+  color: #3b82f6;
+}
+
+.admin-badge {
+  color: #fbbf24;
+  background-color: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+/* ปุ่มออกจากระบบขอบแดงหรูสำหรับออกจากระบบ */
+.btn-logout {
+  background-color: transparent !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-smooth);
+}
+
+.btn-logout:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #ef4444 !important;
+}
+
+/* ปุ่มล็อกอินและสมัครสมาชิกด้านขวา */
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-buttons .btn {
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+/* ปุ่มล็อกอินแบบโปร่งแสง */
+.auth-buttons .btn-outline-light {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+
+.auth-buttons .btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ปุ่มสมัครสมาชิกแบบสีเขียวมรกตเรืองแสงนุ่มๆ */
+.auth-buttons .btn-primary {
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+}
+
+.auth-buttons .btn-primary:hover {
+  background-color: #059669;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
+}
+
+
+
+
+/* =============================================================================
+   7. ปุ่มและอินเทอร์เฟซรองรับระบบโทรศัพท์มือถือ (Responsive Design)
+   ============================================================================= */
+.mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: block;
+  }
+
+  .nav-menu-wrapper {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-dark-header);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-direction: column;
+    padding: 24px 20px;
+    gap: 24px;
+    display: none; /* เริ่มต้นให้ซ่อน */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
+
+  /* แสดงผลเมื่อผู้ใช้เปิดเมนูแฮมเบอร์เกอร์ */
+  .nav-menu-wrapper.active {
+    display: flex;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .nav-link {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 15px;
+  }
+
+  .nav-link.active::after {
+    bottom: 0;
+  }
+
+  .nav-user-area {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 20px;
+    gap: 16px;
+  }
+
+  .auth-buttons {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .auth-buttons .btn {
+    width: 100%;
+    height: 40px;
+  }
+
+  .user-profile {
+    width: 100%;
+  }
+
+  .btn-logout {
+    width: 100%;
+    justify-content: center;
+    height: 40px;
+  }
 }
