@@ -1405,543 +1405,1014 @@ body {
    10. สไตล์สำหรับหน้าตารางจองสนาม (Booking Page Styles)
    ============================================================================= */
 .booking-page-container {
-  padding-top: 106px;
-  /* เว้นระยะจากแถบเมนูลอยตัวด้านบน */
-  padding-bottom: 80px;
+  padding-top: 86px;
+  /* ขยับขึ้นด้านบนเพื่อลดพื้นที่ว่าง */
+  padding-bottom: 24px;
 }
 
-.booking-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.booking-header h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 12px;
-}
-
-.booking-header p {
-  font-size: 15px;
-  color: var(--text-muted);
-}
-
-/* การจัดตารางแบ่งซ้ายขวา */
-.booking-grid {
-  display: grid;
-  grid-template-columns: 7.5fr 4.5fr;
-  /* ฝั่งตารางเวลาจะกว้างกว่าฝั่งสรุปราคา */
-  gap: 32px;
-  align-items: flex-start;
-}
-
-/* การ์ดฝั่งซ้าย: ตัวควบคุมตารางเวลา */
-.booking-form-card {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  padding: 32px;
-  box-shadow: var(--shadow-card);
-}
-
-/* ส่วนหัวคุมการเลือก (Select Dropdown & Date Picker) */
-.booking-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 28px;
-}
-
-.control-group {
+/* 1. Stepper and Navigation */
+.booking-navigation-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  /* ลด margin */
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.btn-back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-back-link:hover {
+  color: var(--text-dark);
+  background-color: rgba(15, 23, 42, 0.05);
+}
+
+.booking-stepper-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.control-group label {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.control-group select {
-  width: 100%;
-  height: 46px;
-  padding: 0 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 14px;
-  color: var(--text-dark);
-  outline: none;
-  background-color: #ffffff;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.control-group select:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-}
-
-.control-loading {
-  height: 46px;
+.step-number {
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 24px;
+  /* ย่อสเตปบาร์ */
+  height: 24px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.step-item.active .step-number {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+.step-item.active .step-label {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.step-line {
+  width: 36px;
+  height: 1px;
+  background-color: #cbd5e1;
+}
+
+/* 2. Page Title Row */
+.booking-page-title-row {
+  margin-bottom: 16px;
+  /* ลดระยะห่าง */
+  position: relative;
+}
+
+.booking-page-title-row h1 {
+  font-size: 24px;
+  /* ย่อขนาดหัวข้อ */
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.booking-page-title-row p {
   font-size: 13.5px;
   color: var(--text-muted);
-  font-style: italic;
 }
 
-/* ตัวกรอกปฏิทินครอบ */
-.date-input-wrapper {
-  position: relative;
+.title-underline {
+  width: 32px;
+  height: 3px;
+  background-color: #10b981;
+  border-radius: 1.5px;
+  margin-top: 6px;
+}
+
+/* 3. Booking Grid layout */
+.booking-grid {
+  display: grid;
+  grid-template-columns: 7.6fr 4.4fr;
+  gap: 20px;
+  /* กระชับช่องว่าง */
+  align-items: flex-start;
+}
+
+.booking-main-content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* ลดความห่างระหว่างกล่องด้านซ้าย */
+}
+
+/* 4. Combined 3-Column Inputs Card */
+.booking-inputs-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px 20px;
+  /* ลด padding */
+  box-shadow: var(--shadow-card);
+}
+
+.booking-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  /* ลดช่องว่าง */
+  margin-bottom: 12px;
+}
+
+.input-group-premium {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* ลดระยะห่างข้อความและช่องกรอก */
+}
+
+.input-group-premium label {
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
 }
 
-.date-icon {
-  position: absolute;
-  left: 14px;
-  color: #94a3b8;
-  pointer-events: none;
-}
-
-.date-input-wrapper input[type="date"] {
+.input-group-premium select,
+.input-group-premium input {
   width: 100%;
-  height: 46px;
-  padding-left: 44px;
-  padding-right: 16px;
+  height: 38px;
+  /* ย่อความสูงของ input */
+  padding: 0 12px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
-  font-size: 14px;
-  color: var(--text-dark);
+  font-size: 13.5px;
   outline: none;
-  background-color: #ffffff;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
   transition: all 0.2s ease;
 }
 
-.date-input-wrapper input[type="date"]:focus {
+.input-group-premium select:focus,
+.input-group-premium input:focus {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-/* แถบคำอธิบายสัญลักษณ์สี (Legend) */
-.slots-legend {
+.booking-info-row {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 16px;
   background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 12px 18px;
+  padding: 8px 16px;
+  /* ลด padding */
   border-radius: 10px;
-  margin-bottom: 32px;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-divider {
+  width: 1px;
+  height: 14px;
+  background-color: #cbd5e1;
+}
+
+/* 5. Time Slot Grid Card */
+.time-slots-card-premium {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px 20px;
+  /* ลด padding */
+  box-shadow: var(--shadow-card);
+}
+
+.slots-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  /* ลดระยะห่าง */
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.slots-header-text h3 {
+  font-size: 16px;
+  /* ย่อข้อความ */
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.slots-header-text p {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.slots-legend-premium {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: #475569;
+  gap: 4px;
+  font-size: 12px;
   font-weight: 500;
+  color: #64748b;
 }
 
-.legend-dot {
-  width: 10px;
-  height: 10px;
+.legend-color-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  display: inline-block;
 }
 
 .dot-available {
-  background-color: #10b981;
-}
-
-.dot-locked {
-  background-color: #94a3b8;
-}
-
-.dot-pending {
-  background-color: #fbbf24;
+  background-color: #ffffff;
+  border: 2px solid #10b981;
 }
 
 .dot-unavailable {
-  background-color: #ef4444;
+  background-color: #cbd5e1;
 }
 
-/* หัวข้อย่อยประจำตาราง */
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin-bottom: 20px;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 12px;
+.dot-pending {
+  background-color: #ffedd5;
+  border: 2px solid #f97316;
 }
 
-/* การจัดตารางชั่วโมงแบบ Grid */
-.slots-selector-grid {
+.dot-selected {
+  background-color: #10b981;
+}
+
+.slots-grid-premium-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(6, 1fr);
+  /* ขยายตารางเวลาเป็น 6 คอลัมน์เซฟพื้นที่แนวตั้ง */
+  gap: 8px;
+  /* กระชับตาราง */
 }
 
-/* ปุ่มสล็อตเวลาหลัก */
-.time-slot-btn {
+.time-slot-btn-premium {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 58px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.slot-time-text {
-  font-size: 14px;
+  height: auto;
+  min-height: 44px;
+  padding: 6px 4px;
+  gap: 2px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-white);
 }
 
-.slot-status-text {
-  font-size: 10px;
+.time-slot-btn-premium .slot-time-text {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.time-slot-btn-premium .slot-status-text {
+  font-size: 9.5px;
   font-weight: 500;
-  color: var(--text-muted);
+  opacity: 0.85;
 }
 
-/* สีสถานะ 1: ว่างจองได้ */
-.time-slot-btn.slot-available {
-  border-color: #86efac;
+/* Available */
+.time-slot-btn-premium.slot-available {
+  border-color: #a7f3d0;
+  color: #065f46;
+  background-color: #ffffff;
+}
+
+.time-slot-btn-premium.slot-available:hover {
   background-color: #f0fdf4;
+  border-color: #10b981;
 }
 
-.time-slot-btn.slot-available .slot-time-text {
+/* Selected */
+.time-slot-btn-premium.selected {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+/* Unavailable */
+.time-slot-btn-premium.slot-unavailable,
+.time-slot-btn-premium.slot-locked {
+  background-color: #f1f5f9;
+  border-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  font-weight: 500;
+}
+
+/* Pending Lock / Orange status */
+.time-slot-btn-premium.slot-pending-approval,
+.time-slot-btn-premium.slot-locked-pending {
+  background-color: #fff7ed;
+  border-color: #ffedd5;
+  color: #c2410c;
+  font-weight: 500;
+}
+
+.time-slot-btn-premium.slot-pending-approval {
+  background-color: #fff7ed;
+  border-color: #ffd8a8;
+  color: #ea580c;
+}
+
+.selection-helper-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 6px 12px;
+  /* ลด padding */
+  margin-top: 10px;
+  /* ลดระยะห่าง */
+}
+
+.helper-alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.helper-alert-text strong {
+  font-size: 13.5px;
   color: #166534;
 }
 
-.time-slot-btn.slot-available .slot-status-text {
+.helper-alert-text span {
+  font-size: 12px;
   color: #15803d;
 }
 
-.time-slot-btn.slot-available:hover {
-  background-color: #dcfce7;
-  border-color: #4ade80;
-  transform: translateY(-1px);
+/* 6. Court Details Card */
+.court-details-card-premium {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px 20px;
+  /* ลด padding */
+  box-shadow: var(--shadow-card);
 }
 
-/* สีสถานะ 2: ล็อกไว้จองชั่วคราว */
-.time-slot-btn.slot-locked {
-  border-color: #cbd5e1;
+.court-details-card-premium h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.court-details-grid-layout {
+  display: grid;
+  grid-template-columns: 2.2fr 6.8fr 3fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.court-detail-image-box {
+  width: 100%;
+  height: 70px;
+  /* ลดขนาดความสูงรูปภาพสนาม */
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
   background-color: #f1f5f9;
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
-.time-slot-btn.slot-locked .slot-time-text {
+.court-detail-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.court-placeholder-img {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.court-detail-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.court-info-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.court-info-header-row h4 {
+  font-size: 15px;
+  /* ย่อตัวหนังสือ */
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.court-tag-badges {
+  display: flex;
+  gap: 6px;
+}
+
+.badge-sport-tag {
+  background-color: #eff6ff;
+  color: #1e40af;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.badge-type-tag {
+  background-color: #f0fdf4;
+  color: #166534;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.location-text-row {
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.facilities-icons-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.facility-item {
+  font-size: 11.5px;
+  color: #64748b;
+  background-color: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.court-detail-price-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  border-left: 1px solid #cbd5e1;
+  padding-left: 16px;
+  /* ลด padding */
+}
+
+.price-tag-value-box strong {
+  font-size: 18px;
+  /* ย่อราคา */
+  font-weight: 800;
+  color: #10b981;
+}
+
+.price-tag-value-box span {
+  font-size: 11px;
   color: #64748b;
 }
 
-.time-slot-btn.slot-locked .slot-status-text {
-  color: #475569;
+.price-desc-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
 }
 
-/* สีสถานะ 3: รอแอดมินอนุมัติสลิป */
-.time-slot-btn.slot-pending-approval {
-  border-color: #fef08a;
-  background-color: #fef9c3;
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-.time-slot-btn.slot-pending-approval .slot-time-text {
-  color: #854d0e;
-}
-
-.time-slot-btn.slot-pending-approval .slot-status-text {
-  color: #854d0e;
-}
-
-/* สีสถานะ 4: ไม่ว่างอนุมัติจองเสร็จแล้ว */
-.time-slot-btn.slot-unavailable {
-  border-color: #fecaca;
-  background-color: #fef2f2;
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-.time-slot-btn.slot-unavailable .slot-time-text {
-  color: #991b1b;
-}
-
-.time-slot-btn.slot-unavailable .slot-status-text {
-  color: #991b1b;
-}
-
-/* ปุ่มที่ถูกเลือก (Selected State) */
-.time-slot-btn.selected {
-  background-color: #10b981 !important;
-  border-color: #10b981 !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  transform: translateY(-1px);
-}
-
-.time-slot-btn.selected .slot-time-text {
-  color: #ffffff !important;
-}
-
-.time-slot-btn.selected .slot-status-text {
-  color: #a7f3d0 !important;
-}
-
-/* โหลด / ว่าง / แจ้งเตือนสล็อต */
-.slots-loading {
-  text-align: center;
-  padding: 40px 20px;
+.btn-view-court-details {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  color: var(--text-muted);
-}
-
-.spinner-clock {
-  color: #10b981;
-  animation: pulse-clock 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse-clock {
-
-  0%,
-  100% {
-    opacity: 0.6;
-    transform: scale(0.95);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-}
-
-.slots-empty-notice {
-  text-align: center;
-  padding: 40px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: #991b1b;
-  background-color: #fef2f2;
-  border: 1px dashed #fca5a5;
-  border-radius: 12px;
-}
-
-/* การ์ดฝั่งขวา: ใบสรุปราคาและยืนยันจอง */
-.booking-summary-card {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  padding: 32px;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.booking-summary-card h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-dark);
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 12px;
-}
-
-.summary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: #475569;
-}
-
-.summary-label {
-  color: var(--text-muted);
-}
-
-.summary-value {
-  color: var(--text-dark);
-}
-
-.summary-value.text-bold {
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.summary-value.text-emerald {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.summary-divider {
-  height: 1px;
-  background-color: #f1f5f9;
-  margin: 4px 0;
-}
-
-.summary-row.price-row {
-  align-items: baseline;
-}
-
-.total-price-text {
-  font-size: 22px;
-  font-weight: 700;
-  color: #10b981;
-}
-
-/* ฟอร์มยืนยันข้อมูลปุ่มจอง */
-.booking-submit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 8px;
-}
-
-.booking-submit-form input[type="tel"] {
-  width: 100%;
-  height: 46px;
-  padding: 0 16px;
+  gap: 4px;
+  background: none;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 14.5px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.booking-submit-form input[type="tel"]:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-}
-
-.btn-confirm-booking {
-  width: 100%;
-  height: 48px;
-  font-size: 14.5px !important;
-  font-weight: 600 !important;
-  border-radius: 10px !important;
-  background-color: #10b981;
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  color: #64748b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.btn-confirm-booking:hover:not(:disabled) {
-  background-color: #059669;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
-  transform: translateY(-1px);
+.btn-view-court-details:hover {
+  background-color: #f8fafc;
+  color: var(--text-dark);
+  border-color: #94a3b8;
 }
 
-.btn-confirm-booking:disabled {
-  background-color: #cbd5e1;
+.court-details-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #94a3b8;
+}
+
+/* 7. Policies Footer */
+.booking-footer-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  /* ลดช่องว่าง */
+  margin-top: 4px;
+}
+
+.benefit-col-item {
+  display: flex;
+  gap: 10px;
+  background-color: #f8fafc;
+  padding: 10px 14px;
+  /* ลด padding */
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.benefit-col-item .icon-badge {
+  font-size: 14px;
+  width: 24px;
+  /* ย่อขนาดไอคอนวงกลมนโยบาย */
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.benefit-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.benefit-info-text strong {
+  font-size: 12.5px;
+  color: var(--text-dark);
+}
+
+.benefit-info-text span {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 8. Sidebar Invoice Summary */
+.summary-sidebar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* ลดระยะห่าง */
+}
+
+.summary-invoice-card-premium {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.invoice-card-header {
+  background-color: #065f46;
+  color: #ffffff;
+  padding: 12px 18px;
+  /* ลด padding */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shield-secure-icon {
+  color: #34d399;
+}
+
+.invoice-card-header h3 {
+  font-size: 14.5px;
+  /* ย่อตัวหนังสือ */
+  font-weight: 700;
+  margin: 0;
+}
+
+.invoice-card-body {
+  padding: 16px 18px;
+  /* ลด padding */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* กระชับช่องว่าง */
+}
+
+.court-mini-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.court-circle-avatar {
+  width: 38px;
+  /* ย่อรูปภาพวงกลม */
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.court-circle-avatar-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  font-size: 16px;
+}
+
+.court-mini-name-info h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.court-mini-name-info span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.invoice-summary-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* ลดระยะห่าง */
+}
+
+.detail-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.detail-row-item .label-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #64748b;
+}
+
+.detail-row-item .value-col {
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.detail-row-item .value-col.text-bold {
+  font-weight: 700;
+}
+
+.invoice-pricing-breakdown {
+  background-color: #f8fafc;
+  padding: 10px 12px;
+  /* ลดขนาดกล่องสรุปราคา */
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breakdown-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-calculation-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.breakdown-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.breakdown-total-row .total-grand-price {
+  font-size: 18px;
+  /* ย่อยอดรวม */
+  font-weight: 800;
+  color: #10b981;
+}
+
+.invoice-secure-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0fdf4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.btn-confirm-booking-premium {
+  width: 100%;
+  height: 40px;
+  /* ลดความสูงปุ่มชำระเงิน */
+  border-radius: 10px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+  transition: all 0.2s ease;
+}
+
+.btn-confirm-booking-premium:hover:not(:disabled) {
+  background-color: #059669;
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.25);
+}
+
+.btn-confirm-booking-premium:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-.btn-confirm-booking.btn-warning-login {
+.btn-confirm-booking-premium.btn-warning-login-premium {
   background-color: #f59e0b;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15);
 }
 
-.btn-confirm-booking.btn-warning-login:hover {
+.btn-confirm-booking-premium.btn-warning-login-premium:hover {
   background-color: #d97706;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
 }
 
-/* แถบการ์ดป้ายแจ้งระเบียบความปลอดภัย */
-.booking-notice-card {
+.secure-sub-notice {
   display: flex;
-  gap: 12px;
-  padding: 16px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-}
-
-.notice-icon {
-  color: #3b82f6;
-  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #94a3b8;
   margin-top: 2px;
 }
 
-.notice-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* 9. Payment Methods & Support */
+.payment-methods-notice-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 14px 18px;
+  /* ลด padding */
+  box-shadow: var(--shadow-card);
 }
 
-.notice-text strong {
-  font-size: 13px;
+.payment-methods-notice-card h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  /* ลดช่องว่าง */
+}
+
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* ลดช่องว่าง */
+}
+
+.method-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.method-bullet {
+  font-size: 14px;
+}
+
+.method-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.method-text strong {
+  font-size: 12.5px;
   color: var(--text-dark);
 }
 
-.notice-text p {
-  font-size: 12px;
+.method-text span {
+  font-size: 11px;
   color: var(--text-muted);
-  line-height: 1.5;
 }
 
-/* จัดส่วนแสดงผลตอนขนาดกลางและโทรศัพท์มือถือ */
+.help-support-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 14px 18px;
+  /* ลด padding */
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.help-support-card h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.help-support-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  /* ลดระยะ */
+}
+
+.btn-call-support {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 36px;
+  /* ลดความสูงปุ่มโทรออก */
+  border-radius: 8px;
+  border: 1px solid #10b981;
+  color: #10b981;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-call-support:hover {
+  background-color: #f0fdf4;
+}
+
+/* 10. Responsive Overrides for Booking Layout */
 @media (max-width: 991px) {
   .booking-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 20px;
+  }
+
+  .booking-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .slots-grid-premium-layout {
+    grid-template-columns: repeat(4, 1fr);
+    /* คืนค่ากริดแบบ 4 แถวบนแท็บเล็ต */
+  }
+
+  .court-details-grid-layout {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .court-detail-image-box {
+    max-width: 180px;
+    margin: 0 auto;
+  }
+
+  .court-info-header-row {
+    justify-content: center;
+  }
+
+  .facilities-icons-row {
+    justify-content: center;
+  }
+
+  .court-detail-price-box {
+    border-left: none;
+    border-top: 1px solid #cbd5e1;
+    padding-left: 0;
+    padding-top: 16px;
+    align-items: center;
+  }
+
+  .booking-footer-benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
 @media (max-width: 600px) {
 
-  .booking-form-card,
-  .booking-summary-card {
-    padding: 20px 16px;
+  .booking-inputs-card,
+  .time-slots-card-premium,
+  .court-details-card-premium,
+  .payment-methods-notice-card,
+  .help-support-card {
+    padding: 16px 14px;
   }
 
-  .booking-controls {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .booking-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .slots-selector-grid {
-    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
-    gap: 10px;
+  .info-divider {
+    display: none;
   }
 
-  .time-slot-btn {
-    height: 52px;
+  .slots-grid-premium-layout {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .slot-time-text {
-    font-size: 13px;
+  .step-label {
+    display: none;
   }
 
-  .total-price-text {
-    font-size: 20px;
+  .step-line {
+    width: 20px;
   }
 }
 
@@ -2765,7 +3236,48 @@ body {
 
 .qr-caption-text {
   font-size: 11px;
-  color: var(--text-muted);
+  color: #64748b;
   text-align: center;
-  line-height: 1.4;
+}
+
+/* =============================================================================
+   14. สไตล์แอนิเมชันนาฬิกาและส่วนประกาศกฎระเบียบเพิ่มเติม
+   ============================================================================= */
+.spinner-clock {
+  animation: spin 2s linear infinite;
+  color: #10b981;
+}
+
+.booking-notice-card {
+  display: flex;
+  gap: 12px;
+  background-color: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+
+.booking-notice-card .notice-icon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.booking-notice-card .notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-notice-card .notice-text strong {
+  font-size: 13px;
+  color: var(--text-dark);
+}
+
+.booking-notice-card .notice-text p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
 }

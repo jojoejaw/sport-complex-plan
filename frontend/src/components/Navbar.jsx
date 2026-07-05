@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Shield, Home, CalendarRange, User, LogOut, Search, Menu, X, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // ดึงข้อมูลการเข้าสู่ระบบและบทบาทผู้ใช้จริงจาก LocalStorage

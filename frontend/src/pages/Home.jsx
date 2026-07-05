@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Trophy, ShieldCheck, Clock, ArrowRight, Activity, Sparkles, Play, Grid } from 'lucide-react';
+import { Trophy, ShieldCheck, Clock, ArrowRight, Activity, Sparkles, Play, Grid } from 'lucide-react';
+import Swal from 'sweetalert2';
 import api from '../api';
 
 export default function Home() {

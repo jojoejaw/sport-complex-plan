@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Phone, AlertCircle, ShieldCheck, Upload, Image, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Phone, AlertCircle, ShieldCheck, Upload, ArrowLeft } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../api';
 
@@ -347,12 +347,22 @@ export default function Booking() {
     }
   };
 
+  const getSportLabel = (sportId) => {
+    switch (parseInt(sportId)) {
+      case 1: return 'ฟุตบอล';
+      case 2: return 'บาสเกตบอล';
+      case 3: return 'แบดมินตัน';
+      case 4: return 'วอลเลย์บอล';
+      default: return 'กีฬา';
+    }
+  };
+
   // --- กรณีที่ 1: ผู้ใช้กดยืนยันแล้ว กำลังอยู่ในสถานะรอชำระเงินทันที (Instant Checkout View) ---
   if (createdBooking) {
     const isExpired = paymentTimeLeft <= 0;
     
-    // สร้างลิงก์ QR Code แบบสแกน PromptPay แบบไดนามิก (EMVCo Standard) ตรงจาก API ของ promptpay.io
-    const qrCodeUrl = `https://promptpay.io/0902214698/${createdBooking.totalPrice}.png`;
+    // สร้างลิงก์ QR Code แบบสแกน PromptPay แบบไดนามิกตามจำนวนราคารวมจริงด้วย API
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://promptpay.io/0891234567/${createdBooking.totalPrice}`;
 
     return (
       <div className="booking-page-container container">
@@ -365,14 +375,14 @@ export default function Booking() {
           <div className="checkout-grid">
             {/* ฝั่งซ้าย: ข้อมูลใบเสนอราคาและคิวอาร์โค้ด */}
             <div className="checkout-info-card">
-              <div className="checkout-timer-section">
+              <div className={`checkout-timer-section ${!isExpired ? 'text-warning' : 'text-danger'}`}>
                 <Clock className="spinner-clock" size={20} />
                 {!isExpired ? (
-                  <span className="timer-text text-warning">
+                  <span className="timer-text">
                     เวลาที่เหลือในการชำระเงิน: <strong>{formatCountdown(paymentTimeLeft)}</strong>
                   </span>
                 ) : (
-                  <span className="timer-text text-danger">
+                  <span className="timer-text">
                     <strong>หมดอายุการล็อกสนาม</strong> (ใบจองนี้ถูกยกเลิกแล้ว)
                   </span>
                 )}
@@ -405,12 +415,9 @@ export default function Booking() {
                     </div>
                   )}
                 </div>
-                <div className="promptpay-text-details" style={{ width: '100%' }}>
-                  <p style={{ color: '#ef4444', fontWeight: '600', fontSize: '13px', margin: '0 0 10px 0', textAlign: 'center' }}>
-                    ⚠️ กรุณาโอนเงินผ่านระบบพร้อมเพย์ (PromptPay) เท่านั้น เพื่อระบบสแกนสลิปผ่านอัตโนมัติ
-                  </p>
-                  <p><strong>ชื่อบัญชี:</strong> ณรงฤทธิ์ โจทจันทร์</p>
-                  <p><strong>พร้อมเพย์ (PromptPay):</strong> <span className="text-copy">090-221-4698</span></p>
+                <div className="promptpay-text-details">
+                  <p><strong>ชื่อบัญชี:</strong> บจก. สปอร์ตคอมเพล็กซ์ บุ๊คกิ้ง (Sport Complex Co., Ltd.)</p>
+                  <p><strong>พร้อมเพย์ (PromptPay):</strong> <span className="text-copy">089-123-4567</span></p>
                 </div>
               </div>
             </div>
@@ -492,197 +499,361 @@ export default function Booking() {
   return (
     <div className="booking-page-container container">
       {/* ส่วนหัวหน้าจอ */}
-      <div className="booking-header">
-        <h2>ค้นหาเวลาว่างและจองสนาม</h2>
+      <div className="booking-page-title-row">
+        <h1>ค้นหาเวลาว่างและจองสนาม</h1>
         <p>ระบุสนามกีฬากับวันที่ต้องการเล่น และจิ้มเลือกสล็อตเวลาได้ตามใจชอบสูงสุด 3 ชั่วโมงติดต่อกัน</p>
+        <div className="title-underline"></div>
       </div>
 
       <div className="booking-grid">
         {/* คอลัมน์ซ้าย: ฟอร์มเลือกสนาม / วันที่ และตารางเวลาสล็อต */}
-        <div className="booking-form-card">
+        <div className="booking-main-content-layout">
           
           {/* ส่วนตัวเลือกควบคุม (Controls) */}
-          <div className="booking-controls">
-            <div className="control-group">
-              <label htmlFor="court-select">เลือกสนามที่ต้องการจอง</label>
-              {isLoadingCourts ? (
-                <div className="control-loading">กำลังดึงข้อมูลคอร์ทสนาม...</div>
-              ) : (
-                <select
-                  id="court-select"
-                  value={selectedCourtId}
-                  onChange={(e) => setSelectedCourtId(e.target.value)}
-                >
-                  {courts.map((court) => (
-                    <option key={court.id} value={court.id}>
-                      {court.name} ({parseFloat(court.price_per_hour).toLocaleString()} บาท/ชม.)
-                    </option>
-                  ))}
-                </select>
-              )}
+          <div className="booking-inputs-card">
+            <div className="booking-inputs-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              <div className="input-group-premium">
+                <label htmlFor="court-select">เลือกสนามที่ต้องการจอง</label>
+                {isLoadingCourts ? (
+                  <select id="court-select" disabled><option>กำลังดึงข้อมูล...</option></select>
+                ) : (
+                  <select
+                    id="court-select"
+                    value={selectedCourtId}
+                    onChange={(e) => setSelectedCourtId(e.target.value)}
+                  >
+                    {courts.map((court) => (
+                      <option key={court.id} value={court.id}>
+                        {court.name} ({parseFloat(court.price_per_hour).toLocaleString()} บาท/ชม.)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="input-group-premium">
+                <label htmlFor="date-select">ระบุวันที่เข้าเล่น</label>
+                <div className="input-wrapper" style={{ width: '100%' }}>
+                  <Calendar size={16} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+                  <input
+                    type="date"
+                    id="date-select"
+                    value={selectedDate}
+                    min={getTodayString()} // ล็อกไม่ให้เลือกวันย้อนหลัง
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    style={{ paddingLeft: '36px' }}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="control-group">
-              <label htmlFor="date-select">ระบุวันที่เข้าเล่น</label>
-              <div className="date-input-wrapper">
-                <Calendar className="date-icon" size={18} />
-                <input
-                  type="date"
-                  id="date-select"
-                  value={selectedDate}
-                  min={getTodayString()} // ล็อกไม่ให้เลือกวันย้อนหลัง
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
+            <div className="booking-info-row">
+              <div className="info-item">📅 วันที่จอง: {selectedDate.split('-').reverse().join('/')}</div>
+              <div className="info-divider"></div>
+              <div className="info-item">🏟️ สนามกีฬา: {currentCourt ? currentCourt.name : '-'}</div>
+            </div>
+          </div>
+
+          {/* ตารางแสดงสล็อตเวลารายชั่วโมง (Slots Grid) */}
+          <div className="time-slots-card-premium">
+            <div className="slots-card-header">
+              <div className="slots-header-text">
+                <h3>ตารางความว่างสนามประจำวัน</h3>
+                <p>เลือกชั่วโมงที่คุณต้องการเข้าเล่น (สูงสุด 3 ชั่วโมงติดต่อกัน)</p>
+              </div>
+
+              {/* สัญลักษณ์แนะนำสีของสถานะเวลา (Color Legend) */}
+              <div className="slots-legend-premium">
+                <div className="legend-item"><span className="legend-color-dot dot-available"></span> ว่าง</div>
+                <div className="legend-item"><span className="legend-color-dot dot-pending"></span> รออนุมัติ</div>
+                <div className="legend-item"><span className="legend-color-dot dot-unavailable"></span> จองแล้ว</div>
+                <div className="legend-item"><span className="legend-color-dot dot-selected"></span> เลือกอยู่</div>
+              </div>
+            </div>
+
+            {isLoadingSlots ? (
+              <div className="slots-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0', gap: '12px' }}>
+                <Clock className="spinner-clock" size={32} />
+                <p style={{ fontSize: '14px', color: '#64748b' }}>กำลังตรวจสอบเวลาสนามว่าง...</p>
+              </div>
+            ) : slots.length === 0 ? (
+              <div className="slots-empty-notice" style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                <AlertCircle size={28} style={{ margin: '0 auto 10px auto', display: 'block' }} />
+                <p>ไม่พบช่วงเวลาเปิดให้บริการในขณะนี้ หรือสนามปิดปรับปรุง</p>
+              </div>
+            ) : (
+              <>
+                <div className="slots-grid-premium-layout">
+                  {slots.map((slot) => {
+                    const isSelected = selectedSlots.some(s => s.start_time === slot.start_time);
+                    const isAvailable = slot.status === 'available';
+
+                    return (
+                      <button
+                        key={slot.start_time}
+                        type="button"
+                        disabled={!isAvailable}
+                        onClick={() => handleSlotClick(slot)}
+                        className={`time-slot-btn-premium ${getSlotStatusClass(slot.status)} ${isSelected ? 'selected' : ''}`}
+                      >
+                        <span className="slot-time-text">{slot.label}</span>
+                        <span className="slot-status-text">
+                          {isSelected ? 'เลือกอยู่' : getSlotStatusText(slot.status)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedSlots.length > 0 && (
+                  <div className="selection-helper-alert">
+                    <div className="helper-alert-text">
+                      <strong>เลือกช่วงเล่นกีฬาสำเร็จ!</strong>
+                      <span>ท่านเลือกเวลาเล่นต่อเนื่องเป็นจำนวน {totalHours} ชั่วโมง ({getSelectedTimeRange().start.substring(0, 5)} - {getSelectedTimeRange().end.substring(0, 5)} น.)</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* รายละเอียดสนามแบบการ์ดพรีเมียม */}
+          {currentCourt && (
+            <div className="court-details-card-premium">
+              <h3>รายละเอียดสนามกีฬานี้</h3>
+              <div className="court-details-grid-layout">
+                <div className="court-detail-image-box">
+                  {currentCourt.image_url ? (
+                    <img src={currentCourt.image_url} alt={currentCourt.name} />
+                  ) : (
+                    <div className="court-placeholder-img">ไม่มีรูปภาพ</div>
+                  )}
+                </div>
+                
+                <div className="court-detail-info-box">
+                  <div className="court-info-header-row">
+                    <h4>{currentCourt.name}</h4>
+                    <div className="court-tag-badges">
+                      <span className="badge-sport-tag">{getSportLabel(currentCourt.sport_id)}</span>
+                      <span className="badge-type-tag">{currentCourt.description || 'สนามมาตรฐาน'}</span>
+                    </div>
+                  </div>
+                  <div className="location-text-row">
+                    📍 ความกว้างมาตรฐานสากล รองรับการเล่นเดี่ยว/ทีมแบบมืออาชีพ
+                  </div>
+                  <div className="facilities-icons-row">
+                    <span className="facility-item">🚗 ที่จอดรถสะดวก</span>
+                    <span className="facility-item">📶 Free Wi-Fi</span>
+                    <span className="facility-item">🚿 ห้องอาบน้ำ</span>
+                  </div>
+                </div>
+                
+                <div className="court-detail-price-box">
+                  <div className="price-tag-value-box">
+                    <strong>{parseFloat(currentCourt.price_per_hour).toLocaleString()}</strong>
+                    <span> / ชม.</span>
+                  </div>
+                  <div className="price-desc-sub">ราคาเรตมาตรฐานกลางวัน/กลางคืน</div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      Swal.fire({
+                        title: currentCourt.name,
+                        text: `อัตราค่าบริการสนาม: ${parseFloat(currentCourt.price_per_hour).toLocaleString()} บาทต่อชั่วโมง | ประเภทกีฬา: ${getSportLabel(currentCourt.sport_id)}`,
+                        imageUrl: currentCourt.image_url || undefined,
+                        imageWidth: 400,
+                        confirmButtonColor: '#10b981'
+                      });
+                    }} 
+                    className="btn-view-court-details"
+                  >
+                    ดูข้อมูลสนาม
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* นโยบายการบริการด้านล่าง */}
+          <div className="booking-footer-benefits-grid">
+            <div className="benefit-col-item">
+              <span className="icon-badge">🔒</span>
+              <div className="benefit-info-text">
+                <strong>ระบบชำระเงินปลอดภัย</strong>
+                <span>แสกนหลักฐานสลิปโอนเช็คยอดทันที</span>
+              </div>
+            </div>
+            <div className="benefit-col-item">
+              <span className="icon-badge">⏱️</span>
+              <div className="benefit-info-text">
+                <strong>ล็อกสนามให้อุ่นใจ</strong>
+                <span>ล็อกสล็อตเวลาให้คุณโอนเงิน 15 นาที</span>
+              </div>
+            </div>
+            <div className="benefit-col-item">
+              <span className="icon-badge">💬</span>
+              <div className="benefit-info-text">
+                <strong>เจ้าหน้าที่พร้อมบริการ</strong>
+                <span>ติดต่อผู้ดูแลได้รวดเร็วทุกปัญหารายการ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* คอลัมน์ขวา: ใบสรุปรายการจองชำระเงิน (Invoice Card Summary) */}
+        <div className="summary-sidebar-wrapper">
+          <div className="summary-invoice-card-premium">
+            <div className="invoice-card-header">
+              <ShieldCheck size={18} className="shield-secure-icon" />
+              <h3>สรุปใบเสนอรายการจอง</h3>
+            </div>
+            
+            <div className="invoice-card-body">
+              {/* Profile ย่อสนาม */}
+              <div className="court-mini-profile-row">
+                {currentCourt && currentCourt.image_url ? (
+                  <img src={currentCourt.image_url} alt={currentCourt.name} className="court-circle-avatar" />
+                ) : (
+                  <div className="court-circle-avatar-placeholder">🏟️</div>
+                )}
+                <div className="court-mini-name-info">
+                  <h4>{currentCourt ? currentCourt.name : '-'}</h4>
+                  <span>{currentCourt ? getSportLabel(currentCourt.sport_id) : 'สนามกีฬา'}</span>
+                </div>
+              </div>
+
+              {/* รายการข้อมูลสรุป */}
+              <div className="invoice-summary-details-list">
+                <div className="detail-row-item">
+                  <span className="label-col">วันที่เข้าเล่น:</span>
+                  <span className="value-col">{selectedDate.split('-').reverse().join('/')}</span>
+                </div>
+                <div className="detail-row-item">
+                  <span className="label-col">ช่วงเวลาเข้าเล่น:</span>
+                  <span className="value-col text-bold text-emerald">
+                    {selectedSlots.length > 0 
+                      ? `${getSelectedTimeRange().start.substring(0, 5)} - ${getSelectedTimeRange().end.substring(0, 5)} น.`
+                      : 'ยังไม่ได้เลือกช่วงเวลา'}
+                  </span>
+                </div>
+                <div className="detail-row-item">
+                  <span className="label-col">จำนวนเวลาเล่น:</span>
+                  <span className="value-col">{totalHours} ชั่วโมง</span>
+                </div>
+              </div>
+
+              {/* รายละเอียดราคา */}
+              <div className="invoice-pricing-breakdown">
+                <span className="breakdown-title">ค่าบริการจอง</span>
+                <div className="breakdown-calculation-row">
+                  <span>{currentCourt ? parseFloat(currentCourt.price_per_hour).toLocaleString() : 0} บาท x {totalHours} ชม.</span>
+                  <span>{totalPrice.toLocaleString()} บาท</span>
+                </div>
+                <div className="breakdown-total-row">
+                  <span>ยอดชำระทั้งสิ้น:</span>
+                  <span className="total-grand-price">{totalPrice.toLocaleString()} บาท</span>
+                </div>
+              </div>
+
+              {/* แถบการันตีความปลอดภัย */}
+              <div className="invoice-secure-banner">
+                <ShieldCheck size={14} style={{ flexShrink: 0 }} />
+                <span>ยืนยันความปลอดภัย ระบบล็อกสนามเมื่อกดจองคิว</span>
+              </div>
+
+              {/* ฟอร์มการยืนยันเบอร์โทรศัพท์ */}
+              <form onSubmit={handleBookingSubmit} className="booking-submit-form" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
+                <div className="form-group" style={{ gap: '6px' }}>
+                  <label htmlFor="contact-phone" className="text-bold" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Phone size={14} />
+                    <span>เบอร์โทรศัพท์ติดต่อสำหรับการจอง</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="contact-phone"
+                    placeholder="กรอกเบอร์โทร 10 หลัก (เช่น 0891234567)"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ''))} // รับเฉพาะตัวเลข
+                    maxLength={10}
+                    disabled={isSubmitting}
+                    required
+                    style={{
+                      width: '100%',
+                      height: '38px',
+                      padding: '0 12px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '10px',
+                      fontSize: '13.5px',
+                      outline: 'none',
+                      backgroundColor: '#ffffff',
+                      color: '#0f172a'
+                    }}
+                  />
+                </div>
+
+                {/* ปุ่มทำรายการยืนยัน */}
+                {token ? (
+                  <button
+                    type="submit"
+                    className="btn-confirm-booking-premium"
+                    disabled={isSubmitting || selectedSlots.length === 0}
+                  >
+                    {isSubmitting ? 'กำลังส่งข้อมูลจองสนาม...' : 'ยืนยันจองสนาม (ล็อกเวลา 15 นาที)'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      Swal.fire({
+                        icon: 'info',
+                        title: 'จำเป็นต้องล็อกอิน',
+                        text: 'กรุณาเข้าสู่ระบบก่อนเพื่อทำการจองและเข้าใช้บริการสนาม',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
+                        showCancelButton: true,
+                        cancelButtonText: 'ยกเลิก'
+                      }).then((result) => {
+                        if (result.isConfirmed) navigate('/login');
+                      });
+                    }}
+                    className="btn-confirm-booking-premium btn-warning-login-premium"
+                  >
+                    กรุณาเข้าสู่ระบบก่อนจองสนาม
+                  </button>
+                )}
+              </form>
+            </div>
+          </div>
+
+          {/* การ์ดช่องทางชำระเงินเสริม */}
+          <div className="payment-methods-notice-card">
+            <h4>ช่องทางการชำระเงินที่รองรับ</h4>
+            <div className="payment-methods-list">
+              <div className="method-item">
+                <span className="method-bullet">🟢</span>
+                <div className="method-text">
+                  <strong>แอปพลิเคชันธนาคาร (QR PromptPay)</strong>
+                  <span>ตรวจสอบยอดสลิปอัตโนมัติ 24 ชั่วโมง</span>
+                </div>
+              </div>
+              <div className="method-item">
+                <span className="method-bullet">🔵</span>
+                <div className="method-text">
+                  <strong>โอนเงินผ่านเลขบัญชี (รองรับทุกธนาคาร)</strong>
+                  <span>ตรวจสอบประวัติใน 15 นาที</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* สัญลักษณ์แนะนำสีของสถานะเวลา (Color Legend) */}
-          <div className="slots-legend">
-            <div className="legend-item"><span className="legend-dot dot-available"></span> ว่าง</div>
-            <div className="legend-item"><span className="legend-dot dot-locked"></span> อยู่ระหว่างโอนเงิน (15น.)</div>
-            <div className="legend-item"><span className="legend-dot dot-pending"></span> รออนุมัติสลิป</div>
-            <div className="legend-item"><span className="legend-dot dot-unavailable"></span> จองแล้ว</div>
-          </div>
-
-          {/* ตารางแสดงสล็อตเวลารายชั่วโมง (Slots Grid) */}
-          <h3 className="section-title">
-            <Clock size={18} />
-            <span>ตารางความว่างสนามประจำวันที่ {selectedDate.split('-').reverse().join('/')}</span>
-          </h3>
-
-          {isLoadingSlots ? (
-            <div className="slots-loading">
-              <Clock className="spinner-clock" size={32} />
-              <p>กำลังตรวจสอบเวลาสนามว่าง...</p>
-            </div>
-          ) : slots.length === 0 ? (
-            <div className="slots-empty-notice">
-              <AlertCircle size={28} />
-              <p>ไม่พบช่วงเวลาเปิดให้บริการในขณะนี้ หรือสนามปิดปรับปรุง</p>
-            </div>
-          ) : (
-            <div className="slots-selector-grid">
-              {slots.map((slot) => {
-                const isSelected = selectedSlots.some(s => s.start_time === slot.start_time);
-                const isAvailable = slot.status === 'available';
-
-                return (
-                  <button
-                    key={slot.start_time}
-                    type="button"
-                    disabled={!isAvailable}
-                    onClick={() => handleSlotClick(slot)}
-                    className={`time-slot-btn ${getSlotStatusClass(slot.status)} ${isSelected ? 'selected' : ''}`}
-                  >
-                    <span className="slot-time-text">{slot.label}</span>
-                    <span className="slot-status-text">
-                      {isSelected ? 'เลือกอยู่' : getSlotStatusText(slot.status)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* คอลัมน์ขวา: ใบสรุปรายการจองชำระเงิน (Invoice Card Summary) */}
-        <div className="booking-summary-card">
-          <h3>สรุปใบเสนอรายการจอง</h3>
-          
-          <div className="summary-list">
-            <div className="summary-row">
-              <span className="summary-label">สนามที่จอง:</span>
-              <span className="summary-value text-bold">{currentCourt ? currentCourt.name : '-'}</span>
-            </div>
-
-            <div className="summary-row">
-              <span className="summary-label">วันที่เข้าเล่น:</span>
-              <span className="summary-value">{selectedDate.split('-').reverse().join('/')}</span>
-            </div>
-
-            <div className="summary-row">
-              <span className="summary-label">ช่วงเวลาที่เลือก:</span>
-              <span className="summary-value text-bold text-emerald">
-                {selectedSlots.length > 0 
-                  ? `${getSelectedTimeRange().start.substring(0, 5)} - ${getSelectedTimeRange().end.substring(0, 5)} น.`
-                  : 'ยังไม่ได้เลือกเวลา'}
-              </span>
-            </div>
-
-            <div className="summary-row">
-              <span className="summary-label">จำนวนชั่วโมงรวม:</span>
-              <span className="summary-value">{totalHours} ชั่วโมง</span>
-            </div>
-
-            <div className="summary-divider"></div>
-
-            <div className="summary-row price-row">
-              <span className="summary-label text-bold">ราคารวมทั้งสิ้น:</span>
-              <span className="summary-value total-price-text">
-                {totalPrice.toLocaleString()} บาท
-              </span>
-            </div>
-          </div>
-
-          {/* ฟอร์มการยืนยันเบอร์โทรศัพท์ */}
-          <form onSubmit={handleBookingSubmit} className="booking-submit-form">
-            <div className="form-group" style={{ gap: '6px' }}>
-              <label htmlFor="contact-phone" className="text-bold" style={{ fontSize: '13px' }}>
-                <Phone size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-                <span>เบอร์โทรศัพท์ติดต่อสำหรับการจอง</span>
-              </label>
-              <input
-                type="tel"
-                id="contact-phone"
-                placeholder="กรอกเบอร์โทร 10 หลัก (เช่น 0891234567)"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ''))} // รับเฉพาะตัวเลข
-                maxLength={10}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            {/* ปุ่มทำรายการยืนยัน */}
-            {token ? (
-              <button
-                type="submit"
-                className="btn btn-primary btn-confirm-booking"
-                disabled={isSubmitting || selectedSlots.length === 0}
-              >
-                {isSubmitting ? 'กำลังส่งข้อมูลจองสนาม...' : 'ยืนยันจองสนาม (ล็อกเวลา 15 นาที)'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  Swal.fire({
-                    icon: 'info',
-                    title: 'จำเป็นต้องล็อกอิน',
-                    text: 'กรุณาเข้าสู่ระบบก่อนเพื่อทำการจองและเข้าใช้บริการสนาม',
-                    confirmButtonColor: '#10b981',
-                    confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
-                    showCancelButton: true,
-                    cancelButtonText: 'ยกเลิก'
-                  }).then((result) => {
-                    if (result.isConfirmed) navigate('/login');
-                  });
-                }}
-                className="btn btn-primary btn-confirm-booking btn-warning-login"
-              >
-                กรุณาเข้าสู่ระบบก่อนจองสนาม
-              </button>
-            )}
-          </form>
-
-          {/* ป้ายเตือนความปลอดภัย */}
-          <div className="booking-notice-card">
-            <ShieldCheck size={18} className="notice-icon" />
-            <div className="notice-text">
-              <strong>กฎระเบียบการล็อกสนาม:</strong>
-              <p>ระบบจะช่วยล็อกสนามพรีเมียมให้คุณ 15 นาที โปรดชำระเงินโอนและแนบสลิปที่หน้าประวัติจอง หากชำระช้าเกินกำหนดรายการจองจะถูกปลดล็อกให้ผู้อื่นจองทันที</p>
-            </div>
+          {/* การ์ดความช่วยเหลือและบริการลูกค้า */}
+          <div className="help-support-card">
+            <h4>ต้องการความช่วยเหลือ?</h4>
+            <p>หากพบปัญหาเกี่ยวกับระบบจอง หรือการชำระเงินสามารถติดต่อเจ้าหน้าที่ได้ทันที</p>
+            <a href="tel:0891234567" className="btn-call-support">
+              <Phone size={14} />
+              <span>โทรติดต่อฝ่ายบริการลูกค้า</span>
+            </a>
           </div>
         </div>
       </div>

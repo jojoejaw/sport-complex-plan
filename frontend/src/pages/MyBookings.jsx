@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, DollarSign, FileText, Upload, Trash2, ShieldAlert, Award, Image } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -29,7 +29,7 @@ export default function MyBookings() {
   }, []);
 
   // ดึงรายการประวัติการจองจากหลังบ้าน
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await api.get('/bookings/my-bookings');
@@ -44,15 +44,16 @@ export default function MyBookings() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBookings();
-  }, [token]);
+  }, [token, fetchBookings, navigate]);
 
   // ฟังก์ชันคำนวณเวลาถอยหลัง 15 นาทีของตั๋วที่จองใหม่
   const getCountdownText = (createdAt) => {
