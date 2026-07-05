@@ -42,8 +42,8 @@ export default function Booking() {
   const [selectedSlipFile, setSelectedSlipFile] = useState(null); // ไฟล์รูปสลิปโอนเงิน
   const [isUploadingSlip, setIsUploadingSlip] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState({
-    promptpayId: '0891234567',
-    promptpayName: 'บจก. สปอร์ตคอมเพล็กซ์ บุ๊คกิ้ง (Sport Complex Co., Ltd.)'
+    promptpayId: '0902214698',
+    promptpayName: 'ณรงฤทธิ์ โจทจันทร์'
   });
 
   // ดึงรายชื่อสนามทั้งหมดตอนหน้าเว็บโหลด
