@@ -240,9 +240,33 @@ export default function Booking() {
     if (!contactPhone.trim()) {
       Swal.fire({
         icon: 'warning',
-        title: 'ระบุเบอร์โทรศัพท์ติดต่อ',
-        text: 'กรุณากรอกเบอร์โทรศัพท์จริงสำหรับการยืนยันการจอง',
+        title: 'กรุณากรอกเบอร์โทรศัพท์',
+        text: 'ระบบจำเป็นต้องใช้เบอร์โทรศัพท์มือถือของคุณเพื่อล็อกสนาม กรุณากรอกในช่องข้อมูลการจองด้านบนครับ',
         confirmButtonColor: '#10b981'
+      }).then(() => {
+        const phoneInput = document.getElementById('contact-phone');
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.style.borderColor = '#ef4444';
+          phoneInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+        }
+      });
+      return;
+    }
+
+    const phoneDigits = contactPhone.replace(/[^0-9]/g, '');
+    if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'เบอร์โทรศัพท์ไม่ถูกต้อง',
+        text: 'กรุณากรอกเบอร์โทรศัพท์มือถือที่ถูกต้องเป็นตัวเลข 9-10 หลัก (เช่น 0902214698) ครับ',
+        confirmButtonColor: '#10b981'
+      }).then(() => {
+        const phoneInput = document.getElementById('contact-phone');
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.style.borderColor = '#ef4444';
+        }
       });
       return;
     }
@@ -618,16 +642,20 @@ export default function Booking() {
               <div className="input-group-premium">
                 <label htmlFor="contact-phone" className="input-label-with-icon">
                   <span className="input-icon-wrapper-green">📞</span>
-                  <span>เบอร์โทรติดต่อ</span>
+                  <span>เบอร์โทรติดต่อ <strong style={{ color: '#ef4444' }}>*</strong></span>
                 </label>
                 <div className="input-wrapper" style={{ width: '100%', position: 'relative' }}>
                   <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', pointerEvents: 'none' }} />
                   <input
                     type="tel"
                     id="contact-phone"
-                    placeholder="กรอกเบอร์โทร (เช่น 0812345678)"
+                    placeholder="กรอกเบอร์โทรศัพท์ 10 หลัก (จำเป็น)"
                     value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                    onChange={(e) => {
+                      setContactPhone(e.target.value.replace(/[^0-9]/g, ''));
+                      e.target.style.borderColor = ''; // reset red border if typing
+                      e.target.style.boxShadow = '';
+                    }}
                     maxLength={10}
                     style={{ paddingLeft: '36px' }}
                   />
@@ -854,7 +882,7 @@ export default function Booking() {
                   <button
                     type="submit"
                     className="btn-confirm-booking-premium"
-                    disabled={isSubmitting || selectedSlots.length === 0 || !contactPhone}
+                    disabled={isSubmitting}
                   >
                     <span>ดำเนินการต่อ</span>
                     <span className="arrow-right-icon">→</span>
