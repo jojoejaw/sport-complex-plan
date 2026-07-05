@@ -10,6 +10,7 @@ const auth = require('../middlewares/auth');
 // 2. Payment Routes (ต้องล็อกอิน — ส่ง Token ใน Header)
 // =============================================================================
 router.post('/upload', auth, paymentController.upload.single('slip'), paymentController.submitPayment);
+router.get('/config', auth, paymentController.getPaymentConfig);
 
 // =============================================================================
 // 3. ส่งออก Router ให้ server.js ใช้งาน

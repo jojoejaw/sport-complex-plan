@@ -2834,18 +2834,18 @@ body {
 
 .checkout-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 12px;
 }
 
 .checkout-header h2 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .checkout-header p {
-  font-size: 15.5px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 
@@ -2860,12 +2860,12 @@ body {
 .checkout-info-card {
   background-color: var(--bg-white);
   border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  padding: 32px;
+  border-radius: 14px;
+  padding: 16px 20px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 /* ตัวแจ้งกล่องจับเวลาถอยหลัง */
@@ -2873,9 +2873,9 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-size: 15px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   border: 1px solid;
 }
 
@@ -2893,18 +2893,18 @@ body {
 
 /* สรุปรายละเอียดรายแถว */
 .booking-summary-details h4 {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-dark);
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 8px;
-  margin-bottom: 12px;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .booking-summary-details .details-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .booking-summary-details .d-row {
@@ -2938,36 +2938,36 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   background-color: #f8fafc;
-  padding: 24px;
-  border-radius: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
 }
 
 .promptpay-qr-section h5 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .qr-code-box {
   background-color: #ffffff;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 8px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 244px;
-  height: 244px;
+  width: 176px;
+  height: 176px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .qr-image {
-  width: 220px;
-  height: 220px;
+  width: 160px;
+  height: 160px;
   display: block;
 }
 
@@ -2983,17 +2983,17 @@ body {
 
 .promptpay-text-details {
   text-align: center;
-  font-size: 14.5px;
+  font-size: 13px;
   color: #475569;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .promptpay-text-details .text-copy {
   font-family: monospace;
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 700;
   background-color: #e2e8f0;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   color: var(--text-dark);
   margin-left: 4px;
@@ -3003,30 +3003,30 @@ body {
 .checkout-upload-card {
   background-color: var(--bg-white);
   border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  padding: 32px;
+  border-radius: 14px;
+  padding: 16px 20px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .checkout-upload-card h3 {
-  font-size: 20px;
+  font-size: 16.5px;
   font-weight: 700;
   color: var(--text-dark);
 }
 
 .upload-subtitle {
-  font-size: 15px;
+  font-size: 13.5px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .checkout-upload-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 /* กล่องปุ่มแดชบอร์ดเลือกไฟล์สลิป */
@@ -3036,15 +3036,15 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 90px;
+  gap: 6px;
+  height: 60px;
   border: 2px dashed #cbd5e1;
-  border-radius: 10px;
+  border-radius: 8px;
   background-color: #f8fafc;
-  font-size: 15px;
+  font-size: 13.5px;
   color: #475569;
   font-weight: 500;
-  padding: 10px 16px;
+  padding: 6px 12px;
   text-align: center;
   transition: all 0.25s ease;
 }
@@ -3061,20 +3061,20 @@ body {
 
 .btn-checkout-upload {
   width: 100%;
-  height: 48px;
-  font-size: 16px !important;
+  height: 40px;
+  font-size: 15px !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
 }
 
 /* บล็อกจัดเรียงนำทางล่างสุด */
 .checkout-navigation-options {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 6px;
   border-top: 1px solid #f1f5f9;
-  padding-top: 18px;
+  padding-top: 10px;
 }
 
 .btn-pay-later {
@@ -3101,7 +3101,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 14.5px;
+  font-size: 13.5px;
   color: var(--text-muted);
   font-weight: 500;
   transition: all 0.2s ease;

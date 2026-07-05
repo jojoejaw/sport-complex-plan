@@ -41,6 +41,10 @@ export default function Booking() {
   const [paymentTimeLeft, setPaymentTimeLeft] = useState(900); // ตัวจับเวลาถอยหลัง (15 นาที = 900 วินาที)
   const [selectedSlipFile, setSelectedSlipFile] = useState(null); // ไฟล์รูปสลิปโอนเงิน
   const [isUploadingSlip, setIsUploadingSlip] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState({
+    promptpayId: '0891234567',
+    promptpayName: 'บจก. สปอร์ตคอมเพล็กซ์ บุ๊คกิ้ง (Sport Complex Co., Ltd.)'
+  });
 
   // ดึงรายชื่อสนามทั้งหมดตอนหน้าเว็บโหลด
   useEffect(() => {
@@ -116,6 +120,26 @@ export default function Booking() {
 
     return () => clearInterval(timer);
   }, [createdBooking]);
+
+  // ดึงข้อมูลการตั้งค่าพร้อมเพย์จาก backend เมื่อเข้าสู่ขั้นตอนการชำระเงิน
+  useEffect(() => {
+    if (createdBooking && token) {
+      const fetchPaymentConfig = async () => {
+        try {
+          const res = await api.get('/payments/config');
+          if (res.data) {
+            setPaymentConfig({
+              promptpayId: res.data.promptpayId,
+              promptpayName: res.data.promptpayName
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch payment config from backend:', error);
+        }
+      };
+      fetchPaymentConfig();
+    }
+  }, [createdBooking, token]);
 
   const formatCountdown = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -376,7 +400,8 @@ export default function Booking() {
     const isExpired = paymentTimeLeft <= 0;
 
     // สร้างลิงก์ QR Code แบบสแกน PromptPay แบบไดนามิกตามจำนวนราคารวมจริงด้วย API
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://promptpay.io/0891234567/${createdBooking.totalPrice}`;
+    // ใช้สเกล .png เพื่อให้เป็นรูปภาพคิวอาร์แบบ EMVCo มาตรฐานสแกนได้ทันทีโดยตรงกับทุก App ธนาคาร
+    const qrCodeUrl = `https://promptpay.io/${paymentConfig.promptpayId}/${createdBooking.totalPrice}.png`;
 
     return (
       <div className="booking-page-container container">
@@ -430,8 +455,8 @@ export default function Booking() {
                   )}
                 </div>
                 <div className="promptpay-text-details">
-                  <p><strong>ชื่อบัญชี:</strong> บจก. สปอร์ตคอมเพล็กซ์ บุ๊คกิ้ง (Sport Complex Co., Ltd.)</p>
-                  <p><strong>พร้อมเพย์ (PromptPay):</strong> <span className="text-copy">089-123-4567</span></p>
+                  <p><strong>ชื่อบัญชี:</strong> {paymentConfig.promptpayName}</p>
+                  <p><strong>พร้อมเพย์ (PromptPay):</strong> <span className="text-copy">{paymentConfig.promptpayId}</span></p>
                 </div>
               </div>
             </div>
@@ -495,7 +520,7 @@ export default function Booking() {
                 </div>
               </form>
 
-              <div className="booking-notice-card" style={{ marginTop: '24px' }}>
+              <div className="booking-notice-card" style={{ marginTop: '10px' }}>
                 <ShieldCheck size={18} className="notice-icon" />
                 <div className="notice-text">
                   <strong>ข้อแนะนำการแสกนสลิป:</strong>

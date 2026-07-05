@@ -228,3 +228,13 @@ exports.submitPayment = async (req, res) => {
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
   }
 };
+
+// =============================================================================
+// 9. getPaymentConfig — ดึงการตั้งค่าหมายเลขพร้อมเพย์สำหรับแสดงผลฝั่ง Front (GET /api/payments/config)
+// =============================================================================
+exports.getPaymentConfig = (req, res) => {
+  res.json({
+    promptpayId: process.env.PROMPTPAY_ID || '0891234567',
+    promptpayName: process.env.PROMPTPAY_NAME || 'บจก. สปอร์ตคอมเพล็กซ์ บุ๊คกิ้ง (Sport Complex Co., Ltd.)'
+  });
+};
