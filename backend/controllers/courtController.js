@@ -54,7 +54,7 @@ exports.createCourt = async (req, res) => {
     return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
   }
 
-  const { sport_id, name, price_per_hour } = req.body;
+  const { sport_id, name, price_per_hour, image_url, description } = req.body;
 
   // --- ขั้นที่ 1: ตรวจสอบความครบถ้วนของข้อมูล ---
   if (!sport_id || !name || !price_per_hour) {
@@ -64,8 +64,8 @@ exports.createCourt = async (req, res) => {
   try {
     // --- ขั้นที่ 2: บันทึกสนามใหม่ ---
     const [result] = await db.query(
-      'INSERT INTO courts (sport_id, name, price_per_hour, status) VALUES (?, ?, ?, ?)',
-      [sport_id, name, price_per_hour, 'active']
+      'INSERT INTO courts (sport_id, name, price_per_hour, status, image_url, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [sport_id, name, price_per_hour, 'active', image_url || null, description || null]
     );
 
     // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
@@ -88,7 +88,7 @@ exports.updateCourt = async (req, res) => {
   }
   
   const { id } = req.params;
-  const { name, price_per_hour, status } = req.body;
+  const { name, price_per_hour, status, image_url, description } = req.body;
 
   try {
     // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบ ---
@@ -99,8 +99,8 @@ exports.updateCourt = async (req, res) => {
 
     // --- ขั้นที่ 2: อัปเดตข้อมูลสนาม ---
     await db.query(
-      'UPDATE courts SET name = ?, price_per_hour = ?, status = ? WHERE id = ?',
-      [name, price_per_hour, status, id]
+      'UPDATE courts SET name = ?, price_per_hour = ?, status = ?, image_url = ?, description = ? WHERE id = ?',
+      [name, price_per_hour, status, image_url || null, description || null, id]
     );
 
     // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---

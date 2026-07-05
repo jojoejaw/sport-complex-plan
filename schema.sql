@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS `courts` (
   `name` VARCHAR(50) NOT NULL,
   `price_per_hour` DECIMAL(10, 2) NOT NULL,
   `status` ENUM('active', 'maintenance') NOT NULL DEFAULT 'active',
+  `image_url` VARCHAR(255) NULL,
+  `description` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
