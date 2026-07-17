@@ -54,6 +54,11 @@
 /* =============================================================================
    3. รีเซ็ตสไตล์ดั้งเดิม (Reset CSS)
    ============================================================================= */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -211,13 +216,18 @@ body {
   padding: 8px 16px;
   border-radius: 10px;
   position: relative;
-  transition: var(--transition-smooth);
+  transition: color 0.15s ease, background-color 0.15s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.nav-link:focus {
+  outline: none;
 }
 
 .nav-link:hover {
   color: var(--text-light);
   background-color: rgba(255, 255, 255, 0.05);
-  /* ขึ้นแถบไฮไลต์จางๆ */
 }
 
 /* เมนูที่กำลังใช้งานอยู่ (มีขีดสั้นโค้งมนสไตล์โมเดิร์น) */
@@ -3505,4 +3515,1173 @@ body {
   .booking-inputs-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* =============================================================================
+   ADMIN PANEL STYLES
+   ============================================================================= */
+.admin-page-container {
+  padding: 100px 20px 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 80vh;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--border-subtle);
+  padding-bottom: 20px;
+}
+
+.admin-header h1 {
+  font-size: 28px;
+  color: var(--text-dark);
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-tabs-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 2px;
+}
+
+.admin-tab-btn {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-tab-btn:hover {
+  color: var(--text-dark);
+  border-bottom-color: var(--border-subtle);
+}
+
+.admin-tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ตารางแอดมิน */
+.admin-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 30px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14.5px;
+}
+
+.admin-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  padding: 16px 20px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-table td {
+  padding: 16px 20px;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* ขนาดรูปสลิปในตาราง */
+.admin-slip-thumbnail-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.admin-slip-thumbnail-btn:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.admin-slip-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* ป้ายสถานะสำหรับแอดมิน */
+.admin-status-badge {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-status-badge.pending_payment {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.admin-status-badge.pending_approval {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.admin-status-badge.approved {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.admin-status-badge.rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-status-badge.cancelled {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+/* ปุ่มการทำงาน */
+.admin-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-action-approve {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid rgba(21, 128, 61, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-approve:hover {
+  background-color: #15803d;
+  color: white;
+}
+
+.btn-action-reject {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-reject:hover {
+  background-color: #b91c1c;
+  color: white;
+}
+
+.btn-action-edit {
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-edit:hover {
+  background-color: #d97706;
+  color: white;
+}
+
+.btn-action-delete {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-delete:hover {
+  background-color: #b91c1c;
+  color: white;
+}
+
+/* Modals */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.admin-modal-container {
+  background-color: var(--bg-white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.admin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: #f8fafc;
+}
+
+.admin-modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.admin-modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.admin-modal-close-btn:hover {
+  background-color: #e2e8f0;
+  color: var(--text-dark);
+}
+
+.admin-modal-body {
+  padding: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.admin-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background-color: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ฟอร์มและอินพุต */
+.admin-form-group {
+  margin-bottom: 20px;
+}
+
+.admin-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.admin-form-input,
+.admin-form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-family: inherit;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+  transition: border-color 0.2s;
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+/* แสดงรูปสลิปใน Modal */
+.slip-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.slip-preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+.slip-metadata {
+  width: 100%;
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  font-size: 13.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* คอนเทนเนอร์สถานะของการจอง */
+.admin-bookings-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filter-chip {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip:hover {
+  background-color: #e2e8f0;
+}
+
+.filter-chip.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+/* =============================================================================
+   ADMIN REDESIGN (MINIMALIST FLAT VERSION)
+   ============================================================================= */
+
+/* 1. Flat Text Tab links */
+.admin-segmented-control-container {
+  display: flex;
+  margin-bottom: 30px;
+}
+
+.admin-minimal-tabs {
+  display: flex;
+  gap: 30px;
+  width: 100%;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 2px;
+}
+
+.admin-tab-link {
+  background: none;
+  border: none;
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.admin-tab-link:focus {
+  outline: none;
+}
+
+.admin-tab-link:hover {
+  color: #0f172a;
+}
+
+.admin-tab-link.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* 2. Inline Metrics Status Row (Slack/GitHub Style) */
+.admin-inline-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.metric-dot-link {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.metric-dot-link:focus {
+  outline: none;
+}
+
+.metric-dot-link:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.metric-dot-link.active {
+  color: #0f172a;
+  background-color: #e2e8f0;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.gray { background-color: #94a3b8; }
+.status-dot.blue { background-color: #3b82f6; }
+.status-dot.yellow { background-color: #eab308; }
+.status-dot.green { background-color: #10b981; }
+.status-dot.red { background-color: #ef4444; }
+
+/* Pulse animation for pending approval status dot */
+@keyframes miniPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.status-dot.pulse {
+  animation: miniPulse 1.8s infinite ease-in-out;
+}
+
+/* 3. Borderless Search Input */
+.admin-search-minimal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 4px 0;
+  margin-bottom: 30px;
+  transition: border-color 0.15s ease;
+}
+
+.admin-search-minimal:focus-within {
+  border-bottom-color: var(--color-primary);
+}
+
+.borderless-search-input {
+  border: none;
+  background: none;
+  width: 100%;
+  padding: 8px 100px 8px 0; /* Make space on the right for absolute reset button */
+  font-size: 14.5px;
+  color: var(--text-dark);
+  font-family: inherit;
+}
+
+.borderless-search-input:focus {
+  outline: none;
+}
+
+.search-icon-gray {
+  color: #94a3b8;
+}
+
+.filter-reset-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.filter-reset-btn:hover {
+  opacity: 0.8;
+}
+
+.filter-reset-btn:focus {
+  outline: none;
+}
+
+/* 4. Flat Booking Cards List */
+.booking-flat-list {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 40px;
+}
+
+.booking-list-header {
+  display: grid;
+  grid-template-columns: 100px 200px 250px 160px 140px 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.booking-flat-row {
+  display: grid;
+  grid-template-columns: 100px 200px 250px 160px 140px 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background-color: var(--bg-white);
+  border: 1px solid #f1f5f9;
+  border-left: 4px solid transparent;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Vertical status bar on the left */
+.booking-flat-row.status-pending_payment {
+  border-left-color: #f59e0b; /* Amber */
+  background-color: rgba(245, 158, 11, 0.015);
+}
+.booking-flat-row.status-pending_approval {
+  border-left-color: #f59e0b; /* Yellow/Amber */
+  background-color: rgba(245, 158, 11, 0.015);
+}
+.booking-flat-row.status-approved {
+  border-left-color: #10b981; /* Green */
+  background-color: rgba(16, 185, 129, 0.015);
+}
+.booking-flat-row.status-rejected {
+  border-left-color: #ef4444; /* Red */
+  background-color: rgba(239, 68, 68, 0.015);
+}
+.booking-flat-row.status-cancelled {
+  border-left-color: #94a3b8; /* Slate */
+  background-color: rgba(148, 163, 184, 0.02);
+}
+
+/* Hover transitions */
+.booking-flat-row.status-pending_payment:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.04);
+  background-color: rgba(245, 158, 11, 0.03); 
+}
+.booking-flat-row.status-pending_approval:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.04);
+  background-color: rgba(245, 158, 11, 0.03); 
+}
+.booking-flat-row.status-approved:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.04);
+  background-color: rgba(16, 185, 129, 0.03); 
+}
+.booking-flat-row.status-rejected:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.04);
+  background-color: rgba(239, 68, 68, 0.03); 
+}
+.booking-flat-row.status-cancelled:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(148, 163, 184, 0.04);
+  background-color: rgba(148, 163, 184, 0.04); 
+}
+
+.flat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.flat-col-muted {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.flat-sport-tag {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 14.5px;
+}
+
+.flat-id-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.flat-user-name {
+  font-weight: 700;
+  margin: 0;
+  font-size: 14.5px;
+  color: #0f172a;
+}
+
+.flat-phone-anchor {
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.flat-phone-anchor:hover {
+  color: var(--color-primary);
+}
+
+.flat-court-title {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #334155;
+}
+
+.flat-schedule-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.flat-price-value {
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  color: #0f172a;
+}
+
+.flat-slip-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+}
+
+.flat-slip-link:hover {
+  opacity: 0.8;
+}
+
+.flat-no-slip-label {
+  color: #94a3b8;
+  font-size: 12.5px;
+}
+
+/* Premium Pill Badges for Booking Status */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.status-pill .status-dot-inner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-pill.pending_payment {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+}
+.status-pill.pending_payment .status-dot-inner {
+  background-color: #f59e0b;
+}
+
+.status-pill.pending_approval {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+}
+.status-pill.pending_approval .status-dot-inner {
+  background-color: #f59e0b;
+}
+
+.status-pill.approved {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #047857;
+}
+.status-pill.approved .status-dot-inner {
+  background-color: #10b981;
+}
+
+.status-pill.rejected {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+.status-pill.rejected .status-dot-inner {
+  background-color: #ef4444;
+}
+
+.status-pill.cancelled {
+  background-color: rgba(148, 163, 184, 0.08);
+  color: #475569;
+}
+.status-pill.cancelled .status-dot-inner {
+  background-color: #94a3b8;
+}
+
+.flat-actions-cell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.btn-edit-minimal {
+  background-color: #f1f5f9;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-minimal:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Responsive Grid for Minimalist list */
+@media (max-width: 1100px) {
+  .booking-list-header {
+    display: none;
+  }
+  
+  .booking-flat-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    padding: 16px 0;
+    gap: 12px;
+  }
+  
+  .flat-actions-cell {
+    grid-column: 1 / span 2;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 10px;
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .booking-flat-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .flat-actions-cell {
+    grid-column: 1;
+  }
+}
+
+/* =============================================================================
+   ADMIN: MODERN COURT CARDS GRID
+   ============================================================================= */
+.admin-courts-container {
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.admin-courts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Add New Court Placeholder Card */
+.court-add-placeholder-card {
+  background-color: var(--bg-white);
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  min-height: 380px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+  outline: none;
+}
+
+.court-add-placeholder-card:hover {
+  border-color: var(--color-primary);
+  background-color: rgba(16, 185, 129, 0.01);
+  color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.04);
+}
+
+.add-card-plus-icon {
+  margin-bottom: 16px;
+  color: #94a3b8;
+  transition: transform 0.25s;
+}
+
+.court-add-placeholder-card:hover .add-card-plus-icon {
+  color: var(--color-primary);
+  transform: scale(1.1) rotate(90deg);
+}
+
+.add-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.court-add-placeholder-card:hover .add-card-title {
+  color: var(--color-primary);
+}
+
+.add-card-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  max-width: 200px;
+  line-height: 1.5;
+}
+
+/* Court Card Item */
+.court-card {
+  background-color: var(--bg-white);
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.court-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.03);
+  border-color: #e2e8f0;
+}
+
+/* Image wrapper */
+.court-card-image-wrapper {
+  position: relative;
+  height: 180px;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8fafc;
+}
+
+.court-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.court-card:hover .court-card-image {
+  transform: scale(1.05);
+}
+
+.court-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.placeholder-emoji {
+  font-size: 48px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+/* Floating Status Badge */
+.court-card-status-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.court-card-status-badge.active {
+  background-color: rgba(16, 185, 129, 0.9);
+  color: white;
+}
+
+.court-card-status-badge.maintenance {
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+}
+
+/* Details Section */
+.court-card-details {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.court-card-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.court-card-sport-pill {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.court-card-id {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.court-card-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px 0;
+  line-height: 1.4;
+  height: 48px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.court-card-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.price-label {
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.price-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-primary);
+  font-family: 'Outfit', sans-serif;
+}
+
+.price-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+/* Card Actions */
+.court-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 20px;
+  background-color: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-card-edit, .btn-card-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-card-edit {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.btn-card-edit:hover {
+  background-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.btn-card-delete {
+  background-color: rgba(239, 68, 68, 0.05);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.btn-card-delete:hover {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.court-card-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: -6px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  height: 40px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.court-card-desc-placeholder {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin-top: -6px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  height: 40px;
+  font-style: italic;
 }

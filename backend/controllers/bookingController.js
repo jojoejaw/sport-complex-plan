@@ -263,8 +263,9 @@ exports.verifyBooking = async (req, res) => {
     return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
   }
 
-  if (!status || (status !== 'approved' && status !== 'rejected')) {
-    return res.status(400).json({ message: 'กรุณาระบุสถานะที่ต้องการเปลี่ยน (approved หรือ rejected)' });
+  const validStatuses = ['approved', 'rejected', 'pending_payment', 'pending_approval', 'cancelled'];
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'กรุณาระบุสถานะที่ถูกต้อง (' + validStatuses.join(', ') + ')' });
   }
 
   if (status === 'rejected' && !reject_reason) {
@@ -272,27 +273,31 @@ exports.verifyBooking = async (req, res) => {
   }
 
   try {
-    // --- ขั้นที่ 2: ค้นหาใบจองและตรวจว่าอยู่ในสถานะ pending_approval ---
+    // --- ขั้นที่ 2: ค้นหาใบจอง ---
     const [bookings] = await db.query('SELECT status FROM bookings WHERE id = ?', [id]);
     if (bookings.length === 0) {
       return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
-    }
-
-    // ยอมให้อนุมัติได้ทั้งกรณีมีสลิปเข้าระบบ (pending_approval) หรือกรณีค้างจ่าย/เงินสดหน้าร้าน (pending_payment)
-    if (!['pending_approval', 'pending_payment'].includes(bookings[0].status)) {
-      return res.status(400).json({ message: 'รายการจองนี้ไม่อยู่ในสถานะที่สามารถทำการอนุมัติได้' });
     }
 
     // --- ขั้นที่ 3: อัปเดตสถานะตามที่แอดมินเลือก ---
     if (status === 'approved') {
       await db.query("UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?", [id]);
       res.json({ message: 'อนุมัติการจองสำเร็จและแจ้งสิทธิ์การใช้งานแล้ว!' });
-    } else {
+    } else if (status === 'rejected') {
       await db.query(
         "UPDATE bookings SET status = 'rejected', reject_reason = ? WHERE id = ?",
         [reject_reason, id]
       );
-      res.json({ message: 'ปฏิเสธการจองและบันทึกเหตุผลเรียบร้อยแล้ว ส่งโอกาสให้ลูกค้าแนบสลิปใหม่ใน 15 นาที' });
+      res.json({ message: 'ปฏิเสธการจองและบันทึกเหตุผลเรียบร้อยแล้ว' });
+    } else if (status === 'pending_payment') {
+      await db.query("UPDATE bookings SET status = 'pending_payment', reject_reason = NULL WHERE id = ?", [id]);
+      res.json({ message: 'เปลี่ยนสถานะเป็นค้างชำระเงินเรียบร้อยแล้ว' });
+    } else if (status === 'pending_approval') {
+      await db.query("UPDATE bookings SET status = 'pending_approval', reject_reason = NULL WHERE id = ?", [id]);
+      res.json({ message: 'เปลี่ยนสถานะเป็นรอตรวจสลิปเรียบร้อยแล้ว' });
+    } else if (status === 'cancelled') {
+      await db.query("UPDATE bookings SET status = 'cancelled', reject_reason = NULL WHERE id = ?", [id]);
+      res.json({ message: 'ยกเลิกการจองสำเร็จ คืนสิทธิ์สนามว่างเรียบร้อย' });
     }
   } catch (error) {
     console.error('VerifyBooking Error:', error);
