@@ -1,5 +1,5 @@
 services:
-  # 1. Backend (Express)
+  # 1. Backend (Express) - ฟรี
   - type: web
     name: sport-complex-backend
     env: node
@@ -8,11 +8,10 @@ services:
     buildCommand: npm install
     startCommand: node server.js
 
-  # 2. Frontend (Vite)
+  # 2. Frontend (Vite) - ฟรีอัตโนมัติ
   - type: web
     name: sport-complex-frontend
     env: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
