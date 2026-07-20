@@ -8,8 +8,9 @@ services:
     startCommand: node server.js
 
   # 2. Frontend (Vite)
-  - type: static
+  - type: web
     name: sport-complex-frontend
+    env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
