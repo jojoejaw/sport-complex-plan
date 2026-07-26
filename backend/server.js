@@ -33,6 +33,13 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // =============================================================================
+// 5.5 Swagger API Documentation (ระบบหน้าคู่มือเอกสาร API)
+// =============================================================================
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// =============================================================================
 // 6. API Routes (เชื่อมเส้นทางย่อยกับแอปหลัก)
 // =============================================================================
 app.use('/api/auth', authRoutes);
