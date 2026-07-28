@@ -2,6 +2,7 @@
 // 1. โหลด Dependencies
 // =============================================================================
 const db = require('../config/db');
+const logger = require('../utils/logger');
 
 // =============================================================================
 // 2. getSports — ดึงประเภทกีฬาทั้งหมด (GET /api/sports)
@@ -12,7 +13,7 @@ exports.getSports = async (req, res) => {
     const [sports] = await db.query('SELECT * FROM sports');
     res.json(sports);
   } catch (error) {
-    console.error('getSports Error:', error);
+    logger.error('getSports Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลกีฬา' });
   }
 };
@@ -38,7 +39,7 @@ exports.getCourts = async (req, res) => {
     const [courts] = await db.query(sql, params);
     res.json(courts);
   } catch (error) {
-    console.error('getCourts Error:', error);
+    logger.error('getCourts Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสนาม' });
   }
 };
@@ -71,7 +72,7 @@ exports.createCourt = async (req, res) => {
     // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
     res.status(201).json({ message: 'เพิ่มสนามใหม่สำเร็จ!', courtId: result.insertId });
   } catch (error) {
-    console.error('createCourt Error:', error);
+    logger.error('createCourt Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มสนาม' });
   }
 };
@@ -106,7 +107,7 @@ exports.updateCourt = async (req, res) => {
     // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
     res.json({ message: 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว!' });
   } catch (error) {
-    console.error('updateCourt Error:', error);
+    logger.error('updateCourt Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลสนาม' });
   }
 };
@@ -135,8 +136,8 @@ exports.deleteCourt = async (req, res) => {
     await db.query('DELETE FROM courts WHERE id = ?', [id]);
     res.json({ message: 'ลบสนามสำเร็จแล้ว!' });
   } catch (error) {
-    console.error('deleteCourt Error:', error);
-
+    logger.error('deleteCourt Error: ' + (error.stack || error));
+    
     // --- ขั้นที่ 3: กรณีมีประวัติการจองอ้างอิง (Foreign Key RESTRICT) ---
     if (error.code === 'ER_ROW_IS_REFERENCED_2') {
       return res.status(400).json({

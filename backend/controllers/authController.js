@@ -4,6 +4,7 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 
 // =============================================================================
 // 2. Register — สมัครสมาชิก (POST /api/auth/register)
@@ -41,7 +42,7 @@ exports.register = async (req, res) => {
     // --- ขั้นที่ 5: ตอบกลับสำเร็จ ---
     res.status(201).json({ message: 'สมัครสมาชิกสำเร็จแล้ว!' });
   } catch (error) {
-    console.error('Register Error:', error);
+    logger.error('Register Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
   }
 };
@@ -93,7 +94,7 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login Error:', error);
+    logger.error('Login Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
   }
 };

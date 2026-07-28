@@ -2,6 +2,7 @@
 // 1. โหลด Dependencies
 // =============================================================================
 const db = require('../config/db');
+const logger = require('../utils/logger');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -121,7 +122,7 @@ exports.submitPayment = async (req, res) => {
       );
       apiResult = thunderResponse.data;
     } catch (apiError) {
-      console.error('Thunder API Call Fail:', apiError.message);
+      logger.error('Thunder API Call Fail: ' + (apiError.stack || apiError.message || apiError));
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
       // กรณี Thunder API ส่งข้อมูลข้อผิดพลาดกลับมา
@@ -162,7 +163,7 @@ exports.submitPayment = async (req, res) => {
 
     // 7.2 ตรวจสอบบัญชีผู้รับเงินผ่านการจับคู่บัญชีของ Thunder API (matchAccount) และต้องเป็นพร้อมเพย์เท่านั้น
     if (!apiResult.data.matchedAccount || apiResult.data.matchedAccount.bank.code !== 'PROMPTPAY') {
-      console.log('Slip receiver account does not match registered PromptPay account.');
+      logger.warn('Slip receiver account does not match registered PromptPay account.');
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง (ต้องโอนผ่านพร้อมเพย์เท่านั้น)' });
     }
@@ -221,7 +222,7 @@ exports.submitPayment = async (req, res) => {
 
     res.json({ message: 'ชำระเงินสำเร็จเรียบร้อยแล้ว! ระบบอนุมัติการจองของท่านอัตโนมัติ' });
   } catch (error) {
-    console.error('SubmitPayment Unexpected Error:', error);
+    logger.error('SubmitPayment Unexpected Error: ' + (error.stack || error));
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }

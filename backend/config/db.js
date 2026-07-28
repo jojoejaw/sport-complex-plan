@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+const logger = require('../utils/logger');
 
 // สร้าง Connection Pool ไปยัง MySQL
 const pool = mysql.createPool({
@@ -15,11 +16,11 @@ const pool = mysql.createPool({
 // ทดสอบความเชื่อมต่อเบื้องต้น
 pool.getConnection()
   .then(conn => {
-    console.log('✅ เชื่อมต่อ MySQL Database สำเร็จ!');
+    logger.info('✅ เชื่อมต่อ MySQL Database สำเร็จ!');
     conn.release(); // คืนการเชื่อมต่อกลับเข้า Pool
   })
   .catch(err => {
-    console.error('❌ เชื่อมต่อฐานข้อมูลล้มเหลว:', err.message);
+    logger.error('❌ เชื่อมต่อฐานข้อมูลล้มเหลว: ' + err.message);
   });
 
 module.exports = pool;

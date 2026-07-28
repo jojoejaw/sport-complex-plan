@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 const db = require('./config/db');
+const logger = require('./utils/logger');
 
 // =============================================================================
 // 2. โหลด Routes (แผนผังเส้นทาง API แต่ละระบบ)
@@ -58,7 +59,7 @@ app.get('/', (req, res) => {
 // 8. Global Error Handler (จัดการข้อผิดพลาดระบบและ Multer อัตโนมัติ)
 // =============================================================================
 app.use((err, req, res, next) => {
-  console.error('🔥 Global Error Caught:', err.message || err);
+  logger.error('🔥 Global Error Caught: ' + (err.stack || err.message || err));
 
   // จัดการข้อผิดพลาดจาก Multer (อัปโหลดสลิป)
   if (err.name === 'MulterError') {
@@ -82,7 +83,7 @@ app.use((err, req, res, next) => {
 // 9. เริ่มรันเซิร์ฟเวอร์
 // =============================================================================
 app.listen(PORT, () => {
-  console.log(`🚀 เซิร์ฟเวอร์ทำงานที่พอร์ต http://localhost:${PORT}`);
+  logger.info(`🚀 เซิร์ฟเวอร์ทำงานที่พอร์ต http://localhost:${PORT}`);
   
   // เริ่มการทำงานของระบบล้างรายการจองที่หมดอายุในเบื้องหลัง
   const { startBookingCleanup } = require('./utils/bookingCleanup');

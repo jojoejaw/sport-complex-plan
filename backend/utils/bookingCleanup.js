@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const logger = require('./logger');
 
 function startBookingCleanup() {
   // รันทุกๆ 1 นาที (60000 มิลลิวินาที)เพื่อเช็คการจองที่เลยกำหนดเวลาชำระเงิน แล้วยกเลิกอัตโนมัติ
@@ -12,10 +13,10 @@ function startBookingCleanup() {
       `;
       const [result] = await db.query(query);
       if (result.affectedRows > 0) {
-        console.log(`[Cleanup Scheduler] Automatically cancelled ${result.affectedRows} expired bookings.`);
+        logger.info(`[Cleanup Scheduler] Automatically cancelled ${result.affectedRows} expired bookings.`);
       }
     } catch (error) {
-      console.error('[Cleanup Scheduler Error] Failed to auto-cancel bookings:', error);
+      logger.error('[Cleanup Scheduler Error] Failed to auto-cancel bookings: ' + (error.stack || error));
     }
   }, 60000);
 }

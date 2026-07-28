@@ -2,6 +2,7 @@
 // 1. โหลด Dependencies
 // =============================================================================
 const db = require('../config/db');
+const logger = require('../utils/logger');
 
 // =============================================================================
 // 2. checkAvailability — ตรวจความว่างของสนามรายชั่วโมง (GET /api/bookings/availability)
@@ -80,7 +81,7 @@ exports.checkAvailability = async (req, res) => {
     // --- ขั้นที่ 5: ตอบกลับรายการสล็อต ---
     res.json({ court_status: 'active', slots });
   } catch (error) {
-    console.error('CheckAvailability Error:', error);
+    logger.error('CheckAvailability Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบความว่างของสนาม' });
   }
 };
@@ -215,7 +216,7 @@ exports.createBooking = async (req, res) => {
       total_price: totalPrice
     });
   } catch (error) {
-    console.error('CreateBooking Error:', error);
+    logger.error('CreateBooking Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการจองสนาม' });
   }
 };
@@ -240,7 +241,7 @@ exports.getMyBookings = async (req, res) => {
     );
     res.json(myBookings);
   } catch (error) {
-    console.error('getMyBookings Error:', error);
+    logger.error('getMyBookings Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงประวัติการจอง' });
   }
 };
@@ -282,7 +283,7 @@ exports.cancelBooking = async (req, res) => {
     await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
     res.json({ message: 'ยกเลิกรายการจองสำเร็จแล้ว คืนสิทธิ์สนามว่างเรียบร้อย' });
   } catch (error) {
-    console.error('CancelBooking Error:', error);
+    logger.error('CancelBooking Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยกเลิกการจอง' });
   }
 };
@@ -338,7 +339,7 @@ exports.verifyBooking = async (req, res) => {
       res.json({ message: 'ยกเลิกการจองสำเร็จ คืนสิทธิ์สนามว่างเรียบร้อย' });
     }
   } catch (error) {
-    console.error('VerifyBooking Error:', error);
+    logger.error('VerifyBooking Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ' });
   }
 };
@@ -371,7 +372,7 @@ exports.getAdminBookings = async (req, res) => {
     );
     res.json(allBookings);
   } catch (error) {
-    console.error('GetAdminBookings Error:', error);
+    logger.error('GetAdminBookings Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงรายการจองสำหรับแอดมิน' });
   }
 };

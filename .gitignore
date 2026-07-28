@@ -14,3 +14,6 @@ backend/uploads/slips/slip-*
 # ไฟล์ระบบของระบบปฏิบัติการ
 .DS_Store
 Thumbs.db
+
+# โฟลเดอร์เก็บไฟล์ Log บันทึกประวัติระบบ
+backend/logs/
