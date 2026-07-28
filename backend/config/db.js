@@ -10,7 +10,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '+07:00' // บังคับใช้เขตเวลาประเทศไทย (Bangkok) เพื่อความถูกต้องในการเช็คเวลาหมดอายุ 15 นาที
 });
 
 // ทดสอบความเชื่อมต่อเบื้องต้น

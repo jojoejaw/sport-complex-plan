@@ -123,17 +123,48 @@ exports.submitPayment = async (req, res) => {
       apiResult = thunderResponse.data;
     } catch (apiError) {
       logger.error('Thunder API Call Fail: ' + (apiError.stack || apiError.message || apiError));
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
-      // กรณี Thunder API ส่งข้อมูลข้อผิดพลาดกลับมา
+      // กรณี Thunder API ส่งข้อมูลข้อผิดพลาดกลับมา (สลิปผิด/สแกนไม่สำเร็จ แต่ API ทำงานได้ปกติ)
       if (apiError.response && apiError.response.data && apiError.response.data.success === false) {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         const rawMessage = apiError.response.data.error.message || '';
         const apiErrorMessage = rawMessage.includes("Please provide")
           ? "รูปภาพไม่ถูกต้อง หรือไม่พบข้อมูล QR Code ในสลิปโอนเงิน"
           : (rawMessage || "สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้");
         return res.status(apiError.response.status).json({ message: apiErrorMessage });
       }
-      return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสลิปผ่านเซิร์ฟเวอร์ภายนอก' });
+
+      // กรณีระบบ API ล่มหรือเกิดข้อผิดพลาดจากเครือข่ายภายนอก (Fallback to Manual Verification)
+      try {
+        const normalizedPath = req.file.path.replace(/\\/g, '/');
+        // ใช้เวลาปัจจุบันชั่วคราวสำหรับคอลัมน์ transfer_time
+        const transferTimePlaceholder = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        // บันทึกหลักฐานสลิปแบบรอนุมัติ (ไม่มีเลขธุรกรรมเพราะไม่ได้สแกน)
+        await db.query(
+          `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
+           VALUES (?, ?, ?, ?) 
+           ON DUPLICATE KEY UPDATE 
+              slip_image_path = VALUES(slip_image_path), 
+              transfer_time = VALUES(transfer_time),
+              transaction_ref = VALUES(transaction_ref)`,
+          [booking_id, normalizedPath, transferTimePlaceholder, null]
+        );
+
+        // ปรับสถานะใบจองเป็น pending_approval เพื่อไม่ให้คิวกดจองหลุดและรอแอดมินตรวจสอบมือ
+        await db.query(
+          `UPDATE bookings SET status = 'pending_approval', reject_reason = NULL WHERE id = ?`,
+          [booking_id]
+        );
+
+        return res.json({ 
+          message: 'ระบบตรวจสอบสลิปอัตโนมัติขัดข้องชั่วคราว ระบบได้รับสลิปของท่านแล้วและกำลังรอให้แอดมินตรวจสอบด้วยตนเอง' 
+        });
+      } catch (dbError) {
+        logger.error('Fallback DB Saving Fail: ' + (dbError.stack || dbError));
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกหลักฐานการชำระเงินสำรอง' });
+      }
     }
 
     if (!apiResult || !apiResult.success || !apiResult.data) {
