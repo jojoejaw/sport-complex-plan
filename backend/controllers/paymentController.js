@@ -124,64 +124,36 @@ exports.submitPayment = async (req, res) => {
     } catch (apiError) {
       logger.error('Thunder API Call Fail: ' + (apiError.stack || apiError.message || apiError));
 
-      // กรณี Thunder API ส่งข้อมูลข้อผิดพลาดกลับมา (สลิปผิด/สแกนไม่สำเร็จ แต่ API ทำงานได้ปกติ)
+      // หากสแกนไม่สำเร็จ ลบไฟล์ภาพสลิปชั่วคราวทิ้งทันที ไม่บันทึกลงระบบ
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+
       if (apiError.response && apiError.response.data && apiError.response.data.success === false) {
-        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        const rawMessage = apiError.response.data.error.message || '';
+        const rawMessage = apiError.response.data.error?.message || '';
         const apiErrorMessage = rawMessage.includes("Please provide")
-          ? "รูปภาพไม่ถูกต้อง หรือไม่พบข้อมูล QR Code ในสลิปโอนเงิน"
-          : (rawMessage || "สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้");
-        return res.status(apiError.response.status).json({ message: apiErrorMessage });
+          ? "รูปภาพสลิปไม่ถูกต้อง หรือไม่พบข้อมูล QR Code ในสลิปโอนเงิน หากท่านโอนเงินแล้ว กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ"
+          : (rawMessage || "สลิปโอนเงินไม่ถูกต้อง หรือไม่สามารถสแกนบาร์โค้ดได้ กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ");
+        return res.status(400).json({ message: apiErrorMessage });
       }
 
-      // กรณีระบบ API ล่มหรือเกิดข้อผิดพลาดจากเครือข่ายภายนอก (Fallback to Manual Verification)
-      try {
-        const normalizedPath = req.file.path.replace(/\\/g, '/');
-        // ใช้เวลาปัจจุบันชั่วคราวสำหรับคอลัมน์ transfer_time
-        const transferTimePlaceholder = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
-        // บันทึกหลักฐานสลิปแบบรอนุมัติ (ไม่มีเลขธุรกรรมเพราะไม่ได้สแกน)
-        await db.query(
-          `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
-           VALUES (?, ?, ?, ?) 
-           ON DUPLICATE KEY UPDATE 
-              slip_image_path = VALUES(slip_image_path), 
-              transfer_time = VALUES(transfer_time),
-              transaction_ref = VALUES(transaction_ref)`,
-          [booking_id, normalizedPath, transferTimePlaceholder, null]
-        );
-
-        // ปรับสถานะใบจองเป็น pending_approval เพื่อไม่ให้คิวกดจองหลุดและรอแอดมินตรวจสอบมือ
-        await db.query(
-          `UPDATE bookings SET status = 'pending_approval', reject_reason = NULL WHERE id = ?`,
-          [booking_id]
-        );
-
-        return res.json({ 
-          message: 'ระบบตรวจสอบสลิปอัตโนมัติขัดข้องชั่วคราว ระบบได้รับสลิปของท่านแล้วและกำลังรอให้แอดมินตรวจสอบด้วยตนเอง' 
-        });
-      } catch (dbError) {
-        logger.error('Fallback DB Saving Fail: ' + (dbError.stack || dbError));
-        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกหลักฐานการชำระเงินสำรอง' });
-      }
+      return res.status(503).json({
+        message: 'ระบบตรวจสอบสลิปอัตโนมัติขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง หรือติดต่อแอดมินเพื่อขอความช่วยเหลือ'
+      });
     }
 
     if (!apiResult || !apiResult.success || !apiResult.data) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง' });
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง หากท่านโอนเงินแล้ว กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
-    // ข้อมูลดิบที่ผ่านการสแกนและตรวจสอบของสลิปจะอยู่ในอ็อบเจกต์ rawSlip ของ v2
     const slipData = apiResult.data.rawSlip;
     if (!slipData) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบข้อมูลในระบบ)' });
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบข้อมูลในระบบ) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
     // --- ขั้นที่ 7: ตรวจสอบความถูกต้องของข้อมูลสลิป (Data Consistency Checks) ---
 
-    // 7.1 ตรวจสอบยอดเงินโอน (ปลอดภัยกับทั้งประเภท Object หรือตัวเลขตรงตัว)
+    // 7.1 ตรวจสอบยอดเงินโอน
     const expectedAmount = parseFloat(booking.total_price);
     const transferredAmount = typeof slipData.amount === 'object' && slipData.amount !== null
       ? parseFloat(slipData.amount.amount)
@@ -189,35 +161,37 @@ exports.submitPayment = async (req, res) => {
 
     if (isNaN(transferredAmount) || transferredAmount !== expectedAmount) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'ยอดเงินไม่ตรง' });
+      return res.status(400).json({ message: 'ยอดเงินในสลิปไม่ตรงกับยอดจอง หากท่านโอนเงินแล้ว กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
-    // 7.2 ตรวจสอบบัญชีผู้รับเงินผ่านการจับคู่บัญชีของ Thunder API (matchAccount) และต้องเป็นพร้อมเพย์เท่านั้น
-    if (!apiResult.data.matchedAccount || apiResult.data.matchedAccount.bank.code !== 'PROMPTPAY') {
+    // 7.2 ตรวจสอบบัญชีผู้รับเงินผ่าน matchAccount และต้องเป็นพร้อมเพย์เท่านั้น (ใช้อย่างปลอดภัยด้วย optional chaining ?.)
+    const bankCode = apiResult.data.matchedAccount?.bank?.code;
+    if (!apiResult.data.matchedAccount || bankCode !== 'PROMPTPAY') {
       logger.warn('Slip receiver account does not match registered PromptPay account.');
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง (ต้องโอนผ่านพร้อมเพย์เท่านั้น)' });
+      return res.status(400).json({ message: 'บัญชีผู้รับเงินไม่ถูกต้อง (ต้องโอนผ่านพร้อมเพย์เท่านั้น) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
-    // 7.3 ตรวจสอบเวลาโอนเงินในสลิป (ป้องกันการเอาสลิปโอนก่อนการสร้างการจองมาใช้)
+    // 7.3 ตรวจสอบเวลาโอนเงินในสลิป (พร้อมระยะผ่อนปรน Clock Skew Buffer 2 นาที)
     if (!slipData.date) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบวันที่ทำรายการ)' });
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบวันที่ทำรายการ) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
     const bookingCreatedAt = new Date(booking.created_at);
     const actualTransferTime = new Date(slipData.date);
+    const allowedEarliestTime = new Date(bookingCreatedAt.getTime() - 2 * 60 * 1000); // ผ่อนปรน 2 นาที
 
-    if (actualTransferTime < bookingCreatedAt) {
+    if (actualTransferTime < allowedEarliestTime) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง (สลิปนี้ทำรายการโอนก่อนการกดจองสนาม)' });
+      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง (สลิปนี้ทำรายการโอนก่อนการกดจองสนาม) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
-    // 7.4 ตรวจสอบความซ้ำซ้อนของเลขธุรกรรมเพื่อป้องกันการส่งสลิปซ้ำ (Duplicate Prevention)
+    // 7.4 ตรวจสอบความซ้ำซ้อนของเลขธุรกรรม
     const transactionRef = slipData.transRef;
     if (!transactionRef) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบเลขธุรกรรมอ้างอิง)' });
+      return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบเลขธุรกรรมอ้างอิง) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
     const [duplicateSlip] = await db.query(
@@ -230,7 +204,7 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'สลิปนี้ถูกใช้งานไปแล้ว' });
     }
 
-    // --- ขั้นที่ 8: บันทึกข้อมูลและอัปเดตสถานะในฐานข้อมูล ---
+    // --- ขั้นที่ 8: บันทึกข้อมูลและอัปเดตสถานะในฐานข้อมูล (กรณีสแกนผ่านเรียบร้อย 100%) ---
     const formattedTransferTime = slipData.date.replace('T', ' ').substring(0, 19);
     const normalizedPath = req.file.path.replace(/\\/g, '/');
 
@@ -257,7 +231,7 @@ exports.submitPayment = async (req, res) => {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
   }
 };
 

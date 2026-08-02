@@ -119,36 +119,50 @@ exports.createBooking = async (req, res) => {
     return res.status(400).json({ message: 'สนามกีฬาเปิดให้บริการเฉพาะเวลา 10:00 น. ถึง 22:00 น. เท่านั้น' });
   }
 
-  // --- ตรวจสอบการจองย้อนหลัง (วันที่และเวลา) ---
+  // --- ตรวจสอบการจองไม่เกิน 3 ชั่วโมงติดต่อกัน ---
+  if (totalHours <= 0 || totalHours > 3) {
+    return res.status(400).json({ message: 'คุณสามารถจองสนามได้สูงสุดครั้งละไม่เกิน 3 ชั่วโมงติดต่อกัน' });
+  }
+
+  // --- ตรวจสอบการจองย้อนหลัง (วันที่และเวลา) โดยใช้ระบบเวลาประเทศไทยแบบตรงตัว ---
   const now = new Date();
-  const localDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+  const bangkokDateObj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+  const localDateStr = bangkokDateObj.toLocaleDateString('en-CA');
 
   if (booking_date < localDateStr) {
     return res.status(400).json({ message: 'ไม่สามารถจองสนามย้อนหลังได้' });
   }
 
   if (booking_date === localDateStr) {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Bangkok',
-      hour: 'numeric',
-      hour12: false
-    });
-    let currentHour = parseInt(formatter.format(now));
-    if (currentHour === 24) currentHour = 0;
-
+    const currentHour = bangkokDateObj.getHours();
     if (startHour <= currentHour) {
       return res.status(400).json({ message: 'ไม่สามารถจองช่วงเวลาที่ผ่านมาแล้วในวันนี้ได้' });
     }
   }
 
+  let connection;
   try {
-    // --- ขั้นที่ 2: กฎข้อที่ 1 — จำกัดการจองไม่เกิน 3 ชั่วโมงติดต่อกัน ---
-    if (totalHours <= 0 || totalHours > 3) {
-      return res.status(400).json({ message: 'คุณสามารถจองสนามได้สูงสุดครั้งละไม่เกิน 3 ชั่วโมงติดต่อกัน' });
+    // --- ขอ Connection จาก Pool และเริ่ม Transaction ---
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // --- ขั้นที่ 2: ดึงราคาสนามและสถานะพร้อมล็อกแถวสนาม (FOR UPDATE) ---
+    const [court] = await connection.query(
+      'SELECT price_per_hour, status FROM courts WHERE id = ? FOR UPDATE',
+      [court_id]
+    );
+
+    if (court.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'ไม่พบสนามนี้' });
+    }
+    if (court[0].status === 'maintenance') {
+      await connection.rollback();
+      return res.status(400).json({ message: 'สนามนี้อยู่ระหว่างการปรับปรุง ไม่พร้อมให้บริการ' });
     }
 
-    // --- ขั้นที่ 3: กฎข้อที่ 2 — ป้องกันสแปม (ห้ามมี pending_payment ค้างภายใน 15 นาที) ---
-    const [spamCheck] = await db.query(
+    // --- ขั้นที่ 3: ป้องกันสแปม (ห้ามมี pending_payment ค้างภายใน 15 นาที) ---
+    const [spamCheck] = await connection.query(
       `SELECT id FROM bookings 
        WHERE user_id = ? 
          AND status = 'pending_payment' 
@@ -157,13 +171,14 @@ exports.createBooking = async (req, res) => {
     );
 
     if (spamCheck.length > 0) {
+      await connection.rollback();
       return res.status(400).json({
         message: 'คุณมีรายการจองเก่าที่ยังไม่ได้ชำระเงินค้างอยู่ กรุณายกเลิกของเก่าหรือรอให้ระบบปลดล็อก (15 นาที) ก่อนทำการจองใหม่'
       });
     }
 
-    // --- ขั้นที่ 4: กฎข้อที่ 3 — เช็คช่วงเวลาชนกับการจองอื่น ---
-    const [overlapCheck] = await db.query(
+    // --- ขั้นที่ 4: เช็คช่วงเวลาชนกับการจองอื่น ---
+    const [overlapCheck] = await connection.query(
       `SELECT status, created_at, updated_at FROM bookings 
        WHERE court_id = ? 
          AND booking_date = ? 
@@ -174,50 +189,49 @@ exports.createBooking = async (req, res) => {
 
     for (const booking of overlapCheck) {
       if (booking.status === 'approved' || booking.status === 'pending_approval') {
+        await connection.rollback();
         return res.status(400).json({ message: 'ช่วงเวลานี้ถูกจองไปแล้ว' });
       }
       if (booking.status === 'pending_payment') {
         const timeDiff = (new Date() - new Date(booking.created_at)) / 1000 / 60;
         if (timeDiff <= 15) {
+          await connection.rollback();
           return res.status(400).json({ message: 'ช่วงเวลานี้อยู่ระหว่างรอการชำระเงินโดยผู้ใช้อื่น' });
         }
       }
       if (booking.status === 'rejected') {
         const timeDiff = (new Date() - new Date(booking.updated_at)) / 1000 / 60;
         if (timeDiff <= 15) {
+          await connection.rollback();
           return res.status(400).json({ message: 'ช่วงเวลานี้อยู่ระหว่างรอการส่งหลักฐานชำระเงินใหม่โดยผู้ใช้อื่น' });
         }
       }
     }
 
-    // --- ขั้นที่ 5: กฎข้อที่ 4 — ดึงราคาสนามและคำนวณยอดรวม ---
-    const [court] = await db.query('SELECT price_per_hour, status FROM courts WHERE id = ?', [court_id]);
-    if (court.length === 0) {
-      return res.status(404).json({ message: 'ไม่พบสนามนี้' });
-    }
-    if (court[0].status === 'maintenance') {
-      return res.status(400).json({ message: 'สนามนี้อยู่ระหว่างการปรับปรุง ไม่พร้อมให้บริการ' });
-    }
-
+    // --- ขั้นที่ 5: คำนวณราคารวมและบันทึกการจอง ---
     const pricePerHour = court[0].price_per_hour;
     const totalPrice = pricePerHour * totalHours;
 
-    // --- ขั้นที่ 6: บันทึกการจอง (สถานะเริ่มต้น = pending_payment) ---
-    const [result] = await db.query(
+    const [result] = await connection.query(
       `INSERT INTO bookings (user_id, court_id, booking_date, start_time, end_time, total_price, contact_phone, status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_payment')`,
       [user_id, court_id, booking_date, start_time, end_time, totalPrice, contact_phone]
     );
 
-    // --- ขั้นที่ 7: ตอบกลับ bookingId และยอดชำระ ---
+    // --- ยืนยัน Transaction ---
+    await connection.commit();
+
     res.status(201).json({
       message: 'สร้างการจองสำเร็จ! กรุณาโอนเงินเพื่อยืนยันภายใน 15 นาที',
       bookingId: result.insertId,
       total_price: totalPrice
     });
   } catch (error) {
+    if (connection) await connection.rollback();
     logger.error('CreateBooking Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการจองสนาม' });
+  } finally {
+    if (connection) connection.release();
   }
 };
 

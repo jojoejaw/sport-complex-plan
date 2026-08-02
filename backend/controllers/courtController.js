@@ -73,13 +73,19 @@ exports.createCourt = async (req, res) => {
     res.status(201).json({ message: 'เพิ่มสนามใหม่สำเร็จ!', courtId: result.insertId });
   } catch (error) {
     logger.error('createCourt Error: ' + (error.stack || error));
+
+    // ดักจับกรณีใส่ sport_id ที่ไม่มีในระบบ (Foreign Key Restrict)
+    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.code === 'ER_NO_REFERENCED_ROW') {
+      return res.status(400).json({ message: 'ไม่พบประเภทกีฬานี้ในระบบ (sport_id ไม่ถูกต้อง)' });
+    }
+
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มสนาม' });
   }
 };
 
 // =============================================================================
 // 5. updateCourt — แก้ไขข้อมูลสนาม (PUT /api/courts/:id)
-//    Flow: รับ id + ข้อมูลใหม่ → ตรวจว่ามีสนาม → UPDATE → ตอบกลับ
+//    Flow: รับ id + ข้อมูลใหม่ → ตรวจว่ามีสนาม → รวมข้อมูลเดิมกับข้อมูลใหม่ → UPDATE → ตอบกลับ
 // =============================================================================
 exports.updateCourt = async (req, res) => {
   const admin_role = req.user.role;             
@@ -92,19 +98,47 @@ exports.updateCourt = async (req, res) => {
   const { name, description, price_per_hour, status, image_url } = req.body;
 
   try {
-    // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบ ---
-    const [existing] = await db.query('SELECT id FROM courts WHERE id = ?', [id]);
+    // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบและดึงข้อมูลเดิม ---
+    const [existing] = await db.query('SELECT * FROM courts WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'ไม่พบข้อมูลสนามที่ต้องการแก้ไข' });
     }
 
-    // --- ขั้นที่ 2: อัปเดตข้อมูลสนาม ---
+    const currentCourt = existing[0];
+
+    // --- ตรวจสอบค่าสถานะหากมีการส่งมา ---
+    if (status && !['active', 'maintenance'].includes(status)) {
+      return res.status(400).json({ message: 'สถานะสนามไม่ถูกต้อง (ต้องเป็น active หรือ maintenance)' });
+    }
+
+    // --- ขั้นที่ 2: รองรับ Partial Update (หากไม่ได้ส่งฟิลด์ใดมา ให้ใช้ค่าเดิมของสนามนั้น) ---
+    const updatedName = name !== undefined && name !== null && String(name).trim() !== '' 
+      ? name 
+      : currentCourt.name;
+
+    const updatedDescription = description !== undefined 
+      ? description 
+      : currentCourt.description;
+
+    const updatedPrice = price_per_hour !== undefined && price_per_hour !== null && price_per_hour !== '' 
+      ? price_per_hour 
+      : currentCourt.price_per_hour;
+
+    const updatedStatus = status !== undefined && status !== null && status !== '' 
+      ? status 
+      : currentCourt.status;
+
+    const updatedImageUrl = image_url !== undefined 
+      ? image_url 
+      : currentCourt.image_url;
+
+    // --- ขั้นที่ 3: อัปเดตข้อมูลสนามด้วยค่าใหม่ที่รวมกับค่าเดิมแล้ว ---
     await db.query(
       'UPDATE courts SET name = ?, description = ?, price_per_hour = ?, status = ?, image_url = ? WHERE id = ?',
-      [name, description || null, price_per_hour, status, image_url || null, id]
+      [updatedName, updatedDescription, updatedPrice, updatedStatus, updatedImageUrl, id]
     );
 
-    // --- ขั้นที่ 3: ตอบกลับสำเร็จ ---
+    // --- ขั้นที่ 4: ตอบกลับสำเร็จ ---
     res.json({ message: 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว!' });
   } catch (error) {
     logger.error('updateCourt Error: ' + (error.stack || error));
