@@ -18,11 +18,40 @@ exports.register = async (req, res) => {
     return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
   }
 
+  const cleanUsername = String(username).trim();
+  const cleanEmail = String(email).trim().toLowerCase();
+
+  // --- 1.1 ตรวจสอบ username: ภาษาอังกฤษหรือตัวเลขเท่านั้น ความยาว 6-30 ตัวอักษร ---
+  const usernameRegex = /^[a-zA-Z0-9]{6,30}$/;
+  if (!usernameRegex.test(cleanUsername)) {
+    return res.status(400).json({
+      message: 'ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น ห้ามใส่เว้นวรรค ภาษาไทย หรือสัญลักษณ์พิเศษ และต้องมีความยาวระหว่าง 6 ถึง 30 ตัวอักษร'
+    });
+  }
+
+  // --- 1.2 ตรวจสอบ email: ฟอร์แมตถูกต้องและความยาวไม่เกิน 100 ตัวอักษร ---
+  if (cleanEmail.length > 100) {
+    return res.status(400).json({ message: 'ความยาวอีเมลต้องไม่เกิน 100 ตัวอักษร' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง (ต้องอยู่ในรูปแบบ user@example.com)' });
+  }
+
+  // --- 1.3 ตรวจสอบ password: ความยาวอย่างน้อย 6 ตัวอักษร และต้องมี A-Z, a-z, 0-9 อย่างละ 1 ตัว ---
+  const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+  if (!passRegex.test(password)) {
+    return res.status(400).json({
+      message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร และต้องประกอบด้วยตัวพิมพ์ใหญ่ (A-Z) ตัวพิมพ์เล็ก (a-z) และตัวเลข (0-9) อย่างน้อยอย่างละ 1 ตัว'
+    });
+  }
+
   try {
     // --- ขั้นที่ 2: เช็คว่า username หรือ email ซ้ำในระบบหรือไม่ ---
     const [existingUser] = await db.query(
       'SELECT id FROM users WHERE username = ? OR email = ?',
-      [username, email]
+      [cleanUsername, cleanEmail]
     );
 
     if (existingUser.length > 0) {
@@ -36,7 +65,7 @@ exports.register = async (req, res) => {
     // --- ขั้นที่ 4: บันทึกผู้ใช้ใหม่ (role เริ่มต้น = customer) ---
     await db.query(
       'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-      [username, email, hashedPassword, 'customer']
+      [cleanUsername, cleanEmail, hashedPassword, 'customer']
     );
 
     // --- ขั้นที่ 5: ตอบกลับสำเร็จ ---

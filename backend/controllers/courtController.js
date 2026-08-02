@@ -173,7 +173,7 @@ exports.deleteCourt = async (req, res) => {
     logger.error('deleteCourt Error: ' + (error.stack || error));
     
     // --- ขั้นที่ 3: กรณีมีประวัติการจองอ้างอิง (Foreign Key RESTRICT) ---
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
       return res.status(400).json({
         message: 'ไม่สามารถลบสนามนี้ได้เนื่องจากมีประวัติการจองอยู่แล้ว แนะนำให้เปลี่ยนสถานะเป็นปิดปรับปรุง (maintenance) แทน'
       });
