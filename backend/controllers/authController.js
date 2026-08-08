@@ -127,3 +127,20 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
   }
 };
+
+// =============================================================================
+// 4. Get Current User Info — ดึงข้อมูลผู้ใช้ปัจจุบัน (GET /api/auth/me)
+// =============================================================================
+exports.getMe = async (req, res) => {
+  try {
+    const [users] = await db.query('SELECT id, username, email, role, created_at FROM users WHERE id = ?', [req.user.id]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบข้อมูลผู้ใช้งาน' });
+    }
+    res.json({ user: users[0] });
+  } catch (error) {
+    logger.error('GetMe Error: ' + (error.stack || error));
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
+  }
+};
+
