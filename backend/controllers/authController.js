@@ -21,11 +21,11 @@ exports.register = async (req, res) => {
   const cleanUsername = String(username).trim();
   const cleanEmail = String(email).trim().toLowerCase();
 
-  // --- 1.1 ตรวจสอบ username: ภาษาอังกฤษหรือตัวเลขเท่านั้น ความยาว 6-30 ตัวอักษร ---
-  const usernameRegex = /^[a-zA-Z0-9]{6,30}$/;
+  // --- 1.1 ตรวจสอบ username: ภาษาอังกฤษหรือตัวเลขเท่านั้น ความยาว 5-30 ตัวอักษร ---
+  const usernameRegex = /^[a-zA-Z0-9]{5,30}$/;
   if (!usernameRegex.test(cleanUsername)) {
     return res.status(400).json({
-      message: 'ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น ห้ามใส่เว้นวรรค ภาษาไทย หรือสัญลักษณ์พิเศษ และต้องมีความยาวระหว่าง 6 ถึง 30 ตัวอักษร'
+      message: 'ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น ห้ามใส่เว้นวรรค ภาษาไทย หรือสัญลักษณ์พิเศษ และต้องมีความยาวระหว่าง 5 ถึง 30 ตัวอักษร'
     });
   }
 

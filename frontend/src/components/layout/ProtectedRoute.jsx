@@ -21,7 +21,7 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    toast.error('กรุณาเข้าสู่ระบบก่อนทำรายการจอง');
+    toast.error('กรุณาเข้าสู่ระบบก่อนทำรายการจอง', { id: 'auth-required' });
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -38,12 +38,12 @@ export const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    toast.error('กรุณาเข้าสู่ระบบด้วยบัญชีแอดมิน');
+    toast.error('กรุณาเข้าสู่ระบบด้วยบัญชีแอดมิน', { id: 'admin-required' });
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!isAdmin) {
-    toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (สำหรับแอดมินเท่านั้น)');
+    toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (สำหรับแอดมินเท่านั้น)', { id: 'admin-only' });
     return <Navigate to="/" replace />;
   }
 

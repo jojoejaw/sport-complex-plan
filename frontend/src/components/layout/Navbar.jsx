@@ -43,20 +43,20 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* 2. เมนูกลาง (Center Navigation Links - 100% Match) */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* 2. เมนูกลาง (Center Navigation Links) */}
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative py-2 text-base font-medium transition-colors ${
+                  className={`relative py-2 text-sm lg:text-base font-medium transition-colors ${
                     active ? 'text-[#0B5D2D] font-semibold' : 'text-gray-700 hover:text-[#0B5D2D]'
                   }`}
                 >
                   {link.name}
-                  {/* เส้นใต้ขีดเขียวแสดงสถานะ Active ตรงตามภาพตัวอย่าง */}
+                  {/* เส้นใต้ขีดเขียวแสดงสถานะ Active */}
                   {active && (
                     <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#0B5D2D] rounded-full" />
                   )}
@@ -65,42 +65,42 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* 3. ปุ่มฝั่งขวา (Right Action Buttons - สลับตามสถานะ Auth) */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* 3. ปุ่มฝั่งขวา (Right Action Buttons) */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">
             {isAuthenticated ? (
               // กรณีล็อกอินแล้ว
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 lg:gap-2.5">
                 {/* User Info Pill */}
-                <div className="flex items-center gap-2 bg-[#F4F7F5] border border-gray-200 px-3.5 py-1.5 rounded-xl">
-                  <div className="w-7 h-7 rounded-full bg-[#0B5D2D] text-white flex items-center justify-center text-xs font-bold">
-                    <User className="w-4 h-4" />
+                <div className="flex items-center gap-2 bg-[#F4F7F5] border border-gray-200 px-3 py-1.5 rounded-xl text-xs lg:text-sm">
+                  <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-[#0B5D2D] text-white flex items-center justify-center font-bold">
+                    <User className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">{user?.username}</span>
-                  {isAdmin && (
-                    <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-300">
-                      <Shield className="w-3 h-3" /> Admin
-                    </span>
-                  )}
+                  <span className="font-semibold text-gray-800">{user?.username}</span>
                 </div>
 
-                {/* แอดมิน แดชบอร์ด (กรณีเป็นแอดมิน) */}
+                {/* ปุ่มแอดมิน แดชบอร์ด (กรณีเป็นแอดมิน - ปรับขนาดกะทัดรัด ดีไซน์พรีเมียม ไม่ดัน Layout) */}
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-3.5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-semibold border transition-all ${
+                      isActive('/admin')
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                        : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-500 hover:text-white hover:border-amber-500'
+                    }`}
+                    title="เข้าสู่หน้าแดชบอร์ดแอดมิน"
                   >
-                    <Shield className="w-4 h-4" />
-                    แดชบอร์ดแอดมิน
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>แดชบอร์ดแอดมิน</span>
                   </Link>
                 )}
 
                 {/* ปุ่มออกจากระบบ */}
                 <button
                   onClick={handleLogout}
-                  className="border border-rose-200 text-rose-600 hover:bg-rose-50 px-3.5 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="border border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
-                  <LogOut className="w-4 h-4" />
-                  ออกจากระบบ
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>ออกจากระบบ</span>
                 </button>
               </div>
             ) : (
