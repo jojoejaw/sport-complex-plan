@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, Shield, User, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import logo from '../../assets/sport-complex-logo.png';
+
 
 const links = [
   { name: 'หน้าแรก', path: '/' },
@@ -28,9 +28,12 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-white text-[#111111] shadow-[0_1px_10px_rgba(0,0,0,0.025)]">
       <div className="mx-auto grid h-[89px] w-full grid-cols-[360px_minmax(0,1fr)_auto] items-center px-10 max-[1100px]:grid-cols-[auto_1fr_auto] max-[1100px]:gap-6 max-[1100px]:px-6 max-md:flex max-md:h-[72px] max-md:justify-between max-md:px-4">
-        <Link to="/" onClick={closeMenu} className="block w-[314px] shrink-0 max-[1100px]:w-[250px] max-md:w-[230px]" aria-label="SPORT COMPLEX หน้าแรก">
-          <img src={logo} alt="SPORT COMPLEX" className="block h-auto w-full" />
+        <Link to="/" onClick={closeMenu} className="block shrink-0" aria-label="SPORT COMPLEX หน้าแรก">
+          <span className="text-xl font-bold tracking-tight text-gray-900 font-['Kanit',sans-serif]">
+            SPORT <span className="text-[#0B5D2D]">COMPLEX</span>
+          </span>
         </Link>
+
 
         <div className="flex h-full items-center justify-center gap-[41px] whitespace-nowrap max-[1180px]:gap-6 max-md:hidden">
           {links.map((link) => (

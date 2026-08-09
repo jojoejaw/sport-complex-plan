@@ -27,22 +27,25 @@ export const bookingService = {
     return response.data;
   },
 
-  // 4. ยกเลิกการจองสนาม (DELETE /api/bookings/:id/cancel)
+  // 4. ยกเลิกการจองสนาม (PUT /api/bookings/:id/cancel)
+  // แก้ไขตาม Backend: เปลี่ยน HTTP Method จาก DELETE เป็น PUT ให้ตรงกับ Backend
   cancelBooking: async (bookingId) => {
-    const response = await api.delete(`/bookings/${bookingId}/cancel`);
+    const response = await api.put(`/bookings/${bookingId}/cancel`);
     return response.data;
   },
 
-  // 5. ดึงรายการการจองทั้งหมด (GET /api/bookings/admin/all) - สำหรับ Admin
+  // 5. ดึงรายการการจองทั้งหมดของทุกคน (GET /api/bookings/admin/list) - สำหรับ Admin
+  // แก้ไขตาม Backend: เปลี่ยน URL จาก /bookings/admin/all เป็น /bookings/admin/list
   getAllBookingsAdmin: async (statusFilter = null) => {
     const params = statusFilter ? { status: statusFilter } : {};
-    const response = await api.get('/bookings/admin/all', { params });
+    const response = await api.get('/bookings/admin/list', { params });
     return response.data;
   },
 
-  // 6. อัปเดตสถานะการจอง (PUT /api/bookings/admin/:id/status) - สำหรับ Admin อนุมัติ/ปฏิเสธ
+  // 6. แอดมินอนุมัติ/ปฏิเสธสลิปการจองสนาม (PUT /api/bookings/:id/verify) - สำหรับ Admin
+  // แก้ไขตาม Backend: เปลี่ยน URL จาก /bookings/admin/:id/status เป็น /bookings/:id/verify
   updateBookingStatusAdmin: async (bookingId, status, rejectReason = '') => {
-    const response = await api.put(`/bookings/admin/${bookingId}/status`, {
+    const response = await api.put(`/bookings/${bookingId}/verify`, {
       status,
       reject_reason: rejectReason
     });
