@@ -354,20 +354,14 @@ const RegisterPage = () => {
         </form>
 
         {/* 4. เส้นแบ่งและลิงก์ไปยังหน้าเข้าสู่ระบบ */}
-        <div className="relative my-3.5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-xs sm:text-sm">
-            <span className="px-2.5 bg-white text-gray-500 font-medium font-['Kanit',sans-serif]">
-              มีบัญชีอยู่แล้ว?
-            </span>
-          </div>
-        </div>
-
-        <div className="text-xs sm:text-sm font-['Kanit',sans-serif]">
-          <Link to="/login" className="text-[#0B5D2D] font-bold hover:underline">
-            เข้าสู่ระบบ คลิกที่นี่
+        <div className="mt-5 pt-4 border-t border-gray-100 text-center text-xs sm:text-sm font-['Kanit',sans-serif]">
+          <span className="text-gray-500 font-medium">มีบัญชีอยู่แล้ว? </span>
+          <Link
+            to="/login"
+            className="text-[#0B5D2D] hover:text-[#064E26] font-bold transition-all inline-flex items-center gap-1 group ml-1"
+          >
+            <span>เข้าสู่ระบบ</span>
+            <span className="text-xs group-hover:translate-x-0.5 transition-transform">➔</span>
           </Link>
         </div>
 

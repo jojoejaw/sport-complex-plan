@@ -234,10 +234,14 @@ const LoginPage = () => {
         </div>
 
         {/* 5. ลิงก์ด้านล่างไปสมัครสมาชิก */}
-        <div className="mt-4 pt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 font-['Kanit',sans-serif]">
-          ยังไม่มีบัญชี?{' '}
-          <Link to="/register" className="text-[#0B5D2D] font-bold hover:underline">
-            สมัครสมาชิก
+        <div className="mt-5 pt-4 border-t border-gray-100 text-center text-xs sm:text-sm font-['Kanit',sans-serif]">
+          <span className="text-gray-500 font-medium">ยังไม่มีบัญชี? </span>
+          <Link
+            to="/register"
+            className="text-[#0B5D2D] hover:text-[#064E26] font-bold transition-all inline-flex items-center gap-1 group ml-1"
+          >
+            <span>สมัครสมาชิก</span>
+            <span className="text-xs group-hover:translate-x-0.5 transition-transform">➔</span>
           </Link>
         </div>
 
