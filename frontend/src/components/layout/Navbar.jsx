@@ -1,200 +1,103 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LogOut, Menu, Shield, User, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, User, Shield, Menu, X } from 'lucide-react';
+import logo from '../../assets/sport-complex-logo.png';
+
+const links = [
+  { name: 'หน้าแรก', path: '/' },
+  { name: 'สนาม & จองสนาม', path: '/courts' },
+  { name: 'ประวัติการจองของฉัน', path: '/my-bookings' },
+  { name: 'เกี่ยวกับเรา', path: '/about' },
+];
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const active = (path) => location.pathname === path;
 
-  const handleLogout = () => {
+  const closeMenu = () => setOpen(false);
+  const signOut = () => {
     logout();
+    closeMenu();
     navigate('/login');
   };
 
-  // ตรวจสอบว่าลิงก์กำลังใช้งานอยู่หรือไม่ (Active Link)
-  const isActive = (path) => location.pathname === path;
-
-  const navLinks = [
-    { name: 'หน้าแรก', path: '/' },
-    { name: 'สนาม & จองสนาม', path: '/courts' },
-    { name: 'ประวัติการจองของฉัน', path: '/my-bookings' },
-    { name: 'เกี่ยวกับเรา', path: '/about' },
-  ];
-
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
-          
-          {/* 1. โลโก้ฝั่งซ้าย (Logo & Brand Name - ตรงตามภาพ Design Theme) */}
-          <Link to="/" className="flex items-center gap-3 group">
-            {/* Hexagon Logo Icon */}
-            <div className="w-11 h-11 bg-[#0B5D2D] rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
-              <svg className="w-7 h-7 stroke-current" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.8"/>
-              </svg>
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-gray-900 font-['Kanit',sans-serif]">
-              SPORT <span className="text-[#0B5D2D]">COMPLEX</span>
-            </span>
-          </Link>
+    <nav className="sticky top-0 z-50 bg-white text-[#111111] shadow-[0_1px_10px_rgba(0,0,0,0.025)]">
+      <div className="mx-auto grid h-[89px] w-full grid-cols-[360px_minmax(0,1fr)_auto] items-center px-10 max-[1100px]:grid-cols-[auto_1fr_auto] max-[1100px]:gap-6 max-[1100px]:px-6 max-md:flex max-md:h-[72px] max-md:justify-between max-md:px-4">
+        <Link to="/" onClick={closeMenu} className="block w-[314px] shrink-0 max-[1100px]:w-[250px] max-md:w-[230px]" aria-label="SPORT COMPLEX หน้าแรก">
+          <img src={logo} alt="SPORT COMPLEX" className="block h-auto w-full" />
+        </Link>
 
-          {/* 2. เมนูกลาง (Center Navigation Links) */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-            {navLinks.map((link) => {
-              const active = isActive(link.path);
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`relative py-2 text-sm lg:text-base font-medium transition-colors ${
-                    active ? 'text-[#0B5D2D] font-semibold' : 'text-gray-700 hover:text-[#0B5D2D]'
-                  }`}
-                >
-                  {link.name}
-                  {/* เส้นใต้ขีดเขียวแสดงสถานะ Active */}
-                  {active && (
-                    <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#0B5D2D] rounded-full" />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* 3. ปุ่มฝั่งขวา (Right Action Buttons) */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            {isAuthenticated ? (
-              // กรณีล็อกอินแล้ว
-              <div className="flex items-center gap-2 lg:gap-2.5">
-                {/* User Info Pill */}
-                <div className="flex items-center gap-2 bg-[#F4F7F5] border border-gray-200 px-3 py-1.5 rounded-xl text-xs lg:text-sm">
-                  <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-[#0B5D2D] text-white flex items-center justify-center font-bold">
-                    <User className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                  </div>
-                  <span className="font-semibold text-gray-800">{user?.username}</span>
-                </div>
-
-                {/* ปุ่มแอดมิน แดชบอร์ด (กรณีเป็นแอดมิน - ปรับขนาดกะทัดรัด ดีไซน์พรีเมียม ไม่ดัน Layout) */}
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-semibold border transition-all ${
-                      isActive('/admin')
-                        ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                        : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-500 hover:text-white hover:border-amber-500'
-                    }`}
-                    title="เข้าสู่หน้าแดชบอร์ดแอดมิน"
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>แดชบอร์ดแอดมิน</span>
-                  </Link>
-                )}
-
-                {/* ปุ่มออกจากระบบ */}
-                <button
-                  onClick={handleLogout}
-                  className="border border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>ออกจากระบบ</span>
-                </button>
-              </div>
-            ) : (
-              // กรณีทียังไม่ได้ล็อกอิน (ตรงตามรูปภาพ 100%)
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/login"
-                  className="border border-[#0B5D2D] text-[#0B5D2D] hover:bg-[#ECFDF5] px-5 py-2.5 rounded-xl text-base font-semibold transition-all shadow-2xs"
-                >
-                  เข้าสู่ระบบ
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-[#0B5D2D] hover:bg-[#064E26] text-white px-5 py-2.5 rounded-xl text-base font-semibold transition-all shadow-sm hover:shadow-md"
-                >
-                  สมัครสมาชิก
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* ปุ่ม Toggle สำหรับมือถือ (Mobile Menu Button) */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-700 hover:text-[#0B5D2D] p-2 rounded-lg"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* เมนูมือถือ (Mobile Dropdown Menu) */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-6 space-y-3">
-          {navLinks.map((link) => (
+        <div className="flex h-full items-center justify-center gap-[41px] whitespace-nowrap max-[1180px]:gap-6 max-md:hidden">
+          {links.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block px-3 py-2 rounded-lg text-base font-medium ${
-                isActive(link.path)
-                  ? 'bg-[#ECFDF5] text-[#0B5D2D] font-semibold'
-                  : 'text-gray-700 hover:bg-gray-50'
+              className={`relative flex h-full items-center pt-px text-[16px] font-medium transition-colors ${
+                active(link.path) ? 'text-[#086b2d]' : 'text-[#111111] hover:text-[#086b2d]'
               }`}
             >
               {link.name}
+              {active(link.path) && (
+                <span className="absolute bottom-[7px] left-1/2 h-[2px] w-[51px] -translate-x-1/2 bg-[#08702e]" />
+              )}
             </Link>
           ))}
-          <div className="pt-4 border-t border-gray-100 flex flex-col gap-2">
+        </div>
+
+        <div className="flex items-center justify-end gap-[11px] pl-7 max-[1100px]:pl-0 max-md:hidden">
+          {isAuthenticated ? (
+            <>
+              <span className="flex h-[46px] items-center gap-2 rounded-[9px] border border-[#08702e] px-4 text-[15px] font-medium text-[#08702e]">
+                <User className="h-4 w-4" />
+                {user?.username}
+              </span>
+              {isAdmin && (
+                <Link to="/admin" className="flex h-[46px] items-center rounded-[9px] border border-amber-500 px-4 text-[15px] font-medium text-amber-700">
+                  <Shield className="mr-1.5 h-4 w-4" />แอดมิน
+                </Link>
+              )}
+              <button onClick={signOut} className="flex h-[46px] w-[46px] items-center justify-center rounded-[9px] bg-[#086b2d] text-white transition hover:bg-[#075c27]" aria-label="ออกจากระบบ">
+                <LogOut className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="flex h-[46px] items-center rounded-[9px] border border-[#08702e] px-[17px] text-[16px] font-medium text-[#08702e] transition hover:bg-[#f1f9f4]">
+                เข้าสู่ระบบ
+              </Link>
+              <Link to="/register" className="flex h-[46px] items-center rounded-[9px] bg-[#086b2d] px-[17px] text-[16px] font-medium text-white shadow-[0_2px_5px_rgba(8,107,45,0.18)] transition hover:bg-[#075c27]">
+                สมัครสมาชิก
+              </Link>
+            </>
+          )}
+        </div>
+
+        <button onClick={() => setOpen((value) => !value)} className="rounded-lg p-2 text-[#086b2d] md:hidden" aria-label={open ? 'ปิดเมนู' : 'เปิดเมนู'} aria-expanded={open}>
+          {open ? <X /> : <Menu />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="border-t border-[#e5eee8] bg-white px-4 pb-5 pt-3 md:hidden">
+          <div className="space-y-1">
+            {links.map((link) => (
+              <Link key={link.path} to={link.path} onClick={closeMenu} className={`block rounded-lg px-3 py-2.5 text-[15px] font-medium ${active(link.path) ? 'bg-[#edf7f0] text-[#086b2d]' : 'text-[#222]'}`}>
+                {link.name}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#e5eee8] pt-3">
             {isAuthenticated ? (
-              <>
-                <div className="px-3 py-2 text-sm text-gray-600 flex items-center gap-2">
-                  <User className="w-4 h-4 text-[#0B5D2D]" />
-                  <span>ผู้ใช้: <strong>{user?.username}</strong></span>
-                  {isAdmin && <span className="text-amber-700 font-bold text-xs bg-amber-100 px-2 py-0.5 rounded-md">ADMIN</span>}
-                </div>
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full bg-amber-500 text-white text-center py-2.5 rounded-xl font-medium"
-                  >
-                    แดชบอร์ดแอดมิน
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full border border-rose-200 text-rose-600 text-center py-2.5 rounded-xl font-medium"
-                >
-                  ออกจากระบบ
-                </button>
-              </>
+              <button onClick={signOut} className="col-span-2 rounded-lg bg-[#086b2d] py-2.5 font-medium text-white">ออกจากระบบ</button>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full border border-[#0B5D2D] text-[#0B5D2D] text-center py-2.5 rounded-xl font-semibold"
-                >
-                  เข้าสู่ระบบ
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full bg-[#0B5D2D] text-white text-center py-2.5 rounded-xl font-semibold"
-                >
-                  สมัครสมาชิก
-                </Link>
+                <Link to="/login" onClick={closeMenu} className="rounded-lg border border-[#08702e] py-2.5 text-center font-medium text-[#08702e]">เข้าสู่ระบบ</Link>
+                <Link to="/register" onClick={closeMenu} className="rounded-lg bg-[#086b2d] py-2.5 text-center font-medium text-white">สมัครสมาชิก</Link>
               </>
             )}
           </div>
