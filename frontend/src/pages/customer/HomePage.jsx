@@ -89,7 +89,15 @@ const HomePage = () => {
     };
 
     loadCourtData();
+
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('scroll') === 'courts') {
+      setTimeout(() => {
+        document.getElementById('courts-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 250);
+    }
   }, []);
+
 
   const visibleCourts = selectedSport === 'ทั้งหมด'
     ? sports
@@ -126,8 +134,9 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="sport-filter mt-1 border-t border-[#e9e9e9] px-1 pt-3 max-lg:mt-32 max-sm:mt-80">
+      <section id="courts-section" className="sport-filter mt-1 border-t border-[#e9e9e9] px-1 pt-3 max-lg:mt-32 max-sm:mt-80">
         <h2 className="mb-2.5 text-[19px] font-semibold">เลือกประเภทกีฬา</h2>
+
         <div className="grid grid-cols-5 gap-5 max-lg:grid-cols-3 max-sm:grid-cols-2 max-sm:gap-3">
           {sports.map(({ name, icon }) => {
             const Icon = typeof icon === 'string' ? null : icon;
@@ -146,7 +155,7 @@ const HomePage = () => {
           <h2 className="text-[21px] font-semibold">สนามแนะนำ</h2>
           <Link to="/courts" className="flex items-center gap-2 font-medium text-[#08752e]">ดูทั้งหมด <ArrowRight className="h-5 w-5" /></Link>
         </div>
-        <div className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+        <div className="grid auto-rows-fr grid-cols-4 items-stretch gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
           {loading && Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.08)]">
               <div className="aspect-video animate-pulse bg-[#e7eee9]" />
@@ -172,18 +181,20 @@ const HomePage = () => {
           )}
 
           {!loading && !error && visibleCourts.map((court) => (
-            <article key={court.id} className="court-card overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.1)] transition hover:-translate-y-1 hover:shadow-lg">
+            <article key={court.id} className="court-card flex h-full min-h-0 flex-col overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.1)] transition hover:-translate-y-1 hover:shadow-lg">
               {court.image_url ? (
                 <img src={court.image_url} alt={court.name} className="aspect-video w-full object-cover" />
               ) : (
                 <div className="aspect-video bg-cover bg-no-repeat" style={{ backgroundImage: `url(${courtPanorama})`, backgroundPosition: court.position, backgroundSize: '400% 100%' }} />
               )}
-              <div className="court-card-body p-3">
-                <h3 className="text-[17px] font-semibold">{court.name}</h3>
+              <div className="court-card-body flex flex-1 flex-col p-3">
+                <h3 className="min-h-[52px] text-[17px] font-semibold leading-[26px]">{court.name}</h3>
                 <p className="mt-2 text-[14px]">{court.sport}</p>
                 <p className="mt-2 text-[17px] font-semibold">{court.price} บาท / ชั่วโมง</p>
-                {court.closed && <p className="mt-2 flex items-center gap-1 text-[13px] font-semibold text-red-600"><RefreshCcw className="h-4 w-4" /> ปิดปรับปรุงชั่วคราว</p>}
-                <Link to={court.closed ? '#' : '/courts'} aria-disabled={court.closed} className={`mt-4 flex h-[41px] items-center justify-center rounded-[7px] text-[14px] font-medium ${court.closed ? 'pointer-events-none bg-[#e4e4e4] text-[#666]' : 'bg-[#08752e] text-white hover:bg-[#056326]'}`}>
+                <div className="mt-2 min-h-[20px]">
+                  {court.closed && <p className="flex items-center gap-1 text-[13px] font-semibold text-red-600"><RefreshCcw className="h-4 w-4" /> ปิดปรับปรุงชั่วคราว</p>}
+                </div>
+                <Link to={court.closed ? '#' : '/courts'} aria-disabled={court.closed} className={`mt-auto flex h-[41px] shrink-0 items-center justify-center rounded-[7px] text-[14px] font-medium ${court.closed ? 'pointer-events-none bg-[#e4e4e4] text-[#666]' : 'bg-[#08752e] text-white hover:bg-[#056326]'}`}>
                   {court.closed ? 'ปิดปรับปรุงชั่วคราว' : 'เช็ครอบเวลาว่าง / จองสนาม'}
                 </Link>
               </div>

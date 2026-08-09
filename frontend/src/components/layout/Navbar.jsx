@@ -12,10 +12,11 @@ import { useAuth } from '../../context/AuthContext';
 
 const links = [
   { name: 'หน้าแรก', path: '/' },
-  { name: 'สนาม & จองสนาม', path: '/courts' },
+  { name: 'จองสนาม', path: '/#courts-section' },
   { name: 'ประวัติการจองของฉัน', path: '/my-bookings' },
   { name: 'เกี่ยวกับเรา', path: '/about' },
 ];
+
 
 const Brand = () => (
   <div className="flex items-center gap-3">
@@ -51,6 +52,23 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const handleNavClick = (e, path) => {
+    if (path === '/#courts-section') {
+      e.preventDefault();
+      if (location.pathname === '/') {
+        const el = document.getElementById('courts-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        navigate('/?scroll=courts');
+      }
+      closeMenu();
+    } else {
+      closeMenu();
+    }
+  };
+
   return (
     <nav className="compact-navbar sticky top-3 z-50 mx-auto w-[calc(100%-40px)] max-w-[1280px] rounded-[26px] bg-white text-[#111] shadow-[0_3px_24px_rgba(0,0,0,0.06)] max-md:top-2 max-md:w-[calc(100%-16px)]">
       <div className="compact-navbar-inner mx-auto grid h-[72px] w-full grid-cols-[310px_minmax(0,1fr)_auto] items-center px-6 max-[1280px]:grid-cols-[275px_minmax(0,1fr)_auto] max-[1280px]:px-5 max-[1060px]:grid-cols-[auto_1fr_auto] max-md:flex max-md:h-[68px] max-md:justify-between max-md:px-4">
@@ -60,12 +78,18 @@ const Navbar = () => {
 
         <div className="flex h-full items-stretch justify-center gap-8 whitespace-nowrap max-[1280px]:gap-4 max-[1060px]:hidden">
           {links.map(({ name, path }) => (
-            <Link key={path} to={path} className={`group relative flex min-w-[88px] items-center justify-center text-[16px] font-semibold transition-colors ${active(path) ? 'text-[#06772d]' : 'text-[#111] hover:text-[#06772d]'}`}>
+            <Link
+              key={path}
+              to={path}
+              onClick={(e) => handleNavClick(e, path)}
+              className={`group relative flex min-w-[88px] items-center justify-center text-[16px] font-semibold transition-colors ${active(path) ? 'text-[#06772d]' : 'text-[#111] hover:text-[#06772d]'}`}
+            >
               <span>{name}</span>
               <span className={`absolute bottom-[11px] left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-[#07802f] transition-all ${active(path) ? 'w-[46px] opacity-100' : 'w-0 opacity-0 group-hover:w-8 group-hover:opacity-100'}`} />
             </Link>
           ))}
         </div>
+
 
         <div className="flex items-center justify-end gap-4 pl-6 max-[1280px]:gap-2.5 max-[1280px]:pl-3 max-[1060px]:hidden">
           {isAuthenticated ? (
@@ -88,7 +112,8 @@ const Navbar = () => {
       {open && (
         <div className="border-t border-[#e5eee8] px-4 pb-5 pt-3 min-[1061px]:hidden">
           <div className="grid gap-1 sm:grid-cols-2">
-            {links.map(({ name, path }) => <Link key={path} to={path} onClick={closeMenu} className={`rounded-xl px-3 py-3 font-medium ${active(path) ? 'bg-[#edf7f0] text-[#08752e]' : 'text-[#222]'}`}>{name}</Link>)}
+            {links.map(({ name, path }) => <Link key={path} to={path} onClick={(e) => handleNavClick(e, path)} className={`rounded-xl px-3 py-3 font-medium ${active(path) ? 'bg-[#edf7f0] text-[#08752e]' : 'text-[#222]'}`}>{name}</Link>)}
+
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#e5eee8] pt-3">
             {isAuthenticated ? <button onClick={signOut} className="col-span-2 rounded-xl bg-[#08752e] py-3 font-medium text-white">ออกจากระบบ</button> : <><Link to="/login" onClick={closeMenu} className="rounded-xl border border-[#07802f] py-3 text-center font-medium text-[#08752e]">เข้าสู่ระบบ</Link><Link to="/register" onClick={closeMenu} className="rounded-xl bg-[#08752e] py-3 text-center font-medium text-white">สมัครสมาชิก</Link></>}
