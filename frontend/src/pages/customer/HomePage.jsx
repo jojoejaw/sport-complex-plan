@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import heroImage from '../../assets/sports-hero.png';
 import courtPanorama from '../../assets/court-panorama.png';
+import courtService from '../../services/courtService';
 
 const benefits = [
   { icon: CalendarCheck, title: 'จองง่าย', detail: 'จองได้ใน 24 ชม.' },
@@ -21,20 +22,19 @@ const benefits = [
   { icon: QrCode, title: 'ยกเลิกได้เอง', detail: 'เมื่อยังไม่ชำระเงิน' },
 ];
 
-const sports = [
-  { name: 'ทั้งหมด', icon: Grid2X2 },
-  { name: 'ฟุตบอล', icon: '⚽' },
-  { name: 'บาสเกตบอล', icon: '🏀' },
-  { name: 'แบดมินตัน', icon: '🏸' },
-  { name: 'วอลเลย์บอล', icon: '🏐' },
-];
+const sportIcons = {
+  ฟุตบอล: '⚽',
+  บาสเกตบอล: '🏀',
+  แบดมินตัน: '🏸',
+  วอลเลย์บอล: '🏐',
+};
 
-const courts = [
-  { name: 'สนามฟุตบอล A (ในร่ม)', sport: 'ฟุตบอล', price: 600, position: '0% center' },
-  { name: 'สนามบาสเกตบอล B', sport: 'บาสเกตบอล', price: 500, position: '33.333% center' },
-  { name: 'สนามแบดมินตัน C', sport: 'แบดมินตัน', price: 300, position: '66.666% center' },
-  { name: 'สนามวอลเลย์บอล D', sport: 'วอลเลย์บอล', price: 400, position: '100% center', closed: true },
-];
+const fallbackImagePositions = {
+  1: '0% center',
+  2: '33.333% center',
+  3: '66.666% center',
+  4: '100% center',
+};
 
 const serviceInfo = [
   { icon: Clock3, title: 'เวลาทำการ', detail: '10:00 - 22:00 น.' },
@@ -46,7 +46,59 @@ const serviceInfo = [
 
 const HomePage = () => {
   const [selectedSport, setSelectedSport] = useState('ทั้งหมด');
-  const visibleCourts = selectedSport === 'ทั้งหมด' ? courts : courts.filter((court) => court.sport === selectedSport);
+  const [sports, setSports] = useState([]);
+  const [courts, setCourts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadCourtData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const [sportData, courtData] = await Promise.all([
+          courtService.getSports(),
+          courtService.getCourts(),
+        ]);
+
+        const sportNames = new Map(sportData.map((sport) => [sport.id, sport.name]));
+
+        setSports([
+          { name: 'ทั้งหมด', icon: Grid2X2 },
+          ...sportData.map((sport) => ({
+            id: sport.id,
+            name: sport.name,
+            icon: sportIcons[sport.name] || Grid2X2,
+          })),
+        ]);
+
+        setCourts(courtData.map((court) => ({
+          ...court,
+          sport: sportNames.get(court.sport_id) || 'ไม่ระบุประเภท',
+          price: Number(court.price_per_hour),
+          closed: court.status === 'maintenance',
+          position: fallbackImagePositions[court.sport_id] || 'center',
+        })));
+      } catch (loadError) {
+        console.error('Unable to load court data:', loadError);
+        setError('ไม่สามารถโหลดข้อมูลสนามได้ กรุณาลองใหม่อีกครั้ง');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCourtData();
+  }, []);
+
+  const visibleCourts = selectedSport === 'ทั้งหมด'
+    ? sports
+        .filter((sport) => sport.name !== 'ทั้งหมด')
+        .map((sport) => courts.find((court) => court.sport_id === sport.id))
+        .filter(Boolean)
+    : courts
+        .filter((court) => court.sport === selectedSport)
+        .slice(0, 4);
 
   return (
     <div className="home-page pb-1 pt-2 text-[#111]">
@@ -95,9 +147,37 @@ const HomePage = () => {
           <Link to="/courts" className="flex items-center gap-2 font-medium text-[#08752e]">ดูทั้งหมด <ArrowRight className="h-5 w-5" /></Link>
         </div>
         <div className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-          {visibleCourts.map((court) => (
-            <article key={court.name} className="court-card overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.1)] transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="aspect-video bg-cover bg-no-repeat" style={{ backgroundImage: `url(${courtPanorama})`, backgroundPosition: court.position, backgroundSize: '400% 100%' }} />
+          {loading && Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.08)]">
+              <div className="aspect-video animate-pulse bg-[#e7eee9]" />
+              <div className="space-y-3 p-3">
+                <div className="h-5 w-4/5 animate-pulse rounded bg-[#e7eee9]" />
+                <div className="h-4 w-2/5 animate-pulse rounded bg-[#edf2ee]" />
+                <div className="h-5 w-3/5 animate-pulse rounded bg-[#e7eee9]" />
+                <div className="h-10 animate-pulse rounded bg-[#dce9e0]" />
+              </div>
+            </div>
+          ))}
+
+          {!loading && error && (
+            <div className="col-span-full rounded-[14px] border border-red-200 bg-red-50 px-5 py-8 text-center text-red-700">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && visibleCourts.length === 0 && (
+            <div className="col-span-full rounded-[14px] border border-[#dce7df] bg-white px-5 py-8 text-center text-gray-500">
+              ไม่พบสนามในประเภทกีฬาที่เลือก
+            </div>
+          )}
+
+          {!loading && !error && visibleCourts.map((court) => (
+            <article key={court.id} className="court-card overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.1)] transition hover:-translate-y-1 hover:shadow-lg">
+              {court.image_url ? (
+                <img src={court.image_url} alt={court.name} className="aspect-video w-full object-cover" />
+              ) : (
+                <div className="aspect-video bg-cover bg-no-repeat" style={{ backgroundImage: `url(${courtPanorama})`, backgroundPosition: court.position, backgroundSize: '400% 100%' }} />
+              )}
               <div className="court-card-body p-3">
                 <h3 className="text-[17px] font-semibold">{court.name}</h3>
                 <p className="mt-2 text-[14px]">{court.sport}</p>
