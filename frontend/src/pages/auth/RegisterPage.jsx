@@ -69,7 +69,7 @@ const RegisterPage = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      toast.error('กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง');
+      toast.error('กรุณากรอกข้อมูลให้ครบทุกช่อง');
       if (newErrors.username) usernameRef.current?.focus();
       else if (newErrors.email) emailRef.current?.focus();
       else if (newErrors.password) passwordRef.current?.focus();
@@ -178,14 +178,14 @@ const RegisterPage = () => {
   return (
     <div className="flex items-center justify-center py-4 px-4 sm:px-6">
       <div className="max-w-sm sm:max-w-md w-full bg-white rounded-2xl p-5 sm:p-6 shadow-md border border-gray-100 text-center relative overflow-hidden my-2">
-        
+
         {/* 1. โลโก้แบรนด์ด้านบน ( Hexagon Logo ) */}
         <div className="flex justify-center mb-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[#0B5D2D] rounded-xl flex items-center justify-center text-white shadow-xs">
               <svg className="w-4 h-4 sm:w-5 sm:h-5 stroke-current" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.8" />
               </svg>
             </div>
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 font-['Kanit',sans-serif]">
@@ -199,12 +199,12 @@ const RegisterPage = () => {
           สมัครสมาชิก
         </h2>
         <p className="text-gray-500 text-xs sm:text-sm mb-4 font-['Kanit',sans-serif]">
-          สร้างบัญชีเพื่อใช้งานระบบ SPORT COMPLEX
+          สร้างบัญชีเพื่อใช้งาน SPORT COMPLEX
         </p>
 
         {/* 3. ฟอร์มสมัครสมาชิก */}
         <form onSubmit={handleSubmit} noValidate className="space-y-3.5 text-left">
-          
+
           {/* ช่อง 1: ชื่อผู้ใช้ (Username) */}
           <div>
             <label className={`block text-xs sm:text-sm font-semibold mb-1 font-['Kanit',sans-serif] ${errors.username ? 'text-red-600' : 'text-gray-800'}`}>
@@ -222,12 +222,11 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onKeyDown={handleKeyDownNoSpace}
                 maxLength={30}
-                placeholder="กรอกชื่อผู้ใช้ (5-30 ตัวอักษร)"
-                className={`w-full pl-9 pr-3 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${
-                  errors.username
-                    ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
-                    : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
-                }`}
+                placeholder="username"
+                className={`w-full pl-9 pr-3 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${errors.username
+                  ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
+                  : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
+                  }`}
               />
             </div>
           </div>
@@ -249,12 +248,11 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onKeyDown={handleKeyDownNoSpace}
                 maxLength={50}
-                placeholder="กรอกอีเมลของคุณ"
-                className={`w-full pl-9 pr-3 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${
-                  errors.email
-                    ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
-                    : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
-                }`}
+                placeholder="e-mail"
+                className={`w-full pl-9 pr-3 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${errors.email
+                  ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
+                  : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
+                  }`}
               />
             </div>
           </div>
@@ -276,12 +274,11 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onKeyDown={handleKeyDownNoSpace}
                 maxLength={30}
-                placeholder="กรอกรหัสผ่าน"
-                className={`w-full pl-9 pr-9 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${
-                  errors.password
-                    ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
-                    : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
-                }`}
+                placeholder="password"
+                className={`w-full pl-9 pr-9 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${errors.password
+                  ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
+                  : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
+                  }`}
               />
               <button
                 type="button"
@@ -310,12 +307,11 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onKeyDown={handleKeyDownNoSpace}
                 maxLength={30}
-                placeholder="กรอกยืนยันรหัสผ่าน"
-                className={`w-full pl-9 pr-9 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${
-                  errors.confirmPassword
-                    ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
-                    : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
-                }`}
+                placeholder="confirm password"
+                className={`w-full pl-9 pr-9 py-2 bg-white border rounded-lg text-sm focus:outline-none transition-all font-['Kanit',sans-serif] ${errors.confirmPassword
+                  ? 'border-red-500 ring-2 ring-red-500/20 text-red-900 placeholder-red-300'
+                  : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0B5D2D] focus:ring-2 focus:ring-[#0B5D2D]/20'
+                  }`}
               />
               <button
                 type="button"
