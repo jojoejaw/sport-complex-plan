@@ -60,3 +60,64 @@
 .btn-outline-primary:hover {
   background-color: #ECFDF5;
 }
+
+/* Keep the complete home booking overview visible on shorter desktop screens. */
+@media (min-width: 1024px) and (max-height: 900px) {
+  .compact-navbar {
+    top: 6px;
+  }
+
+  .compact-navbar-inner {
+    height: 72px;
+  }
+
+  .home-page {
+    padding-top: 2px;
+  }
+
+  .home-hero {
+    min-height: 326px;
+  }
+
+  .home-hero-copy {
+    padding-top: 12px;
+    padding-bottom: 52px;
+  }
+
+  .home-hero-image {
+    height: 286px;
+  }
+
+  .sport-filter {
+    padding-top: 10px;
+  }
+
+  .sport-filter h2 {
+    margin-bottom: 9px;
+  }
+
+  .sport-filter button {
+    height: 42px;
+  }
+
+  .featured-courts {
+    padding-top: 14px;
+  }
+
+  .featured-courts > div:first-child {
+    margin-bottom: 9px;
+  }
+
+  .court-card-body {
+    padding: 11px 13px 12px;
+  }
+
+  .court-card-body p {
+    margin-top: 4px;
+  }
+
+  .court-card-body a {
+    height: 36px;
+    margin-top: 9px;
+  }
+}

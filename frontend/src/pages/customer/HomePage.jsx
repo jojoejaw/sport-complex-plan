@@ -1,19 +1,125 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  ArrowRight,
+  BellRing,
+  CalendarCheck,
+  Clock3,
+  Grid2X2,
+  QrCode,
+  RefreshCcw,
+  ShieldCheck,
+  TimerReset,
+} from 'lucide-react';
+import heroImage from '../../assets/sports-hero.png';
+import courtPanorama from '../../assets/court-panorama.png';
+
+const benefits = [
+  { icon: CalendarCheck, title: 'จองง่าย', detail: 'จองได้ใน 24 ชม.' },
+  { icon: Clock3, title: 'สะดวก', detail: 'เลือกเวลาได้ทันที' },
+  { icon: ShieldCheck, title: 'ปลอดภัย', detail: 'ชำระเงินอย่างปลอดภัย' },
+  { icon: QrCode, title: 'ยกเลิกได้เอง', detail: 'เมื่อยังไม่ชำระเงิน' },
+];
+
+const sports = [
+  { name: 'ทั้งหมด', icon: Grid2X2 },
+  { name: 'ฟุตบอล', icon: '⚽' },
+  { name: 'บาสเกตบอล', icon: '🏀' },
+  { name: 'แบดมินตัน', icon: '🏸' },
+  { name: 'วอลเลย์บอล', icon: '🏐' },
+];
+
+const courts = [
+  { name: 'สนามฟุตบอล A (ในร่ม)', sport: 'ฟุตบอล', price: 600, position: '0% center' },
+  { name: 'สนามบาสเกตบอล B', sport: 'บาสเกตบอล', price: 500, position: '33.333% center' },
+  { name: 'สนามแบดมินตัน C', sport: 'แบดมินตัน', price: 300, position: '66.666% center' },
+  { name: 'สนามวอลเลย์บอล D', sport: 'วอลเลย์บอล', price: 400, position: '100% center', closed: true },
+];
+
+const serviceInfo = [
+  { icon: Clock3, title: 'เวลาทำการ', detail: '10:00 - 22:00 น.' },
+  { icon: TimerReset, title: 'จองได้สูงสุด', detail: '3 ชั่วโมง/ครั้ง' },
+  { icon: CalendarCheck, title: 'ล็อกสนามรอโอนเงิน', detail: 'ภายใน 15 นาที' },
+  { icon: QrCode, title: 'ชำระเงินผ่าน', detail: 'พร้อมเพย์ (PromptPay QR)' },
+  { icon: BellRing, title: 'ยกเลิกได้เอง', detail: 'เมื่อยังไม่ชำระเงิน' },
+];
 
 const HomePage = () => {
+  const [selectedSport, setSelectedSport] = useState('ทั้งหมด');
+  const visibleCourts = selectedSport === 'ทั้งหมด' ? courts : courts.filter((court) => court.sport === selectedSport);
+
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Kanit',sans-serif]">
-      <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xs text-center max-w-xl w-full">
-        <div className="w-12 h-12 bg-[#ECFDF5] text-[#0B5D2D] rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-          ✨
+    <div className="home-page pb-1 pt-2 text-[#111]">
+      <section className="home-hero grid min-h-[326px] grid-cols-[35%_65%] items-center max-lg:grid-cols-1">
+        <div className="home-hero-copy relative z-10 px-4 pb-12 pt-3 max-lg:pb-8 max-lg:text-center">
+          <p className="mb-3 text-[16px] font-semibold uppercase text-[#08752e]">WELCOME TO</p>
+          <h1 className="text-[43px] font-bold leading-none tracking-[-1.5px] max-sm:text-[36px]">SPORT COMPLEX</h1>
+          <h2 className="mt-4 text-[19px] font-semibold leading-[1.55]">จองสนามกีฬาออนไลน์<br />ง่าย สะดวก รวดเร็ว</h2>
+          <p className="mt-2 text-[15px] leading-6">เปิดให้บริการทุกวัน 10:00 - 22:00 น.<br />จองสนามล่วงหน้าได้ทันที</p>
+          <Link to="/courts" className="mt-5 inline-flex h-[48px] items-center gap-4 rounded-[10px] bg-[#08752e] px-8 text-[16px] font-semibold text-white shadow-[0_6px_15px_rgba(8,117,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#056326]">
+            จองสนามทันที <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          หน้าหลัก (HomePage)
-        </h1>
-        <p className="text-gray-500 text-sm">
-          ลบเนื้อหาเดิมออกเรียบร้อยแล้ว พร้อมสำหรับการเขียนและออกแบบใหม่ของคุณครับ
-        </p>
-      </div>
+
+        <div className="home-hero-image relative h-[286px] self-start overflow-visible max-lg:mx-2 max-lg:h-[310px] max-sm:h-[245px]">
+          <img src={heroImage} alt="สนามกีฬากลางแจ้ง SPORT COMPLEX" className="h-full w-full rounded-[98px_20px_20px_20px] object-cover max-sm:rounded-[55px_16px_16px_16px]" />
+          <div className="absolute -bottom-16 left-0 right-2 grid min-h-[100px] grid-cols-4 items-center rounded-[20px] bg-white px-7 shadow-[0_7px_25px_rgba(0,0,0,0.11)] max-lg:relative max-lg:-bottom-3 max-lg:right-0 max-lg:grid-cols-2 max-lg:gap-4 max-lg:px-5 max-lg:py-5 max-sm:grid-cols-1">
+            {benefits.map(({ icon: Icon, title, detail }) => (
+              <div key={title} className="flex items-center gap-4 border-r border-[#e0e8e2] px-4 last:border-0 max-lg:border-0">
+                <Icon className="h-9 w-9 shrink-0 text-[#08752e]" />
+                <div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-[13px]">{detail}</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="sport-filter mt-1 border-t border-[#e9e9e9] px-1 pt-3 max-lg:mt-32 max-sm:mt-80">
+        <h2 className="mb-2.5 text-[19px] font-semibold">เลือกประเภทกีฬา</h2>
+        <div className="grid grid-cols-5 gap-5 max-lg:grid-cols-3 max-sm:grid-cols-2 max-sm:gap-3">
+          {sports.map(({ name, icon }) => {
+            const Icon = typeof icon === 'string' ? null : icon;
+            const active = selectedSport === name;
+            return (
+              <button key={name} onClick={() => setSelectedSport(name)} className={`flex h-[42px] items-center justify-center gap-3 rounded-full text-[14px] font-medium shadow-[0_3px_12px_rgba(0,0,0,0.07)] transition ${active ? 'bg-[#08752e] text-white' : 'bg-white hover:text-[#08752e]'}`}>
+                {Icon ? <Icon className="h-6 w-6" /> : <span className="text-[22px]">{icon}</span>}{name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="featured-courts px-1 pt-3.5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-[21px] font-semibold">สนามแนะนำ</h2>
+          <Link to="/courts" className="flex items-center gap-2 font-medium text-[#08752e]">ดูทั้งหมด <ArrowRight className="h-5 w-5" /></Link>
+        </div>
+        <div className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+          {visibleCourts.map((court) => (
+            <article key={court.name} className="court-card overflow-hidden rounded-[14px] bg-white shadow-[0_3px_14px_rgba(0,0,0,0.1)] transition hover:-translate-y-1 hover:shadow-lg">
+              <div className="aspect-video bg-cover bg-no-repeat" style={{ backgroundImage: `url(${courtPanorama})`, backgroundPosition: court.position, backgroundSize: '400% 100%' }} />
+              <div className="court-card-body p-3">
+                <h3 className="text-[17px] font-semibold">{court.name}</h3>
+                <p className="mt-2 text-[14px]">{court.sport}</p>
+                <p className="mt-2 text-[17px] font-semibold">{court.price} บาท / ชั่วโมง</p>
+                {court.closed && <p className="mt-2 flex items-center gap-1 text-[13px] font-semibold text-red-600"><RefreshCcw className="h-4 w-4" /> ปิดปรับปรุงชั่วคราว</p>}
+                <Link to={court.closed ? '#' : '/courts'} aria-disabled={court.closed} className={`mt-4 flex h-[41px] items-center justify-center rounded-[7px] text-[14px] font-medium ${court.closed ? 'pointer-events-none bg-[#e4e4e4] text-[#666]' : 'bg-[#08752e] text-white hover:bg-[#056326]'}`}>
+                  {court.closed ? 'ปิดปรับปรุงชั่วคราว' : 'เช็ครอบเวลาว่าง / จองสนาม'}
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8 grid grid-cols-5 rounded-[16px] border border-[#e3eee6] bg-[#f5faf7] px-5 py-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
+        {serviceInfo.map(({ icon: Icon, title, detail }) => (
+          <div key={title} className="flex items-center justify-center gap-4 border-r border-[#dce7df] px-4 last:border-0 max-lg:justify-start max-lg:border-0 max-lg:py-2">
+            <Icon className="h-9 w-9 shrink-0 text-[#08752e]" />
+            <div><h3 className="text-[14px] font-semibold">{title}</h3><p className="mt-1 text-[13px]">{detail}</p></div>
+          </div>
+        ))}
+      </section>
     </div>
   );
 };
