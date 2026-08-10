@@ -38,8 +38,8 @@ const BookingPhoneModal = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[5px]" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
-      <div role="dialog" aria-modal="true" aria-labelledby="phone-modal-title" className="booking-phone-dialog relative grid max-h-[calc(100dvh-24px)] w-full max-w-[1500px] origin-center grid-cols-[410px_minmax(0,1fr)] overflow-hidden rounded-[28px] bg-white ring-2 ring-white/75 shadow-[0_34px_110px_rgba(2,20,13,0.58)] lg:scale-[0.6] max-lg:grid-cols-[320px_minmax(0,1fr)] max-md:block max-md:overflow-y-auto">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#07111e]/70 p-4 backdrop-blur-[2px]" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="phone-modal-title" className="booking-phone-dialog booking-dialog-enter relative grid max-h-[calc(100dvh-24px)] w-full max-w-[1500px] origin-center grid-cols-[410px_minmax(0,1fr)] overflow-hidden rounded-[28px] bg-white ring-2 ring-white/70 shadow-[0_26px_58px_rgba(2,20,13,0.42)] lg:[zoom:0.6] max-lg:grid-cols-[320px_minmax(0,1fr)] max-md:block max-md:overflow-y-auto">
         <aside className="relative border-r-2 border-dashed border-[#d7dad5] bg-[#fffef9] px-8 py-7 max-lg:px-6 max-md:border-b-2 max-md:border-r-0">
           <div className="flex items-center gap-4 border-b border-dashed border-[#aeb6ae] pb-5">
             <span className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full border-4 border-[#c8ead6] bg-[#08752e] text-[34px] shadow-md">⚽</span>
@@ -65,7 +65,7 @@ const BookingPhoneModal = ({
         </aside>
 
         <section className="relative flex min-h-0 flex-col px-16 py-8 max-xl:px-10 max-lg:px-7 max-md:px-5 max-md:py-6">
-          <button type="button" onClick={onCancel} aria-label="ปิดหน้ากรอกเบอร์โทรศัพท์" className="absolute right-7 top-7 grid h-12 w-12 place-items-center rounded-full bg-[#f1f3f5] text-[#101827] transition hover:bg-[#e5e9ed] max-md:right-4 max-md:top-4"><X className="h-7 w-7" /></button>
+          <button type="button" onClick={onCancel} aria-label="ปิดหน้ากรอกเบอร์โทรศัพท์" className="absolute right-7 top-7 grid h-12 w-12 cursor-pointer place-items-center rounded-full bg-[#f1f3f5] text-[#101827] transition-colors hover:bg-[#e5e9ed] max-md:right-4 max-md:top-4"><X className="h-7 w-7" /></button>
 
           <header className="flex items-center justify-center gap-5 pr-14 max-md:justify-start">
             <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-[8px] border-[#f0f7f2] bg-[#f7fcf8] text-[#0b9345] shadow-lg max-lg:h-20 max-lg:w-20"><Phone className="h-12 w-12 fill-[#0b9345]/15 max-lg:h-10 max-lg:w-10" /></span>
@@ -98,8 +98,8 @@ const BookingPhoneModal = ({
           </div>
 
           <div className="mt-6 grid grid-cols-[0.7fr_1.3fr] gap-6 max-sm:grid-cols-1 max-sm:gap-3">
-            <button type="button" onClick={onCancel} className="flex h-[74px] items-center justify-center gap-4 rounded-[14px] border border-[#16a653] bg-white text-3xl font-bold text-[#08752e] transition hover:bg-[#f2faf5] max-lg:h-14 max-lg:text-xl"><ArrowLeft className="h-6 w-6" />กลับไป</button>
-            <button type="button" onClick={onConfirm} disabled={!phoneIsValid || !user} className="flex h-[74px] items-center justify-center gap-4 rounded-[14px] bg-gradient-to-r from-[#0d7b36] to-[#079442] px-5 text-3xl font-bold text-white shadow-[0_8px_20px_rgba(8,117,46,0.24)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 max-lg:h-14 max-lg:text-xl"><CheckCircle2 className="h-8 w-8" /><span>ยืนยันและตรวจสอบรายการ<span className="block text-lg font-normal">ไปยังขั้นตอนถัดไป: ตรวจสอบรายการ</span></span></button>
+            <button type="button" onClick={onCancel} className="flex h-[74px] cursor-pointer items-center justify-center gap-4 rounded-[14px] border border-[#16a653] bg-white text-3xl font-bold text-[#08752e] transition-colors hover:bg-[#f2faf5] max-lg:h-14 max-lg:text-xl"><ArrowLeft className="h-6 w-6" />กลับไป</button>
+            <button type="button" onClick={onConfirm} disabled={!phoneIsValid || !user} className="flex h-[74px] cursor-pointer items-center justify-center gap-4 rounded-[14px] bg-gradient-to-r from-[#0d7b36] to-[#079442] px-5 text-3xl font-bold text-white shadow-[0_8px_20px_rgba(8,117,46,0.24)] transition-colors enabled:hover:from-[#09672d] enabled:hover:to-[#078039] disabled:cursor-not-allowed disabled:opacity-45 max-lg:h-14 max-lg:text-xl"><CheckCircle2 className="h-8 w-8" /><span>ยืนยันและตรวจสอบรายการ<span className="block text-lg font-normal">ไปยังขั้นตอนถัดไป: ตรวจสอบรายการ</span></span></button>
           </div>
         </section>
       </div>

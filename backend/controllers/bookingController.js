@@ -16,6 +16,37 @@ exports.checkAvailability = async (req, res) => {
     return res.status(400).json({ message: 'กรุณาระบุสนามและวันที่ต้องการตรวจสอบ' });
   }
 
+  const availabilityDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!availabilityDateRegex.test(date)) {
+    return res.status(400).json({ message: 'รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)' });
+  }
+
+  const [availabilityYear, availabilityMonth, availabilityDay] = date.split('-').map(Number);
+  const parsedAvailabilityDate = new Date(`${date}T00:00:00.000Z`);
+  const isRealAvailabilityDate = !Number.isNaN(parsedAvailabilityDate.getTime())
+    && parsedAvailabilityDate.getUTCFullYear() === availabilityYear
+    && parsedAvailabilityDate.getUTCMonth() + 1 === availabilityMonth
+    && parsedAvailabilityDate.getUTCDate() === availabilityDay;
+
+  if (!isRealAvailabilityDate) {
+    return res.status(400).json({ message: 'วันที่ตรวจสอบไม่ถูกต้อง กรุณาระบุวันที่ที่มีอยู่จริง' });
+  }
+
+  const bangkokDateParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const bangkokDateValues = Object.fromEntries(
+    bangkokDateParts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value])
+  );
+  const todayInBangkok = `${bangkokDateValues.year}-${bangkokDateValues.month}-${bangkokDateValues.day}`;
+
+  if (date < todayInBangkok) {
+    return res.status(400).json({ message: 'ไม่สามารถตรวจสอบรอบเวลาของวันที่ย้อนหลังได้' });
+  }
+
   try {
     // --- ขั้นที่ 2: ตรวจสอบว่าสนามมีอยู่และเปิดบริการหรือไม่ ---
     const [court] = await db.query('SELECT status FROM courts WHERE id = ?', [court_id]);
@@ -99,6 +130,10 @@ exports.createBooking = async (req, res) => {
     return res.status(400).json({ message: 'กรุณากรอกข้อมูลการจองให้ครบถ้วน' });
   }
 
+  if (!/^\d{10}$/.test(String(contact_phone))) {
+    return res.status(400).json({ message: 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น' });
+  }
+
   // --- ตรวจสอบฟอร์แมตข้อมูลนำเข้า ---
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   const timeRegex = /^(?:[01]\d|2[0-3]):00:00$/;
@@ -106,6 +141,18 @@ exports.createBooking = async (req, res) => {
   if (!dateRegex.test(booking_date)) {
     return res.status(400).json({ message: 'รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)' });
   }
+
+  const [bookingYear, bookingMonth, bookingDay] = booking_date.split('-').map(Number);
+  const parsedBookingDate = new Date(`${booking_date}T00:00:00.000Z`);
+  const isRealBookingDate = !Number.isNaN(parsedBookingDate.getTime())
+    && parsedBookingDate.getUTCFullYear() === bookingYear
+    && parsedBookingDate.getUTCMonth() + 1 === bookingMonth
+    && parsedBookingDate.getUTCDate() === bookingDay;
+
+  if (!isRealBookingDate) {
+    return res.status(400).json({ message: 'วันที่จองไม่ถูกต้อง กรุณาระบุวันที่ที่มีอยู่จริง' });
+  }
+
   if (!timeRegex.test(start_time) || !timeRegex.test(end_time)) {
     return res.status(400).json({ message: 'ช่วงเวลาที่จองต้องเริ่มและสิ้นสุดตรงชั่วโมงเท่านั้น (เช่น 10:00:00)' });
   }

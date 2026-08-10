@@ -75,11 +75,23 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [bookingResult, setBookingResult] = useState(null);
+  const [modalEntered, setModalEntered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summaryHeight, setSummaryHeight] = useState(null);
   const notesRef = useRef(null);
   const summaryRef = useRef(null);
+
+  useEffect(() => {
+    let secondFrame;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => setModalEntered(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, []);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -238,8 +250,14 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
     : { backgroundImage: `url(${fallbackImage})`, backgroundSize: '400% 100%', backgroundPosition: court.position };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[5px]" onMouseDown={(event) => event.target === event.currentTarget && !submitting && onClose()}>
-      <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className={`booking-modal flex h-auto max-h-[calc(100dvh-24px)] w-full flex-col overflow-hidden rounded-[22px] shadow-[0_25px_80px_rgba(0,0,0,0.35)] ${currentStep >= 2 ? 'max-w-[800px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[2px]" onMouseDown={(event) => event.target === event.currentTarget && !submitting && onClose()}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-title"
+        style={{ transform: modalEntered ? 'translate3d(0, 0, 0)' : 'translate3d(0, 18px, 0)' }}
+        className={`booking-modal flex h-auto max-h-[calc(100dvh-24px)] w-full flex-col overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity] motion-reduce:transition-none ${modalEntered ? 'opacity-100' : 'opacity-0'} ${currentStep >= 2 ? 'max-w-[800px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}
+      >
         <header className={`booking-modal-header flex border-b border-[#e3e8ef] bg-white px-6 max-lg:px-5 max-md:py-4 ${currentStep >= 2 ? 'relative min-h-[126px] items-start pt-4' : 'min-h-[76px] items-center max-md:items-start'}`}>
           <div className="flex min-w-[350px] items-center gap-3 max-lg:min-w-0 max-lg:flex-1">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-[#c8ead6] bg-[#08752e] text-2xl shadow-inner">⚽</div>
@@ -266,7 +284,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
         <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_360px] gap-4 overflow-hidden p-4 max-lg:grid-cols-1 max-lg:overflow-y-auto">
           {currentStep === 1 ? (
             <>
-              <main className="booking-modal-main flex min-h-0 flex-col gap-3">
+          <main className="booking-modal-main flex min-h-0 flex-col gap-3">
                 <section className="booking-booking-info grid grid-cols-[300px_225px_1fr] overflow-hidden rounded-[16px] bg-white shadow-sm max-md:grid-cols-1">
                   <div className="border-r border-[#e2e7ee] p-5">
                     <label htmlFor="booking-date" className="mb-3 flex items-center gap-3 font-semibold"><CalendarDays className="h-6 w-6" />เลือกวันที่ต้องการเข้าใช้งาน</label>
@@ -362,7 +380,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                 </section>
               </main>
 
-              <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#132538] to-[#07131f] px-4 pb-2 pt-4 text-white shadow-xl max-lg:min-h-[520px]">
+          <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#132538] to-[#07131f] px-4 pb-2 pt-4 text-white shadow-lg max-lg:min-h-[520px]">
                 <h3 className="flex items-center gap-3 text-lg font-semibold"><CalendarDays className="h-7 w-7 text-[#31d675]" />สรุปการเลือก</h3>
                 <p className="ml-10 mt-0.5 text-xs text-[#d3dbe5]">ตรวจสอบรายการก่อนยืนยันการจอง</p>
                 <div className="mt-3 aspect-video w-full shrink-0 rounded-[14px] border border-[#8090a3] bg-cover bg-center" style={imageStyle} />

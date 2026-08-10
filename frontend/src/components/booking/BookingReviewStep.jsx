@@ -35,8 +35,8 @@ const BookingReviewStep = ({
   ];
 
   return (
-    <main className="col-span-2 min-h-0 overflow-hidden bg-[#fffefb] px-4 py-3 max-lg:col-span-1 max-sm:overflow-y-auto max-sm:px-3">
-      <div className="mx-auto w-full max-w-[540px] origin-top lg:scale-[0.95]">
+    <main className="booking-step-enter col-span-2 min-h-0 overflow-hidden bg-[#fffefb] px-4 py-3 max-lg:col-span-1 max-sm:overflow-y-auto max-sm:px-3">
+      <div className="mx-auto w-full max-w-[540px] origin-top lg:scale-[0.90]">
         <article className="relative bg-[#fffefb] px-8 py-5 shadow-[0_10px_30px_rgba(29,45,62,0.14)] max-sm:px-4 max-sm:py-4">
           <span className="absolute -left-2.5 bottom-[105px] h-5 w-5 rounded-full bg-[#fffefb]" />
           <span className="absolute -right-2.5 bottom-[105px] h-5 w-5 rounded-full bg-[#fffefb]" />
@@ -90,10 +90,10 @@ const BookingReviewStep = ({
         </article>
 
         <div className="mx-auto mt-3 grid w-[80%] grid-cols-[0.8fr_1.2fr] gap-3 max-sm:w-full max-sm:grid-cols-1">
-          <button type="button" onClick={onBack} disabled={submitting} className="flex h-10 items-center justify-center gap-3 rounded-xl border border-[#15813a] bg-white text-base font-semibold text-[#147333] shadow-sm transition hover:bg-[#f0faf4] disabled:opacity-50">
+          <button type="button" onClick={onBack} disabled={submitting} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#15813a] bg-white text-base font-semibold text-[#147333] shadow-sm transition-colors hover:bg-[#f0faf4] disabled:cursor-not-allowed disabled:opacity-50">
             <ArrowLeft className="h-5 w-5" />ย้อนกลับ
           </button>
-          <button type="button" onClick={onNext} disabled={submitting} className="flex h-10 items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition enabled:hover:brightness-110 disabled:opacity-50">
+          <button type="button" onClick={onNext} disabled={submitting} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition-colors enabled:hover:from-[#125f2b] enabled:hover:to-[#087432] disabled:cursor-not-allowed disabled:opacity-50">
             {submitting ? 'กำลังสร้างรายการ...' : 'ยืนยันการจอง และไปชำระเงิน'}<ArrowRight className="h-5 w-5" />
           </button>
         </div>

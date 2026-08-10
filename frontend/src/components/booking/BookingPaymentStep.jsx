@@ -50,7 +50,7 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
 
   if (paid) {
     return (
-      <main className="col-span-2 flex min-h-0 items-center justify-center overflow-y-auto bg-[#fffefb] p-5 max-lg:col-span-1">
+      <main className="booking-step-enter col-span-2 flex min-h-0 items-center justify-center overflow-y-auto bg-[#fffefb] p-5 max-lg:col-span-1">
         <section className="w-full max-w-[500px] rounded-[22px] border border-[#cde7d6] bg-white p-8 text-center shadow-lg">
           <CheckCircle2 className="mx-auto h-20 w-20 text-[#08752e]" />
           <h3 className="mt-4 text-2xl font-bold text-[#155426]">ชำระเงินสำเร็จ</h3>
@@ -62,7 +62,7 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
   }
 
   return (
-    <main className="col-span-2 min-h-0 overflow-y-auto bg-[#fffefb] p-5 max-lg:col-span-1 max-sm:p-3">
+    <main className="booking-step-enter col-span-2 min-h-0 overflow-y-auto bg-[#fffefb] p-5 max-lg:col-span-1 max-sm:p-3">
       <form onSubmit={submitSlip} className="mx-auto w-full max-w-[560px] rounded-[22px] border border-[#dce5df] bg-white p-7 shadow-lg max-sm:p-5">
         <div className="flex items-center gap-4 border-b border-[#e5ebe7] pb-5">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf8ef] text-[#08752e]"><CreditCard className="h-6 w-6" /></span>
