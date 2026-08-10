@@ -14,6 +14,9 @@ import {
 import heroImage from '../../assets/sports-hero.png';
 import courtPanorama from '../../assets/court-panorama.png';
 import courtService from '../../services/courtService';
+import BookingModal from '../../components/booking/BookingModal';
+
+
 
 const benefits = [
   { icon: CalendarCheck, title: 'จองง่าย', detail: 'จองได้ใน 24 ชม.' },
@@ -50,6 +53,9 @@ const HomePage = () => {
   const [courts, setCourts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bookingCourt, setBookingCourt] = useState(null);
+
+
 
   useEffect(() => {
     const loadCourtData = async () => {
@@ -194,9 +200,18 @@ const HomePage = () => {
                 <div className="mt-2 min-h-[20px]">
                   {court.closed && <p className="flex items-center gap-1 text-[13px] font-semibold text-red-600"><RefreshCcw className="h-4 w-4" /> ปิดปรับปรุงชั่วคราว</p>}
                 </div>
-                <Link to={court.closed ? '#' : '/courts'} aria-disabled={court.closed} className={`mt-auto flex h-[41px] shrink-0 items-center justify-center rounded-[7px] text-[14px] font-medium ${court.closed ? 'pointer-events-none bg-[#e4e4e4] text-[#666]' : 'bg-[#08752e] text-white hover:bg-[#056326]'}`}>
+                <button
+                  type="button"
+                  onClick={() => !court.closed && setBookingCourt(court)}
+                  disabled={court.closed}
+                  className={`mt-auto flex h-[41px] w-full shrink-0 items-center justify-center rounded-[7px] text-[14px] font-medium cursor-pointer transition ${
+                    court.closed
+                      ? 'pointer-events-none bg-[#e4e4e4] text-[#666]'
+                      : 'bg-[#08752e] text-white hover:bg-[#056326]'
+                  }`}
+                >
                   {court.closed ? 'ปิดปรับปรุงชั่วคราว' : 'เช็ครอบเวลาว่าง / จองสนาม'}
-                </Link>
+                </button>
               </div>
             </article>
           ))}
@@ -211,8 +226,17 @@ const HomePage = () => {
           </div>
         ))}
       </section>
+
+      {bookingCourt && (
+        <BookingModal
+          court={bookingCourt}
+          fallbackImage={courtPanorama}
+          onClose={() => setBookingCourt(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default HomePage;
+
