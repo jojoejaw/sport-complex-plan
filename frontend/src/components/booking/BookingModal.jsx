@@ -25,9 +25,43 @@ import BookingPhoneModal from './BookingPhoneModal';
 import BookingReviewStep from './BookingReviewStep';
 import toast from 'react-hot-toast';
 
-const toLocalDateInput = (date = new Date()) => {
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
+const toBangkokDateInput = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]),
+  );
+  return `${values.year}-${values.month}-${values.day}`;
+};
+
+const disablePastSlotsForToday = (slots, selectedDate) => {
+  const bangkokParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(
+    bangkokParts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]),
+  );
+  const todayInBangkok = `${values.year}-${values.month}-${values.day}`;
+
+  if (selectedDate !== todayInBangkok) return slots;
+
+  const currentHourInBangkok = Number(values.hour);
+  return slots.map((slot) => {
+    const slotStartHour = Number(slot.start_time?.slice(0, 2));
+    if (slot.status === 'available' && slotStartHour <= currentHourInBangkok) {
+      return { ...slot, status: 'past' };
+    }
+    return slot;
+  });
 };
 
 const formatThaiDate = (value) => {
@@ -56,6 +90,7 @@ const getTimePeriod = (time) => {
 
 const statusStyles = {
   available: 'border-[#d7dee8] bg-white text-[#13213a] hover:border-[#07863a] hover:bg-[#f1fbf5]',
+  past: 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400',
   unavailable: 'cursor-not-allowed border-red-200 bg-red-50 text-red-500',
   pending_approval: 'cursor-not-allowed border-amber-300 bg-amber-50 text-amber-600',
   locked: 'cursor-not-allowed border-orange-300 bg-orange-50 text-orange-600',
@@ -64,7 +99,7 @@ const statusStyles = {
 const BookingModal = ({ court, fallbackImage, onClose }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [date, setDate] = useState(toLocalDateInput());
+  const [date, setDate] = useState(toBangkokDateInput());
   const [slots, setSlots] = useState([]);
   const [selectedIndexes, setSelectedIndexes] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
@@ -124,7 +159,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
           setError('สนามนี้อยู่ระหว่างการปรับปรุงและยังไม่พร้อมให้บริการ');
           return;
         }
-        setSlots(data.slots || []);
+        setSlots(disablePastSlotsForToday(data.slots || [], date));
       } catch (requestError) {
         console.error('Unable to load available slots:', requestError);
         if (active) setError('ไม่สามารถโหลดรอบเวลาว่างได้ กรุณาลองใหม่อีกครั้ง');
@@ -137,25 +172,33 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   }, [court.id, date]);
 
   useLayoutEffect(() => {
+    if (currentStep !== 1 || !notesRef.current || !summaryRef.current) {
+      setSummaryHeight(null);
+      return undefined;
+    }
+
+    const notesElement = notesRef.current;
+    const summaryElement = summaryRef.current;
+
     const alignSummaryBottom = () => {
-      if (!notesRef.current || !summaryRef.current || window.innerWidth < 1024) {
+      if (window.innerWidth < 1024) {
         setSummaryHeight(null);
         return;
       }
-      const notesBottom = notesRef.current.getBoundingClientRect().bottom;
-      const summaryTop = summaryRef.current.getBoundingClientRect().top;
+      const notesBottom = notesElement.getBoundingClientRect().bottom;
+      const summaryTop = summaryElement.getBoundingClientRect().top;
       setSummaryHeight(Math.max(0, Math.round(notesBottom - summaryTop)));
     };
 
     alignSummaryBottom();
     const observer = new ResizeObserver(alignSummaryBottom);
-    observer.observe(notesRef.current);
+    observer.observe(notesElement);
     window.addEventListener('resize', alignSummaryBottom);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', alignSummaryBottom);
     };
-  }, [loading, slots.length]);
+  }, [currentStep, loading, slots.length]);
 
   const selectedSlots = useMemo(
     () => selectedIndexes.map((index) => slots[index]).filter(Boolean),
@@ -199,10 +242,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   };
 
   const handleBookingAction = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+    if (!isAuthenticated) return;
     handleNextStep();
   };
 
@@ -289,7 +329,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                   <div className="border-r border-[#e2e7ee] p-5">
                     <label htmlFor="booking-date" className="mb-3 flex items-center gap-3 font-semibold"><CalendarDays className="h-6 w-6" />เลือกวันที่ต้องการเข้าใช้งาน</label>
                     <div className="relative">
-                      <input id="booking-date" type="date" min={toLocalDateInput()} value={date} onChange={(event) => setDate(event.target.value)} className="booking-date-input h-12 w-full cursor-pointer rounded-xl border border-[#cfd8e6] px-4 text-[18px] font-semibold text-transparent caret-transparent outline-none focus:border-[#08752e]" />
+                      <input id="booking-date" type="date" min={toBangkokDateInput()} value={date} onChange={(event) => setDate(event.target.value)} className="booking-date-input h-12 w-full cursor-pointer rounded-xl border border-[#cfd8e6] px-4 text-[18px] font-semibold text-transparent caret-transparent outline-none focus:border-[#08752e]" />
                       <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-[18px] font-semibold text-[#18345f]">{formatDateInput(date)}</span>
                     </div>
                   </div>
@@ -394,7 +434,15 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                 <div className="mt-auto rounded-[15px] border border-[#0ba14d] bg-[#0b3028]/60 px-4 py-3">
                   <p className="text-sm font-semibold text-[#4be18a]">รวมทั้งหมด</p><p className="text-[28px] font-bold leading-8 text-[#4be18a]">฿ {totalPrice.toLocaleString('th-TH')}</p>
                 </div>
-                <button type="button" onClick={handleBookingAction} disabled={isAuthenticated && selectedSlots.length === 0} className="mt-3 flex h-11 items-center justify-center gap-3 rounded-[12px] bg-gradient-to-r from-[#078333] to-[#12a94e] text-[15px] font-semibold transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45">{isAuthenticated ? 'ต่อไป : ตรวจสอบรายการ' : 'กรุณาเข้าสู่ระบบเพื่อจองสนาม'} <ArrowRight className="h-5 w-5" /></button>
+                <button type="button" onClick={handleBookingAction} disabled={!isAuthenticated || selectedSlots.length === 0} className="mt-3 flex h-11 items-center justify-center gap-3 rounded-[12px] bg-gradient-to-r from-[#078333] to-[#12a94e] text-[15px] font-semibold text-white transition-colors enabled:cursor-pointer enabled:hover:from-[#066f2b] enabled:hover:to-[#0e963f] disabled:cursor-not-allowed disabled:from-[#657383] disabled:to-[#657383] disabled:opacity-70">{isAuthenticated ? 'ต่อไป : ตรวจสอบรายการ' : 'กรุณาเข้าสู่ระบบก่อนจองสนาม'} <ArrowRight className="h-5 w-5" /></button>
+                {!isAuthenticated && (
+                  <p className="mt-2 text-center text-xs text-[#d3dbe5]">
+                    ต้องเข้าสู่ระบบก่อนทำรายการ{' '}
+                    <button type="button" onClick={() => navigate('/login')} className="cursor-pointer font-semibold text-[#4be18a] underline underline-offset-2 hover:text-[#7ce9a8]">
+                      ไปหน้าเข้าสู่ระบบ
+                    </button>
+                  </p>
+                )}
               </aside>
             </>
           ) : currentStep === 2 ? (
@@ -440,12 +488,6 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
         />
         <BookingPhoneModal
           isOpen={showConfirm}
-          court={court}
-          formattedDate={formatThaiDate(date)}
-          startTime={shortTime(startTime)}
-          endTime={shortTime(endTime)}
-          hours={selectedSlots.length}
-          totalPrice={totalPrice}
           contactPhone={contactPhone}
           user={user}
           onPhoneChange={(value) => {
@@ -469,6 +511,7 @@ const SummaryRow = ({ icon: Icon, label, value, highlight = false }) => (
 
 const SlotStatusIcon = ({ status, className = '' }) => {
   if (status === 'available') return <span className={`h-3 w-3 rounded-full bg-[#159547] ${className}`} />;
+  if (status === 'past') return <span className={`h-3 w-3 rounded-full bg-slate-300 ${className}`} />;
   if (status === 'pending_approval' || status === 'locked') return <span className={`grid h-4 w-4 place-items-center rounded-full border-2 border-amber-500 text-amber-500 ${className}`}><Clock3 className="h-2.5 w-2.5" /></span>;
   return <span className={`grid h-4 w-4 place-items-center rounded-full bg-red-500 text-white ${className}`}><X className="h-2.5 w-2.5" /></span>;
 };

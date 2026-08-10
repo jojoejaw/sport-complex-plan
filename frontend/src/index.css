@@ -9,32 +9,6 @@
   --color-brand-bg: #F8FAF9;
 }
 
-/* Transparent ticket notches used only by BookingPhoneModal. */
-.booking-phone-dialog {
-  --booking-ticket-notch-x: 410px;
-  -webkit-mask-image:
-    radial-gradient(circle 28px at var(--booking-ticket-notch-x) 0, transparent 27px, #000 28px),
-    radial-gradient(circle 28px at var(--booking-ticket-notch-x) 100%, transparent 27px, #000 28px);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    radial-gradient(circle 28px at var(--booking-ticket-notch-x) 0, transparent 27px, #000 28px),
-    radial-gradient(circle 28px at var(--booking-ticket-notch-x) 100%, transparent 27px, #000 28px);
-  mask-composite: intersect;
-}
-
-@media (max-width: 1023px) {
-  .booking-phone-dialog {
-    --booking-ticket-notch-x: 320px;
-  }
-}
-
-@media (max-width: 767px) {
-  .booking-phone-dialog {
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-
 :root {
   font-family: 'Kanit', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   color-scheme: light;

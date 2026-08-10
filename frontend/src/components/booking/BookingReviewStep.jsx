@@ -24,13 +24,30 @@ const BookingReviewStep = ({
   submitting = false,
   submitError = '',
 }) => {
-  const pricePerHour = Number(court.price || court.price_per_hour || 0);
+  const pricePerHour = Number(court?.price || court?.price_per_hour || 0);
+  const safeTotalPrice = Number(totalPrice || 0);
+  const safeHours = Number(hours || 0);
+  const reviewIsValid = Boolean(
+    court?.name
+    && formattedDate
+    && formattedDate !== '-'
+    && startTime
+    && endTime
+    && Number.isInteger(safeHours)
+    && safeHours >= 1
+    && safeHours <= 3
+    && /^\d{10}$/.test(String(contactPhone || ''))
+    && Number.isFinite(pricePerHour)
+    && pricePerHour > 0
+    && Number.isFinite(safeTotalPrice)
+    && safeTotalPrice > 0
+  );
 
   const details = [
-    { icon: Map, label: 'สนาม', value: court.name },
+    { icon: Map, label: 'สนาม', value: court?.name || '-' },
     { icon: CalendarDays, label: 'วันที่จอง', value: formattedDate },
-    { icon: Clock3, label: 'ช่วงเวลา', value: `${startTime} - ${endTime} น. (${hours} ชม.)` },
-    { icon: Tag, label: `ราคา (฿ ${pricePerHour.toLocaleString('th-TH')} / ชั่วโมง)`, value: `฿ ${totalPrice.toLocaleString('th-TH')}` },
+    { icon: Clock3, label: 'ช่วงเวลา', value: `${startTime} - ${endTime} น. (${safeHours} ชม.)` },
+    { icon: Tag, label: `ราคา (฿ ${pricePerHour.toLocaleString('th-TH')} / ชั่วโมง)`, value: `฿ ${safeTotalPrice.toLocaleString('th-TH')}` },
     { icon: Phone, label: 'เบอร์โทรศัพท์', value: contactPhone },
   ];
 
@@ -77,7 +94,7 @@ const BookingReviewStep = ({
 
           <div className="relative mt-2 flex items-center justify-between overflow-hidden rounded-[12px] bg-gradient-to-r from-[#17682e] via-[#0b7b34] to-[#075c28] px-6 py-3 text-white">
             <span className="font-semibold">รวมทั้งหมด</span>
-            <strong className="text-[27px]">฿ {totalPrice.toLocaleString('th-TH')}</strong>
+            <strong className="text-[27px]">฿ {safeTotalPrice.toLocaleString('th-TH')}</strong>
             <span className="absolute -bottom-9 -right-5 h-28 w-28 rounded-full border-[12px] border-white/5 bg-white/5" />
           </div>
 
@@ -93,10 +110,11 @@ const BookingReviewStep = ({
           <button type="button" onClick={onBack} disabled={submitting} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#15813a] bg-white text-base font-semibold text-[#147333] shadow-sm transition-colors hover:bg-[#f0faf4] disabled:cursor-not-allowed disabled:opacity-50">
             <ArrowLeft className="h-5 w-5" />ย้อนกลับ
           </button>
-          <button type="button" onClick={onNext} disabled={submitting} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition-colors enabled:hover:from-[#125f2b] enabled:hover:to-[#087432] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={onNext} disabled={submitting || !reviewIsValid} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition-colors enabled:hover:from-[#125f2b] enabled:hover:to-[#087432] disabled:cursor-not-allowed disabled:opacity-50">
             {submitting ? 'กำลังสร้างรายการ...' : 'ยืนยันการจอง และไปชำระเงิน'}<ArrowRight className="h-5 w-5" />
           </button>
         </div>
+        {!reviewIsValid && <div role="alert" className="mx-auto mt-2 w-[80%] rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-700">ข้อมูลรายการจองไม่ครบหรือไม่ถูกต้อง กรุณาย้อนกลับไปตรวจสอบข้อมูล</div>}
         {submitError && <div role="alert" className="mx-auto mt-2 w-[80%] rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-center text-xs text-red-600">{submitError}</div>}
         <p className="mt-2 flex items-center justify-center gap-2 text-xs text-[#53637a]"><LockKeyhole className="h-3.5 w-3.5" />ระบบจะล็อกสนามไว้ 15 นาทีหลังยืนยันรายการ</p>
       </div>
