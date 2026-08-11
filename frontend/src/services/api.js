@@ -8,6 +8,8 @@ const api = axios.create({
   },
 });
 
+let isHandlingUnauthorized = false;
+
 // Request Interceptors: ใส่ Authorization header ถ้ามี token
 api.interceptors.request.use(
   (config) => {
@@ -24,12 +26,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // ถ้าเป็น 401 ให้ลบ Token และนำกลับไปหน้า Login ถ้าไม่ได้อยู่ที่หน้า auth
+    if (error.response?.status === 401 && !isHandlingUnauthorized) {
+      isHandlingUnauthorized = true;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
-        window.location.href = '/login';
+
+      window.dispatchEvent(new CustomEvent('auth:session-expired', {
+        detail: { message: error.response?.data?.message || 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' },
+      }));
+
+      const isAuthPage = window.location.pathname.startsWith('/login')
+        || window.location.pathname.startsWith('/register');
+
+      if (!isAuthPage) {
+        const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        sessionStorage.setItem('auth:returnTo', returnTo);
+        window.location.replace('/login?reason=session-expired');
+      } else {
+        isHandlingUnauthorized = false;
       }
     }
     return Promise.reject(error);

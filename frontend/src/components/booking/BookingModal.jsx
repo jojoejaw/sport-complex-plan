@@ -21,6 +21,7 @@ import bookingService from '../../services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../common/ConfirmModal';
 import BookingPaymentStep from './BookingPaymentStep';
+import BookingModalHeader from './BookingModalHeader';
 import BookingPhoneModal from './BookingPhoneModal';
 import BookingReviewStep from './BookingReviewStep';
 import toast from 'react-hot-toast';
@@ -114,6 +115,8 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summaryHeight, setSummaryHeight] = useState(null);
+  const [stepOneModalSize, setStepOneModalSize] = useState(null);
+  const modalRef = useRef(null);
   const notesRef = useRef(null);
   const summaryRef = useRef(null);
 
@@ -248,6 +251,10 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
 
   const handleConfirmNextStep = () => {
     if (!/^\d{10}$/.test(contactPhone)) return;
+    if (modalRef.current) {
+      const { width, height } = modalRef.current.getBoundingClientRect();
+      setStepOneModalSize({ width, height });
+    }
     setShowConfirm(false);
     setCurrentStep(2);
   };
@@ -292,36 +299,27 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[2px]" onMouseDown={(event) => event.target === event.currentTarget && !submitting && onClose()}>
       <div
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-title"
-        style={{ transform: modalEntered ? 'translate3d(0, 0, 0)' : 'translate3d(0, 18px, 0)' }}
-        className={`booking-modal flex h-auto max-h-[calc(100dvh-24px)] w-full flex-col overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity] motion-reduce:transition-none ${modalEntered ? 'opacity-100' : 'opacity-0'} ${currentStep >= 2 ? 'max-w-[800px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}
+        style={{
+          transform: modalEntered ? 'translate3d(0, 0, 0)' : 'translate3d(0, 18px, 0)',
+          ...(currentStep === 2 && stepOneModalSize
+            ? { width: `${stepOneModalSize.width}px`, height: `${stepOneModalSize.height}px` }
+            : {}),
+        }}
+        className={`booking-modal flex h-auto max-h-[calc(100dvh-24px)] w-full flex-col overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity] motion-reduce:transition-none ${modalEntered ? 'opacity-100' : 'opacity-0'} ${currentStep === 3 ? 'max-w-[800px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}
       >
-        <header className={`booking-modal-header flex border-b border-[#e3e8ef] bg-white px-6 max-lg:px-5 max-md:py-4 ${currentStep >= 2 ? 'relative min-h-[126px] items-start pt-4' : 'min-h-[76px] items-center max-md:items-start'}`}>
-          <div className="flex min-w-[350px] items-center gap-3 max-lg:min-w-0 max-lg:flex-1">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-[#c8ead6] bg-[#08752e] text-2xl shadow-inner">⚽</div>
-            <div>
-              <h2 id="booking-title" className="text-[21px] font-bold text-[#111827] max-sm:text-lg">จองสนาม: {court.name}</h2>
-              <p className="text-sm font-semibold text-[#08752e]">฿{Number(court.price || court.price_per_hour).toLocaleString('th-TH')} / ชั่วโมง</p>
-            </div>
-          </div>
+        <BookingModalHeader
+          courtName={court.name}
+          pricePerHour={court.price || court.price_per_hour}
+          currentStep={currentStep}
+          onClose={onClose}
+          closeDisabled={submitting}
+        />
 
-          <div className={`flex items-center whitespace-nowrap max-lg:hidden ${currentStep >= 2 ? 'absolute bottom-4 left-1/2 -translate-x-1/2 gap-3' : 'mx-auto translate-y-1 gap-3'}`}>
-            {['เลือกวันและเวลา', 'ตรวจสอบรายการ', 'ชำระเงิน'].map((label, index) => (
-              <React.Fragment key={label}>
-                <div className={`flex items-center font-semibold ${currentStep >= 2 ? 'gap-2 text-[13px]' : 'gap-2 text-[13px]'} ${index + 1 === currentStep ? 'text-[#08752e]' : 'text-[#52617a]'}`}>
-                  <span className={`grid h-7 w-7 place-items-center rounded-full text-xs text-white ${index + 1 === currentStep ? 'bg-[#08752e]' : 'bg-[#254875]'}`}>{index + 1}</span>{label}
-                </div>
-                {index < 2 && <span className={`h-[2px] rounded-full bg-[#d9e1eb] ${currentStep >= 2 ? 'w-10' : 'w-8'}`} />}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <button onClick={onClose} disabled={submitting} className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#f0f3f7] text-[#14213a] transition enabled:hover:bg-[#e3e8ef] disabled:cursor-not-allowed disabled:opacity-45 ${currentStep >= 2 ? 'ml-auto' : 'ml-5'}`} aria-label="ปิดหน้าต่างจองสนาม"><X className="h-6 w-6" /></button>
-        </header>
-
-        <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_360px] gap-4 overflow-hidden p-4 max-lg:grid-cols-1 max-lg:overflow-y-auto">
+        <div className={`booking-modal-content grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_360px] gap-4 overflow-hidden p-4 max-lg:grid-cols-1 max-lg:overflow-y-auto ${currentStep === 2 ? 'bg-[radial-gradient(circle_at_50%_0%,#edf6f0_0%,#d8e9de_42%,#c4dccd_100%)]' : currentStep === 3 ? 'bg-[radial-gradient(circle_at_50%_0%,#f4faf6_0%,#e5f0e8_48%,#d5e6da_100%)]' : ''}`}>
           {currentStep === 1 ? (
             <>
           <main className="booking-modal-main flex min-h-0 flex-col gap-3">
@@ -420,19 +418,36 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                 </section>
               </main>
 
-          <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#132538] to-[#07131f] px-4 pb-2 pt-4 text-white shadow-lg max-lg:min-h-[520px]">
-                <h3 className="flex items-center gap-3 text-lg font-semibold"><CalendarDays className="h-7 w-7 text-[#31d675]" />สรุปการเลือก</h3>
-                <p className="ml-10 mt-0.5 text-xs text-[#d3dbe5]">ตรวจสอบรายการก่อนยืนยันการจอง</p>
-                <div className="mt-3 aspect-video w-full shrink-0 rounded-[14px] border border-[#8090a3] bg-cover bg-center" style={imageStyle} />
-                <div className="mt-2 divide-y divide-[#314153]">
-                  <SummaryRow icon={MapPin} label="สนาม" value={court.name} />
-                  <SummaryRow icon={CalendarDays} label="วันที่" value={formatThaiDate(date)} />
-                  <SummaryRow icon={Clock3} label="ช่วงเวลา" value={startTime ? `${shortTime(startTime)} - ${shortTime(endTime)} น. (${selectedSlots.length} ชม.)` : 'กรุณาเลือกเวลา'} />
-                  <SummaryRow icon={TimerReset} label="เวลาเปิด - ปิด" value="10.00 - 22.00 น." highlight />
-                  <SummaryRow icon={CircleDollarSign} label={`ราคา (฿ ${Number(court.price || court.price_per_hour).toLocaleString('th-TH')} / ชั่วโมง)`} value={`฿ ${totalPrice.toLocaleString('th-TH')}`} />
+          <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#0b532f] to-[#063820] px-4 pb-2 pt-4 text-white shadow-lg max-lg:min-h-[520px]">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-[#55eb91] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                    <CalendarDays className="h-5 w-5" strokeWidth={2.2} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-[18px] font-bold leading-tight tracking-[-0.01em] text-white">สรุปการเลือก</h3>
+                    <p className="mt-1 text-[11px] leading-tight text-[#cbe7d6]">ตรวจสอบรายการก่อนยืนยันการจอง</p>
+                  </div>
                 </div>
-                <div className="mt-auto rounded-[15px] border border-[#0ba14d] bg-[#0b3028]/60 px-4 py-3">
-                  <p className="text-sm font-semibold text-[#4be18a]">รวมทั้งหมด</p><p className="text-[28px] font-bold leading-8 text-[#4be18a]">฿ {totalPrice.toLocaleString('th-TH')}</p>
+                <div className="mt-3 aspect-video w-full shrink-0 rounded-[14px] border border-[#8090a3] bg-cover bg-center" style={imageStyle} />
+                <div className="relative mt-3 flex min-h-0 flex-1 flex-col bg-[#fffefb] px-4 pb-3 pt-3 text-[#14213a] shadow-[inset_0_0_0_1px_rgba(222,226,220,0.7)]">
+                  <span aria-hidden="true" className="pointer-events-none absolute -top-[6px] left-0 h-3 w-full bg-[radial-gradient(circle_at_6px_6px,#fffefb_5.5px,transparent_6px)] bg-[length:12px_12px] bg-repeat-x" />
+                  <span aria-hidden="true" className="pointer-events-none absolute -bottom-[6px] left-0 h-3 w-full bg-[radial-gradient(circle_at_6px_6px,#fffefb_5.5px,transparent_6px)] bg-[length:12px_12px] bg-repeat-x" />
+                  <div className="mb-1 text-center">
+                    <span className="inline-flex rounded-full bg-[#e8f7ed] px-3 py-1 text-[10px] font-semibold text-[#08752e]">★ กำลังตรวจสอบ ★</span>
+                    <h4 className="mt-1 text-[16px] font-bold">รายการจองของคุณ</h4>
+                  </div>
+                  <div className="divide-y divide-dashed divide-[#d6ddd8]">
+                    <SummaryRow icon={MapPin} label="สนาม" value={court.name} />
+                    <SummaryRow icon={CalendarDays} label="วันที่" value={formatThaiDate(date)} />
+                    <SummaryRow icon={Clock3} label="ช่วงเวลา" value={startTime ? `${shortTime(startTime)} - ${shortTime(endTime)} น.` : 'กรุณาเลือกเวลา'} />
+                    <SummaryRow icon={TimerReset} label="ระยะเวลา" value={selectedSlots.length > 0 ? `${selectedSlots.length} ชั่วโมง` : '-'} />
+                    <SummaryRow icon={CircleDollarSign} label="ราคาต่อชั่วโมง" value={`฿${Number(court.price || court.price_per_hour).toLocaleString('th-TH')}`} />
+                  </div>
+                  <div className="mt-auto flex items-end justify-between border-t border-dashed border-[#9eaaa2] pt-2">
+                    <p className="text-sm font-semibold text-[#08752e]">รวมทั้งหมด</p>
+                    <p className="text-[25px] font-bold leading-none text-[#08752e]">฿{totalPrice.toLocaleString('th-TH')}</p>
+                  </div>
+                  <p className="mt-2 text-center text-[9px] font-medium tracking-[0.14em] text-[#59645e]">REVIEW ONLY • NOT CONFIRMED</p>
                 </div>
                 <button type="button" onClick={handleBookingAction} disabled={!isAuthenticated || selectedSlots.length === 0} className="mt-3 flex h-11 items-center justify-center gap-3 rounded-[12px] bg-gradient-to-r from-[#078333] to-[#12a94e] text-[15px] font-semibold text-white transition-colors enabled:cursor-pointer enabled:hover:from-[#066f2b] enabled:hover:to-[#0e963f] disabled:cursor-not-allowed disabled:from-[#657383] disabled:to-[#657383] disabled:opacity-70">{isAuthenticated ? 'ต่อไป : ตรวจสอบรายการ' : 'กรุณาเข้าสู่ระบบก่อนจองสนาม'} <ArrowRight className="h-5 w-5" /></button>
                 {!isAuthenticated && (
@@ -503,9 +518,10 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
 };
 
 const SummaryRow = ({ icon: Icon, label, value, highlight = false }) => (
-  <div className="flex gap-3 py-2">
-    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0a402c] text-[#37d87a]"><Icon className="h-[18px] w-[18px]" /></span>
-    <div><p className="text-xs text-[#cbd4df]">{label}</p><p className={`text-sm font-semibold ${highlight ? 'text-[#39de80]' : 'text-white'}`}>{value}</p></div>
+  <div className="grid grid-cols-[24px_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-2 py-1.5">
+    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#eef4ef] text-[#176633]"><Icon className="h-3.5 w-3.5" /></span>
+    <p className="text-[11px] text-[#526078]">{label}</p>
+    <p className={`text-right text-[12px] font-semibold ${highlight ? 'text-[#08752e]' : 'text-[#172033]'}`}>{value}</p>
   </div>
 );
 

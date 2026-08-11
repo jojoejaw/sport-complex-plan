@@ -2,12 +2,17 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
-  Check,
+  CheckCircle2,
   Clock3,
+  Dumbbell,
+  Lightbulb,
   LockKeyhole,
-  Map,
+  MapPin,
   Phone,
+  ShieldCheck,
+  Sparkles,
   Tag,
+  TimerReset,
 } from 'lucide-react';
 
 const BookingReviewStep = ({
@@ -44,80 +49,82 @@ const BookingReviewStep = ({
   );
 
   const details = [
-    { icon: Map, label: 'สนาม', value: court?.name || '-' },
     { icon: CalendarDays, label: 'วันที่จอง', value: formattedDate },
     { icon: Clock3, label: 'ช่วงเวลา', value: `${startTime} - ${endTime} น. (${safeHours} ชม.)` },
-    { icon: Tag, label: `ราคา (฿ ${pricePerHour.toLocaleString('th-TH')} / ชั่วโมง)`, value: `฿ ${safeTotalPrice.toLocaleString('th-TH')}` },
-    { icon: Phone, label: 'เบอร์โทรศัพท์', value: contactPhone },
+    { icon: Tag, label: `ราคา (฿${pricePerHour.toLocaleString('th-TH')} / ชั่วโมง)`, value: `฿${safeTotalPrice.toLocaleString('th-TH')}` },
+    { icon: TimerReset, label: 'จำนวนชั่วโมง', value: `${safeHours} ชั่วโมง` },
+    { icon: Phone, label: 'เบอร์โทรศัพท์', value: contactPhone || '-' },
   ];
 
   return (
-    <main className="booking-step-enter col-span-2 min-h-0 overflow-hidden bg-[#fffefb] px-4 py-3 max-lg:col-span-1 max-sm:overflow-y-auto max-sm:px-3">
-      <div className="mx-auto w-full max-w-[540px] origin-top lg:scale-[0.90]">
-        <article className="relative bg-[#fffefb] px-8 py-5 shadow-[0_10px_30px_rgba(29,45,62,0.14)] max-sm:px-4 max-sm:py-4">
-          <span className="absolute -left-2.5 bottom-[105px] h-5 w-5 rounded-full bg-[#fffefb]" />
-          <span className="absolute -right-2.5 bottom-[105px] h-5 w-5 rounded-full bg-[#fffefb]" />
+    <main className="booking-step-enter col-span-2 flex min-h-0 flex-col overflow-hidden bg-transparent p-4 max-lg:col-span-1 max-md:overflow-y-auto max-sm:p-2">
+      <section className="relative mx-auto flex min-h-0 w-full max-w-[1260px] flex-1 overflow-hidden rounded-[22px] bg-[#fffefb] shadow-[0_18px_44px_rgba(0,22,13,0.28)] max-md:flex-none max-md:flex-col">
+        <span className="absolute left-1/2 top-0 z-10 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#e8f3ec] max-md:hidden" />
+        <span className="absolute bottom-0 left-1/2 z-10 h-8 w-8 -translate-x-1/2 translate-y-1/2 rounded-full bg-[#c9dfd1] max-md:hidden" />
 
-          <div className="flex items-center justify-between gap-4 border-b border-dashed border-[#cbd2d7] pb-3">
+        <article className="flex min-w-0 flex-[1.2] flex-col border-r-2 border-dashed border-[#8ba998] px-8 py-5 max-lg:px-5 max-md:border-b-2 max-md:border-r-0 max-sm:px-3">
+          <header className="flex items-center justify-between border-b border-dashed border-[#afc2b6] pb-3">
             <div className="flex items-center gap-4">
-              <span className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full border-4 border-[#d7eadc] bg-gradient-to-br from-[#205e2e] to-[#063a17] text-white shadow-inner">
-                <Check className="h-9 w-9" strokeWidth={3.5} />
-              </span>
-              <div>
-                <h3 className="text-[23px] font-bold text-[#155426] max-sm:text-lg">กำลังตรวจสอบรายการจอง</h3>
-                <p className="text-sm text-[#415168]">กรุณาตรวจสอบความถูกต้องก่อนยืนยัน</p>
-              </div>
+              <span className="grid h-14 w-14 shrink-0 place-items-center text-[#116331]"><ShieldCheck className="h-14 w-14" strokeWidth={1.8} /></span>
+              <div><h3 className="text-[23px] font-bold text-[#18364a] max-lg:text-xl">ตรวจสอบรายละเอียดการจอง</h3><p className="text-sm text-[#53657a]">กรุณาตรวจสอบข้อมูลให้ถูกต้อง ก่อนยืนยันการจอง</p></div>
             </div>
-            <div className="grid h-[82px] w-[82px] shrink-0 rotate-[-9deg] place-items-center rounded-full border-[3px] border-double border-[#17602b] text-center text-[8px] font-bold uppercase tracking-wider text-[#17602b] max-sm:hidden">
-              <span>Sport Complex<br /><span className="text-[23px]">⚽</span><br />Booking Review</span>
-            </div>
+            <div className="grid h-20 w-20 shrink-0 rotate-[-8deg] place-items-center rounded-full border-[3px] border-double border-[#16813c] text-center text-[8px] font-bold uppercase tracking-wider text-[#167238] max-sm:hidden"><span>Sport Complex<br /><span className="text-xl">⚽</span><br />Booking Review</span></div>
+          </header>
+
+          <div className="mt-3 aspect-[2.55/1] w-full rounded-[13px] bg-center bg-no-repeat" style={{ ...imageStyle, backgroundSize: 'cover' }} />
+
+          <div className="mt-3 flex items-center gap-4">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#0d7b37] text-white"><MapPin className="h-6 w-6" /></span>
+            <div><h4 className="text-lg font-bold text-[#172d3f]">{court?.name || '-'}</h4><p className="text-sm font-semibold text-[#147335]">฿{pricePerHour.toLocaleString('th-TH')} / ชั่วโมง</p></div>
           </div>
+          <p className="mt-2 text-xs leading-5 text-[#53657a]">สนามกีฬาคุณภาพมาตรฐาน พร้อมพื้นที่และสิ่งอำนวยความสะดวกสำหรับการเล่นกีฬาอย่างเต็มที่</p>
 
-          <div
-            className="mx-auto mt-3 aspect-[2.42/1] w-[94%] bg-center bg-no-repeat"
-            style={{
-              ...imageStyle,
-              backgroundSize: 'cover',
-              clipPath: 'polygon(1.2% 0,98.8% 0,98.8% 4%,100% 8%,98.8% 12%,100% 16%,98.8% 20%,100% 24%,98.8% 28%,100% 32%,98.8% 36%,100% 40%,98.8% 44%,100% 48%,98.8% 52%,100% 56%,98.8% 60%,100% 64%,98.8% 68%,100% 72%,98.8% 76%,100% 80%,98.8% 84%,100% 88%,98.8% 92%,100% 96%,98.8% 100%,1.2% 100%,1.2% 96%,0 92%,1.2% 88%,0 84%,1.2% 80%,0 76%,1.2% 72%,0 68%,1.2% 64%,0 60%,1.2% 56%,0 52%,1.2% 48%,0 44%,1.2% 40%,0 36%,1.2% 32%,0 28%,1.2% 24%,0 20%,1.2% 16%,0 12%,1.2% 8%,1.2% 4%)',
-            }}
-          />
+          <div className="mt-auto grid grid-cols-3 divide-x divide-[#dce5df] rounded-xl border border-[#d8e3dc] px-3 py-3 text-xs text-[#33485a]">
+            <div className="flex items-center gap-2 px-2"><ShieldCheck className="h-6 w-6 shrink-0 text-[#15743a]" /><span><strong className="block">มาตรฐานดี</strong>พื้นที่คุณภาพ</span></div>
+            <div className="flex items-center gap-2 px-3"><Lightbulb className="h-6 w-6 shrink-0 text-[#15743a]" /><span><strong className="block">ไฟส่องสว่าง</strong>ใช้งานชัดเจน</span></div>
+            <div className="flex items-center gap-2 px-3"><Dumbbell className="h-6 w-6 shrink-0 text-[#15743a]" /><span><strong className="block">พร้อมใช้งาน</strong>สะดวกสบาย</span></div>
+          </div>
+        </article>
 
-          <div className="mt-2 divide-y divide-dashed divide-[#cbd2d7]">
+        <article className="flex min-w-0 flex-1 flex-col px-8 py-5 max-lg:px-5 max-sm:px-3">
+          <header className="relative border-b-2 border-dashed border-[#a6bbae] pb-4 text-center">
+            <Sparkles className="absolute right-1 top-0 h-7 w-7 text-[#118039]" />
+            <h3 className="text-[28px] font-extrabold tracking-wide text-[#11612f] max-lg:text-2xl">SPORT COMPLEX</h3>
+            <p className="text-xs font-bold tracking-[0.26em] text-[#244c38]">★ BOOKING REVIEW ★</p>
+          </header>
+
+          <div className="mt-3 divide-y divide-[#d4ddd7]">
             {details.map(({ icon: Icon, label, value }) => (
-              <div key={label} className="grid grid-cols-[40px_1fr_1.3fr] items-center gap-3 py-1.5 max-sm:grid-cols-[36px_1fr]">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#eef4ef] text-[#145b29]"><Icon className="h-4 w-4" /></span>
-                <span className="text-sm font-semibold text-[#26364d]">{label}</span>
-                <strong className="text-[15px] text-[#12602b] max-sm:col-start-2">{value}</strong>
+              <div key={label} className="grid grid-cols-[36px_1fr_1.35fr] items-center gap-3 py-2">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#edf5ef] text-[#14743a]"><Icon className="h-4 w-4" /></span>
+                <span className="text-sm font-semibold text-[#34465a]">{label}</span>
+                <strong className="text-[15px] text-[#173d2a]">{value}</strong>
               </div>
             ))}
           </div>
 
-          <div className="relative mt-2 flex items-center justify-between overflow-hidden rounded-[12px] bg-gradient-to-r from-[#17682e] via-[#0b7b34] to-[#075c28] px-6 py-3 text-white">
-            <span className="font-semibold">รวมทั้งหมด</span>
-            <strong className="text-[27px]">฿ {safeTotalPrice.toLocaleString('th-TH')}</strong>
-            <span className="absolute -bottom-9 -right-5 h-28 w-28 rounded-full border-[12px] border-white/5 bg-white/5" />
+          <div className="mt-auto flex min-h-[86px] overflow-hidden rounded-[14px] border-2 border-[#14743a]">
+            <div className="flex flex-1 flex-col justify-center px-6 text-[#12612f]"><span className="text-xl font-bold">รวมทั้งหมด</span><em className="font-serif text-sm">Total Amount</em></div>
+            <div className="grid min-w-[170px] place-items-center bg-gradient-to-br from-[#147a36] to-[#075425] px-6 text-white"><strong className="text-[38px] leading-none">฿{safeTotalPrice.toLocaleString('th-TH')}</strong><span className="text-xs font-semibold tracking-wider">THB</span></div>
           </div>
 
-          <div className="mt-3 border-t-2 border-dashed border-[#768079] pt-3">
-            <div className="text-center text-[#0f5a28]">
-              <p className="font-serif text-[29px] italic leading-none">Thank you!</p>
-              <p className="mt-1 text-[10px] tracking-[0.24em]">♡ &nbsp; SEE YOU AGAIN</p>
-            </div>
+          <div className="mt-4 border-t-2 border-dashed border-[#8fa599] pt-3 text-center">
+            <p className="font-semibold tracking-[0.18em] text-[#486255]">รายการรอตรวจสอบ</p>
+            <p className="mt-1 text-[10px] tracking-[0.2em] text-[#6b7b72]">REVIEW ONLY • NOT CONFIRMED</p>
           </div>
         </article>
+      </section>
 
-        <div className="mx-auto mt-3 grid w-[80%] grid-cols-[0.8fr_1.2fr] gap-3 max-sm:w-full max-sm:grid-cols-1">
-          <button type="button" onClick={onBack} disabled={submitting} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#15813a] bg-white text-base font-semibold text-[#147333] shadow-sm transition-colors hover:bg-[#f0faf4] disabled:cursor-not-allowed disabled:opacity-50">
-            <ArrowLeft className="h-5 w-5" />ย้อนกลับ
-          </button>
-          <button type="button" onClick={onNext} disabled={submitting || !reviewIsValid} className="flex h-10 cursor-pointer items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition-colors enabled:hover:from-[#125f2b] enabled:hover:to-[#087432] disabled:cursor-not-allowed disabled:opacity-50">
-            {submitting ? 'กำลังสร้างรายการ...' : 'ยืนยันการจอง และไปชำระเงิน'}<ArrowRight className="h-5 w-5" />
-          </button>
+      <footer className="mx-auto mt-3 grid w-full max-w-[1260px] grid-cols-[1fr_auto_auto] items-center gap-5 max-md:grid-cols-2">
+        <div className="max-md:col-span-2">
+          {submitError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-center text-xs text-red-600">{submitError}</div>}
         </div>
-        {!reviewIsValid && <div role="alert" className="mx-auto mt-2 w-[80%] rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-700">ข้อมูลรายการจองไม่ครบหรือไม่ถูกต้อง กรุณาย้อนกลับไปตรวจสอบข้อมูล</div>}
-        {submitError && <div role="alert" className="mx-auto mt-2 w-[80%] rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-center text-xs text-red-600">{submitError}</div>}
-        <p className="mt-2 flex items-center justify-center gap-2 text-xs text-[#53637a]"><LockKeyhole className="h-3.5 w-3.5" />ระบบจะล็อกสนามไว้ 15 นาทีหลังยืนยันรายการ</p>
-      </div>
+        <button type="button" onClick={onBack} disabled={submitting} className="flex h-12 min-w-[200px] items-center justify-center gap-3 rounded-xl border-2 border-[#15813a] bg-white px-6 text-base font-semibold text-[#147333] transition-colors hover:bg-[#f0faf4] disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-w-0"><ArrowLeft className="h-5 w-5" />กลับไปแก้ไข</button>
+        <button type="button" onClick={onNext} disabled={submitting || !reviewIsValid} className="flex h-12 min-w-[310px] items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#167333] to-[#098138] px-7 text-base font-semibold text-white shadow-[0_6px_14px_rgba(10,113,49,0.2)] transition-colors enabled:hover:from-[#125f2b] enabled:hover:to-[#087432] disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-w-0">{submitting ? 'กำลังสร้างรายการ...' : 'ยืนยันการจอง'}<CheckCircle2 className="h-5 w-5" /><ArrowRight className="h-5 w-5" /></button>
+      </footer>
+
+      {!reviewIsValid && <div role="alert" className="mx-auto mt-2 w-full max-w-[760px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-700">ข้อมูลรายการจองไม่ครบหรือไม่ถูกต้อง กรุณาย้อนกลับไปตรวจสอบข้อมูล</div>}
+      <p className="mt-1 flex items-center justify-center gap-2 text-[13px] font-medium text-[#345c49]"><LockKeyhole className="h-3.5 w-3.5" />ระบบจะล็อกสนามไว้ 15 นาทีหลังยืนยันรายการ</p>
     </main>
   );
 };

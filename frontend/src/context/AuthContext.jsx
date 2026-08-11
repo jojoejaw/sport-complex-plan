@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -10,6 +10,13 @@ export const AuthProvider = ({ children }) => {
   });
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+  }, []);
 
   // ตรวจสอบ Token และดึงข้อมูลผู้ใช้ปัจจุบันเมื่อโหลดหน้าเว็บครั้งแรก
   useEffect(() => {
@@ -31,7 +38,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [logout]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => logout();
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, [logout]);
 
   // ฟังก์ชันเข้าสู่ระบบ
   const login = async (username, password) => {
@@ -57,14 +70,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
-
-  // ฟังก์ชันออกจากระบบ
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
   };
 
   const value = {

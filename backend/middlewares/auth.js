@@ -22,6 +22,9 @@ module.exports = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ message: 'โทเค็นไม่ถูกต้องหรือหมดอายุแล้ว' });
+    const message = error.name === 'TokenExpiredError'
+      ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'
+      : 'โทเค็นไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่';
+    return res.status(401).json({ message });
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
@@ -19,6 +19,13 @@ const LoginPage = () => {
 
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('reason') === 'session-expired') {
+      toast.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', { id: 'session-expired' });
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -67,8 +74,14 @@ const LoginPage = () => {
     try {
       const result = await login(cleanUsername, formData.password);
       toast.success(result.message || 'เข้าสู่ระบบสำเร็จ!');
-      
-      if (result.user?.role === 'admin') {
+
+      const returnTo = sessionStorage.getItem('auth:returnTo');
+      const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
+      sessionStorage.removeItem('auth:returnTo');
+
+      if (safeReturnTo) {
+        navigate(safeReturnTo, { replace: true });
+      } else if (result.user?.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/');
