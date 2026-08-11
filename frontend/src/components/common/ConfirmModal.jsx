@@ -1,4 +1,5 @@
 import { AlertCircle, X } from 'lucide-react';
+import modalBackground from '../../assets/bg.png';
 
 const ConfirmModal = ({
   isOpen,
@@ -23,7 +24,12 @@ const ConfirmModal = ({
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
         aria-describedby={message ? 'confirm-modal-message' : undefined}
-        className="w-full max-w-[460px] rounded-[22px] bg-white p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]"
+        className="relative w-full max-w-[460px] overflow-hidden rounded-[22px] bg-white p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(224, 241, 230, 0.28), rgba(194, 224, 205, 0.38)), url(${modalBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         <div className="flex items-start gap-4">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf8ef] text-[#08752e]">

@@ -10,6 +10,7 @@ import {
   RefreshCcw,
   ShieldCheck,
   TimerReset,
+  Users,
 } from 'lucide-react';
 import heroImage from '../../assets/sports-hero.png';
 import courtPanorama from '../../assets/court-panorama.png';
@@ -117,14 +118,21 @@ const HomePage = () => {
   return (
     <div className="home-page pb-1 pt-2 text-[#111]">
       <section className="home-hero grid min-h-[326px] grid-cols-[35%_65%] items-center max-lg:grid-cols-1">
-        <div className="home-hero-copy relative z-10 px-4 pb-12 pt-3 max-lg:pb-8 max-lg:text-center">
-          <p className="mb-3 text-[16px] font-semibold uppercase text-[#08752e]">WELCOME TO</p>
-          <h1 className="text-[43px] font-bold leading-none tracking-[-1.5px] max-sm:text-[36px]">SPORT COMPLEX</h1>
-          <h2 className="mt-4 text-[19px] font-semibold leading-[1.55]">จองสนามกีฬาออนไลน์<br />ง่าย สะดวก รวดเร็ว</h2>
-          <p className="mt-2 text-[15px] leading-6">เปิดให้บริการทุกวัน 10:00 - 22:00 น.<br />จองสนามล่วงหน้าได้ทันที</p>
-          <Link to="/courts" className="mt-5 inline-flex h-[48px] items-center gap-4 rounded-[10px] bg-[#08752e] px-8 text-[16px] font-semibold text-white shadow-[0_6px_15px_rgba(8,117,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#056326]">
-            จองสนามทันที <ArrowRight className="h-5 w-5" />
-          </Link>
+        <div className="home-hero-copy relative z-10 overflow-hidden px-2 pb-7 pt-1 max-lg:px-4 max-lg:pb-8 max-lg:text-center">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_75%_25%,rgba(18,112,54,0.07),transparent_42%)]" />
+          <p className="mb-2 text-[15px] font-medium uppercase tracking-[0.02em] text-[#2d7a36]">WELCOME TO</p>
+          <h1 className="font-extrabold uppercase leading-[0.88] tracking-[-2px]">
+            <span className="block bg-gradient-to-r from-[#65b33c] via-[#278238] to-[#155b2f] bg-clip-text text-[55px] text-transparent max-xl:text-[49px] max-sm:text-[43px]">SPORT</span>
+            <span className="mt-1 block text-[55px] text-[#0b1933] max-xl:text-[49px] max-sm:text-[43px]">COMPLEX</span>
+          </h1>
+          <span className="mt-4 block h-[2px] w-14 bg-gradient-to-r from-[#2f963f] to-[#93c76d] max-lg:mx-auto" />
+          <h2 className="mt-4 text-[18px] font-medium leading-[1.45] text-[#18243a]">จองสนามกีฬาครบจบในที่เดียว<br />ง่าย สะดวก รวดเร็ว ปลอดภัย</h2>
+
+          <div className="mt-6 grid grid-cols-3 gap-2 text-left max-lg:mx-auto max-lg:max-w-[520px]">
+            <div className="flex items-center gap-2"><Clock3 className="h-7 w-7 shrink-0 text-[#276f35]" /><p className="whitespace-nowrap text-[12px] leading-[1.05] text-[#243247]">เปิดบริการทุกวัน<br /><strong className="font-medium text-[#2d873d]">10:00 - 22:00 น.</strong></p></div>
+            <div className="flex items-center gap-2"><ShieldCheck className="h-7 w-7 shrink-0 text-[#276f35]" /><p className="whitespace-nowrap text-[12px] leading-[1.05] text-[#243247]">มาตรฐาน<br /><strong className="font-medium">ปลอดภัย</strong></p></div>
+            <div className="-translate-x-4 flex items-center gap-2"><Users className="h-7 w-7 shrink-0 text-[#276f35]" /><p className="whitespace-nowrap text-[12px] leading-[1.05] text-[#243247]">รองรับทุกกิจกรรม<br /><strong className="font-medium">ทุกไลฟ์สไตล์</strong></p></div>
+          </div>
         </div>
 
         <div className="home-hero-image relative h-[286px] self-start overflow-visible max-lg:mx-2 max-lg:h-[310px] max-sm:h-[245px]">
@@ -239,4 +247,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

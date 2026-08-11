@@ -25,6 +25,7 @@ import BookingModalHeader from './BookingModalHeader';
 import BookingPhoneModal from './BookingPhoneModal';
 import BookingReviewStep from './BookingReviewStep';
 import toast from 'react-hot-toast';
+import reviewBackground from '../../assets/bg.png';
 
 const toBangkokDateInput = (date = new Date()) => {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -319,10 +320,17 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
           closeDisabled={submitting}
         />
 
-        <div className={`booking-modal-content grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_360px] gap-4 overflow-hidden p-4 max-lg:grid-cols-1 max-lg:overflow-y-auto ${currentStep === 2 ? 'bg-[radial-gradient(circle_at_50%_0%,#edf6f0_0%,#d8e9de_42%,#c4dccd_100%)]' : currentStep === 3 ? 'bg-[radial-gradient(circle_at_50%_0%,#f4faf6_0%,#e5f0e8_48%,#d5e6da_100%)]' : ''}`}>
+        <div
+          className="booking-modal-content grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_360px] gap-4 overflow-hidden p-4 max-lg:grid-cols-1 max-lg:overflow-y-auto"
+          style={currentStep === 2 || currentStep === 3 ? {
+            backgroundImage: `linear-gradient(rgba(224, 241, 230, 0.28), rgba(194, 224, 205, 0.38)), url(${reviewBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          } : undefined}
+        >
           {currentStep === 1 ? (
             <>
-          <main className="booking-modal-main flex min-h-0 flex-col gap-3">
+              <main className="booking-modal-main flex min-h-0 flex-col gap-3">
                 <section className="booking-booking-info grid grid-cols-[300px_225px_1fr] overflow-hidden rounded-[16px] bg-white shadow-sm max-md:grid-cols-1">
                   <div className="border-r border-[#e2e7ee] p-5">
                     <label htmlFor="booking-date" className="mb-3 flex items-center gap-3 font-semibold"><CalendarDays className="h-6 w-6" />เลือกวันที่ต้องการเข้าใช้งาน</label>
@@ -418,7 +426,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                 </section>
               </main>
 
-          <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#0b532f] to-[#063820] px-4 pb-2 pt-4 text-white shadow-lg max-lg:min-h-[520px]">
+              <aside ref={summaryRef} style={summaryHeight ? { height: `${summaryHeight}px` } : undefined} className="booking-summary flex min-h-0 flex-col self-start overflow-hidden rounded-[18px] bg-gradient-to-br from-[#0b532f] to-[#063820] px-4 pb-2 pt-4 text-white shadow-lg max-lg:min-h-[520px]">
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-[#55eb91] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                     <CalendarDays className="h-5 w-5" strokeWidth={2.2} />

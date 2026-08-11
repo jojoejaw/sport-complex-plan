@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
-import toast from 'react-hot-toast';
+import AlertModal from '../../components/common/AlertModal';
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, completeLogin } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -16,14 +16,22 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ isOpen: false, type: 'info', title: '', message: '', onClose: null });
 
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
 
+  const showAlert = (type, title, message, onClose = null) => setAlert({ isOpen: true, type, title, message, onClose });
+  const closeAlert = () => {
+    const nextAction = alert.onClose;
+    setAlert((current) => ({ ...current, isOpen: false, onClose: null }));
+    nextAction?.();
+  };
+
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('reason') === 'session-expired') {
-      toast.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', { id: 'session-expired' });
+      setAlert({ isOpen: true, type: 'warning', title: 'เซสชันหมดอายุ', message: 'กรุณาเข้าสู่ระบบใหม่', onClose: null });
     }
   }, []);
 
@@ -57,7 +65,6 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
-    toast.dismiss();
 
     const cleanUsername = formData.username.trim();
 
@@ -66,30 +73,26 @@ const LoginPage = () => {
       setErrors({ username: !cleanUsername, password: !formData.password });
       if (!cleanUsername) usernameRef.current?.focus();
       else passwordRef.current?.focus();
-      toast.error('กรุณากรอกชื่อผู้ใช้ และรหัสผ่าน');
+      showAlert('error', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
       return;
     }
 
     setLoading(true);
     try {
       const result = await login(cleanUsername, formData.password);
-      toast.success(result.message || 'เข้าสู่ระบบสำเร็จ!');
-
       const returnTo = sessionStorage.getItem('auth:returnTo');
       const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
       sessionStorage.removeItem('auth:returnTo');
 
-      if (safeReturnTo) {
-        navigate(safeReturnTo, { replace: true });
-      } else if (result.user?.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } catch (error) {
+      const destination = safeReturnTo || (result.user?.role === 'admin' ? '/admin' : '/');
+      showAlert('success', 'เข้าสู่ระบบสำเร็จ', result.message || 'เข้าสู่ระบบสำเร็จ!', () => {
+        completeLogin(result);
+        navigate(destination, { replace: true });
+      });
+    } catch {
       setErrors({ username: true, password: true });
       usernameRef.current?.focus();
-      toast.error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      showAlert('error', 'เข้าสู่ระบบไม่สำเร็จ', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     } finally {
       setLoading(false);
     }
@@ -97,6 +100,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center py-4 px-4 sm:px-6">
+      <AlertModal isOpen={alert.isOpen} type={alert.type} title={alert.title} message={alert.message} onClose={closeAlert} />
       <div className="max-w-sm sm:max-w-md w-full bg-white rounded-2xl p-5 sm:p-6 shadow-md border border-gray-100 text-center relative overflow-hidden my-2">
         
         {/* 1. โลโก้แบรนด์ด้านบน */}
@@ -188,7 +192,7 @@ const LoginPage = () => {
 
           {/* ลิงก์ลืมรหัสผ่าน */}
           <div className="flex justify-end text-xs sm:text-sm pt-0.5">
-            <a href="#" onClick={(e) => { e.preventDefault(); toast('ฟังก์ชันลืมรหัสผ่านอยู่ในระหว่างพัฒนา'); }} className="text-[#0B5D2D] font-semibold hover:underline font-['Kanit',sans-serif]">
+            <a href="#" onClick={(e) => { e.preventDefault(); showAlert('info', 'ยังไม่เปิดให้ใช้งาน', 'ฟังก์ชันลืมรหัสผ่านอยู่ในระหว่างพัฒนา'); }} className="text-[#0B5D2D] font-semibold hover:underline font-['Kanit',sans-serif]">
               ลืมรหัสผ่าน?
             </a>
           </div>
@@ -223,7 +227,7 @@ const LoginPage = () => {
         <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
-            onClick={() => toast('ระบบเข้าสู่ระบบด้วย Google อยู่ระหว่างพัฒนา')}
+            onClick={() => showAlert('info', 'ยังไม่เปิดให้ใช้งาน', 'ระบบเข้าสู่ระบบด้วย Google อยู่ระหว่างพัฒนา')}
             className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 rounded-lg hover:bg-gray-50 text-xs sm:text-sm font-semibold text-gray-700 transition-all cursor-pointer font-['Kanit',sans-serif]"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -236,7 +240,7 @@ const LoginPage = () => {
           </button>
           <button
             type="button"
-            onClick={() => toast('ระบบเข้าสู่ระบบด้วย Facebook อยู่ระหว่างพัฒนา')}
+            onClick={() => showAlert('info', 'ยังไม่เปิดให้ใช้งาน', 'ระบบเข้าสู่ระบบด้วย Facebook อยู่ระหว่างพัฒนา')}
             className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 rounded-lg hover:bg-gray-50 text-xs sm:text-sm font-semibold text-gray-700 transition-all cursor-pointer font-['Kanit',sans-serif]"
           >
             <svg className="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">

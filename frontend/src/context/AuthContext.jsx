@@ -49,17 +49,19 @@ export const AuthProvider = ({ children }) => {
   // ฟังก์ชันเข้าสู่ระบบ
   const login = async (username, password) => {
     try {
-      const data = await authService.login(username, password);
-      if (data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setToken(data.token);
-        setUser(data.user);
-      }
-      return data;
+      return await authService.login(username, password);
     } catch (error) {
       throw error;
     }
+  };
+
+  const completeLogin = (data) => {
+    if (!data?.token || !data?.user) return false;
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setToken(data.token);
+    setUser(data.user);
+    return true;
   };
 
   // ฟังก์ชันสมัครสมาชิกใหม่
@@ -80,6 +82,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === 'admin',
     isCustomer: user?.role === 'customer',
     login,
+    completeLogin,
     register,
     logout,
   };

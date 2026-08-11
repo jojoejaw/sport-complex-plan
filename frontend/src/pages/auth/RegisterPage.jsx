@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import toast from 'react-hot-toast';
+import AlertModal from '../../components/common/AlertModal';
 
 const RegisterPage = () => {
   const { register } = useAuth();
@@ -20,11 +20,19 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ isOpen: false, type: 'info', title: '', message: '', onClose: null });
 
   const usernameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
+
+  const showAlert = (type, title, message, onClose = null) => setAlert({ isOpen: true, type, title, message, onClose });
+  const closeAlert = () => {
+    const nextAction = alert.onClose;
+    setAlert((current) => ({ ...current, isOpen: false, onClose: null }));
+    nextAction?.();
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -59,7 +67,6 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
-    toast.dismiss();
 
     const newErrors = {};
     if (!formData.username) newErrors.username = true;
@@ -69,7 +76,7 @@ const RegisterPage = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      toast.error('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+      showAlert('error', 'ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบทุกช่อง');
       if (newErrors.username) usernameRef.current?.focus();
       else if (newErrors.email) emailRef.current?.focus();
       else if (newErrors.password) passwordRef.current?.focus();
@@ -84,19 +91,19 @@ const RegisterPage = () => {
     if (cleanUsername.length < 5) {
       setErrors({ username: true });
       usernameRef.current?.focus();
-      toast.error('ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 5 ตัวอักษร');
+      showAlert('error', 'ชื่อผู้ใช้ไม่ถูกต้อง', 'ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 5 ตัวอักษร');
       return;
     }
     if (cleanUsername.length > 30) {
       setErrors({ username: true });
       usernameRef.current?.focus();
-      toast.error('ชื่อผู้ใช้ต้องไม่เกิน 30 ตัวอักษร');
+      showAlert('error', 'ชื่อผู้ใช้ไม่ถูกต้อง', 'ชื่อผู้ใช้ต้องไม่เกิน 30 ตัวอักษร');
       return;
     }
     if (!/^[a-zA-Z0-9]+$/.test(cleanUsername)) {
       setErrors({ username: true });
       usernameRef.current?.focus();
-      toast.error('ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น');
+      showAlert('error', 'ชื่อผู้ใช้ไม่ถูกต้อง', 'ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น');
       return;
     }
 
@@ -104,7 +111,7 @@ const RegisterPage = () => {
     if (cleanEmail.length > 50) {
       setErrors({ email: true });
       emailRef.current?.focus();
-      toast.error('ความยาวอีเมลต้องไม่เกิน 50 ตัวอักษร');
+      showAlert('error', 'อีเมลไม่ถูกต้อง', 'ความยาวอีเมลต้องไม่เกิน 50 ตัวอักษร');
       return;
     }
 
@@ -112,7 +119,7 @@ const RegisterPage = () => {
     if (!emailRegex.test(cleanEmail)) {
       setErrors({ email: true });
       emailRef.current?.focus();
-      toast.error('รูปแบบอีเมลไม่ถูกต้อง (ตัวอย่าง: user@example.com)');
+      showAlert('error', 'อีเมลไม่ถูกต้อง', 'รูปแบบอีเมลไม่ถูกต้อง ');
       return;
     }
 
@@ -120,7 +127,7 @@ const RegisterPage = () => {
     if (formData.password !== formData.confirmPassword) {
       setErrors({ password: true, confirmPassword: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
+      showAlert('error', 'รหัสผ่านไม่ตรงกัน', 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
       return;
     }
 
@@ -128,48 +135,47 @@ const RegisterPage = () => {
     if (formData.password.length < 6) {
       setErrors({ password: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+      showAlert('error', 'รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
       return;
     }
     if (formData.password.length > 30) {
       setErrors({ password: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านต้องไม่เกิน 30 ตัวอักษร');
+      showAlert('error', 'รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านต้องไม่เกิน 30 ตัวอักษร');
       return;
     }
     if (!/[A-Z]/.test(formData.password)) {
       setErrors({ password: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านต้องมีตัวพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว');
+      showAlert('error', 'รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านต้องประกรอบด้วย(A-Z, a-z)');
       return;
     }
     if (!/[a-z]/.test(formData.password)) {
       setErrors({ password: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านต้องมีตัวพิมพ์เล็ก (a-z) อย่างน้อย 1 ตัว');
+      showAlert('error', 'รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านต้องมีตัวพิมพ์เล็ก (a-z) อย่างน้อย 1 ตัว');
       return;
     }
     if (!/\d/.test(formData.password)) {
       setErrors({ password: true });
       passwordRef.current?.focus();
-      toast.error('รหัสผ่านต้องมีตัวเลข (0-9) อย่างน้อย 1 ตัว');
+      showAlert('error', 'รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านต้องมีตัวเลข (0-9)');
       return;
     }
 
     if (!formData.agreeTerms) {
       setErrors({ agreeTerms: true });
-      toast.error('กรุณากดยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว');
+      showAlert('warning', 'กรุณายอมรับเงื่อนไข', 'กรุณากดยอมรับเงื่อนไขการใช้ยริการ');
       return;
     }
 
     setLoading(true);
     try {
       const result = await register(cleanUsername, cleanEmail, formData.password);
-      toast.success(result.message || 'สมัครสมาชิกสำเร็จแล้ว!');
-      navigate('/login');
+      showAlert('success', 'สมัครสมาชิกสำเร็จ', result.message || 'สมัครสมาชิกสำเร็จแล้ว!', () => navigate('/login'));
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก';
-      toast.error(errorMsg);
+      showAlert('error', 'สมัครสมาชิกไม่สำเร็จ', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -177,6 +183,7 @@ const RegisterPage = () => {
 
   return (
     <div className="flex items-center justify-center py-4 px-4 sm:px-6">
+      <AlertModal isOpen={alert.isOpen} type={alert.type} title={alert.title} message={alert.message} onClose={closeAlert} />
       <div className="max-w-sm sm:max-w-md w-full bg-white rounded-2xl p-5 sm:p-6 shadow-md border border-gray-100 text-center relative overflow-hidden my-2">
 
         {/* 1. โลโก้แบรนด์ด้านบน ( Hexagon Logo ) */}

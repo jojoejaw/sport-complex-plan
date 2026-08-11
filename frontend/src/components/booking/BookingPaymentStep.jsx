@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
-  CheckCircle2,
   Clock3,
   Copy,
   FileImage,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import paymentService from '../../services/paymentService';
+import AlertModal from '../common/AlertModal';
 
 const PAYMENT_SECONDS = 15 * 60;
 
@@ -46,7 +46,7 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
 
   const formattedTime = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
   const totalPrice = Number(bookingResult?.total_price || 0);
-  const bookingCode = `BK${String(bookingResult?.bookingId || '').padStart(10, '0')}`;
+  const bookingCode = bookingResult?.bookingId || '-';
   const qrCodeUrl = useMemo(() => {
     if (!paymentConfig?.promptpayId) return '';
     const promptPayId = encodeURIComponent(paymentConfig.promptpayId.replace(/\s/g, ''));
@@ -94,20 +94,8 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
     }
   };
 
-  if (paid) {
-    return (
-      <main className="booking-step-enter col-span-2 flex min-h-0 items-center justify-center overflow-y-auto bg-[#f7f9f5] p-5 max-lg:col-span-1">
-        <section className="w-full max-w-[500px] rounded-[24px] border border-[#d8e8c5] bg-white p-8 text-center shadow-[0_18px_50px_rgba(4,21,15,0.12)]">
-          <CheckCircle2 className="mx-auto h-20 w-20 text-[#78ad13]" />
-          <h3 className="mt-4 text-2xl font-bold text-[#123d25]">ชำระเงินสำเร็จ</h3>
-          <p className="mt-2 text-[#607087]">รายการจอง #{bookingResult.bookingId} ได้รับการยืนยันแล้ว</p>
-          <button type="button" onClick={onClose} className="mt-6 h-11 w-full rounded-xl bg-[#0b7d35] font-semibold text-white hover:bg-[#096a2d]">ปิดหน้าต่าง</button>
-        </section>
-      </main>
-    );
-  }
-
   return (
+    <>
     <main className="booking-step-enter col-span-2 min-h-0 overflow-hidden bg-transparent p-2 max-lg:col-span-1 max-lg:overflow-y-auto max-sm:p-1">
       <form onSubmit={submitSlip} className="mx-auto grid h-full max-h-full w-full max-w-[1050px] grid-cols-[1.1fr_0.9fr] gap-2.5 rounded-[20px] border border-transparent bg-transparent p-3 shadow-none max-lg:h-auto max-lg:grid-cols-1 max-sm:p-2">
         <div className="flex min-w-0 flex-col gap-2">
@@ -162,6 +150,17 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
         <button type="submit" disabled={!slipFile || submitting || loadingConfig || secondsLeft <= 0} className="relative col-span-2 flex h-[52px] items-center justify-center rounded-[15px] bg-[#071820] px-14 text-center text-base font-bold text-white shadow-md transition-colors enabled:hover:bg-[#0d2922] disabled:cursor-not-allowed max-lg:col-span-1 max-sm:h-12 max-sm:text-sm"><ShieldCheck className="absolute left-[calc(50%-175px)] h-7 w-7 text-[#a8eb27] max-sm:left-4" /><span>{submitting ? 'กำลังตรวจสอบสลิป...' : 'ยืนยันการชำระเงินและตรวจสอบสลิป'}<small className="block text-[11px] font-normal text-white/70">ระบบจะตรวจสอบอัตโนมัติ ภายในไม่กี่วินาที</small></span><ArrowRight className="absolute right-5 h-6 w-6 text-[#a8eb27]" /></button>
       </form>
     </main>
+      <AlertModal
+        isOpen={paid}
+        type="success"
+        title="ชำระเงินสำเร็จ"
+        message={`รายการจอง #${bookingResult.bookingId} ได้รับการยืนยันแล้ว`}
+        confirmText="ปิดหน้าต่าง"
+        lightBackdrop
+        autoCloseMs={3000}
+        onClose={onClose}
+      />
+    </>
   );
 };
 

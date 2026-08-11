@@ -4,6 +4,7 @@ import {
   Phone,
   X,
 } from 'lucide-react';
+import modalBackground from '../../assets/bg.png';
 
 const BookingPhoneModal = ({
   isOpen,
@@ -33,7 +34,12 @@ const BookingPhoneModal = ({
         aria-modal="true"
         aria-labelledby="phone-modal-title"
         onSubmit={handleSubmit}
-        className="booking-phone-dialog booking-dialog-enter relative w-full max-w-[480px] rounded-[24px] bg-white p-7 shadow-[0_22px_55px_rgba(2,20,13,0.34)] ring-1 ring-white/70 max-sm:rounded-[20px] max-sm:p-5"
+        className="booking-phone-dialog booking-dialog-enter relative w-full max-w-[480px] overflow-hidden rounded-[24px] bg-white p-7 shadow-[0_22px_55px_rgba(2,20,13,0.34)] ring-1 ring-white/70 max-sm:rounded-[20px] max-sm:p-5"
+        style={{
+          backgroundImage: `linear-gradient(rgba(224, 241, 230, 0.28), rgba(194, 224, 205, 0.38)), url(${modalBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         <button
           type="button"
