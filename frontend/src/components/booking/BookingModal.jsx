@@ -20,6 +20,7 @@ import {
 import bookingService from '../../services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../common/ConfirmModal';
+import AlertModal from '../common/AlertModal';
 import BookingPaymentStep from './BookingPaymentStep';
 import BookingModalHeader from './BookingModalHeader';
 import BookingPhoneModal from './BookingPhoneModal';
@@ -111,6 +112,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   const [contactPhone, setContactPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [bookingAlert, setBookingAlert] = useState({ isOpen: false, title: '', message: '' });
   const [bookingResult, setBookingResult] = useState(null);
   const [modalEntered, setModalEntered] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -282,7 +284,11 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
     } catch (requestError) {
       const message = requestError.response?.data?.message || 'ไม่สามารถสร้างรายการจองได้ กรุณาลองใหม่อีกครั้ง';
       setSubmitError(message);
-      toast.error(message);
+      setBookingAlert({
+        isOpen: true,
+        title: 'ไม่สามารถทำรายการจองได้',
+        message,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -519,6 +525,15 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
           }}
           onConfirm={handleConfirmNextStep}
           onCancel={() => setShowConfirm(false)}
+        />
+        <AlertModal
+          isOpen={bookingAlert.isOpen}
+          type="error"
+          title={bookingAlert.title}
+          message={bookingAlert.message}
+          confirmText="รับทราบ"
+          lightBackdrop
+          onClose={() => setBookingAlert((current) => ({ ...current, isOpen: false }))}
         />
       </div>
     </div>
