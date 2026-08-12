@@ -109,7 +109,10 @@ const HomePage = () => {
   const visibleCourts = selectedSport === 'ทั้งหมด'
     ? sports
         .filter((sport) => sport.name !== 'ทั้งหมด')
-        .map((sport) => courts.find((court) => court.sport_id === sport.id))
+        .map((sport) => (
+          courts.find((court) => court.sport_id === sport.id && !court.closed)
+          || courts.find((court) => court.sport_id === sport.id)
+        ))
         .filter(Boolean)
     : courts
         .filter((court) => court.sport === selectedSport)

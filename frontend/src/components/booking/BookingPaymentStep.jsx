@@ -82,13 +82,11 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
     try {
       setSubmitting(true);
       setError('');
-      const result = await paymentService.uploadSlip(bookingResult.bookingId, slipFile);
+      await paymentService.uploadSlip(bookingResult.bookingId, slipFile);
       setPaid(true);
-      toast.success(result.message || 'ชำระเงินสำเร็จ');
     } catch (requestError) {
       const message = requestError.response?.data?.message || 'ไม่สามารถตรวจสอบสลิปได้ กรุณาลองใหม่อีกครั้ง';
       setError(message);
-      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -146,7 +144,6 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
           <div className="relative mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-[#668b25] bg-[#0b241d] p-2 text-xs"><ShieldCheck className="h-6 w-6 text-[#a8eb27]" /><span>ปลอดภัยด้วยระบบพร้อมเพย์<br /><small className="text-white/70">โอนเงินได้จากทุกธนาคาร</small></span><LockKeyhole className="ml-auto h-5 w-5 text-[#a8eb27]" /></div>
         </aside>
 
-        {error && <div role="alert" className="col-span-2 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600 max-lg:col-span-1">{error}</div>}
         <button type="submit" disabled={!slipFile || submitting || loadingConfig || secondsLeft <= 0} className="relative col-span-2 flex h-[52px] items-center justify-center rounded-[15px] bg-[#071820] px-14 text-center text-base font-bold text-white shadow-md transition-colors enabled:hover:bg-[#0d2922] disabled:cursor-not-allowed max-lg:col-span-1 max-sm:h-12 max-sm:text-sm"><ShieldCheck className="absolute left-[calc(50%-175px)] h-7 w-7 text-[#a8eb27] max-sm:left-4" /><span>{submitting ? 'กำลังตรวจสอบสลิป...' : 'ยืนยันการชำระเงินและตรวจสอบสลิป'}<small className="block text-[11px] font-normal text-white/70">ระบบจะตรวจสอบอัตโนมัติ ภายในไม่กี่วินาที</small></span><ArrowRight className="absolute right-5 h-6 w-6 text-[#a8eb27]" /></button>
       </form>
     </main>
@@ -157,8 +154,16 @@ const BookingPaymentStep = ({ bookingResult, onClose }) => {
         message={`รายการจอง #${bookingResult.bookingId} ได้รับการยืนยันแล้ว`}
         confirmText="ปิดหน้าต่าง"
         lightBackdrop
-        autoCloseMs={3000}
         onClose={onClose}
+      />
+      <AlertModal
+        isOpen={Boolean(error) && !paid}
+        type="error"
+        title="ตรวจสอบสลิปไม่สำเร็จ"
+        message={error}
+        confirmText="รับทราบ"
+        lightBackdrop
+        onClose={() => setError('')}
       />
     </>
   );

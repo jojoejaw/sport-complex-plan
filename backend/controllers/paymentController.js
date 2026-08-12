@@ -56,6 +56,8 @@ exports.upload = multer({
 exports.submitPayment = async (req, res) => {
   const { booking_id } = req.body;
   const user_id = req.user.id;
+  let connection;
+  let transactionStarted = false;
 
   // --- ขั้นที่ 1: ตรวจสอบพารามิเตอร์และรูปภาพที่อัปโหลด ---
   if (!req.file) {
@@ -99,7 +101,10 @@ exports.submitPayment = async (req, res) => {
 
     if (timeDiff > 15) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [booking_id]);
+      await db.query(
+        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status IN ('pending_payment', 'rejected')",
+        [booking_id]
+      );
       return res.status(400).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
     }
 
@@ -184,7 +189,7 @@ exports.submitPayment = async (req, res) => {
 
     if (actualTransferTime < allowedEarliestTime) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง (สลิปนี้ทำรายการโอนก่อนการกดจองสนาม) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
+      return res.status(400).json({ message: 'เวลาโอนเงินในสลิปไม่ถูกต้อง กรุณาติดต่อเพื่อขอความช่วยเหลือ' });
     }
 
     // 7.4 ตรวจสอบความซ้ำซ้อนของเลขธุรกรรม
@@ -194,44 +199,120 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'สลิปโอนเงินไม่ถูกต้อง (ไม่พบเลขธุรกรรมอ้างอิง) กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
     }
 
-    const [duplicateSlip] = await db.query(
-      'SELECT id FROM payments WHERE transaction_ref = ?',
-      [transactionRef]
-    );
-
-    if (duplicateSlip.length > 0) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'สลิปนี้ถูกใช้งานไปแล้ว' });
-    }
-
-    // --- ขั้นที่ 8: บันทึกข้อมูลและอัปเดตสถานะในฐานข้อมูล (กรณีสแกนผ่านเรียบร้อย 100%) ---
+    // --- ขั้นที่ 8: ล็อกข้อมูลและตรวจสถานะล่าสุดก่อนบันทึกผล ---
     const formattedTransferTime = slipData.date.replace('T', ' ').substring(0, 19);
     const normalizedPath = req.file.path.replace(/\\/g, '/');
 
-    // บันทึกหลักฐานสลิป
-    await db.query(
-      `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
-       VALUES (?, ?, ?, ?) 
-       ON DUPLICATE KEY UPDATE 
-          slip_image_path = VALUES(slip_image_path), 
-          transfer_time = VALUES(transfer_time),
-          transaction_ref = VALUES(transaction_ref)`,
-      [booking_id, normalizedPath, formattedTransferTime, transactionRef]
-    );
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    transactionStarted = true;
 
-    // อัปเดตสถานะการจองเป็น approved
-    await db.query(
-      `UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?`,
+    // Thunder API อาจใช้เวลาตอบกลับ จึงต้องอ่านและล็อก Booking ซ้ำก่อนบันทึกผลจริง
+    const [lockedBookings] = await connection.query(
+      `SELECT status, created_at, updated_at, user_id, total_price
+       FROM bookings
+       WHERE id = ?
+       FOR UPDATE`,
       [booking_id]
     );
 
+    if (lockedBookings.length === 0) {
+      const stateError = new Error('ไม่พบรายการจองนี้ในระบบ');
+      stateError.status = 404;
+      throw stateError;
+    }
+
+    const lockedBooking = lockedBookings[0];
+    if (lockedBooking.user_id !== user_id) {
+      const stateError = new Error('คุณไม่มีสิทธิ์ทำรายการในใบจองนี้');
+      stateError.status = 403;
+      throw stateError;
+    }
+
+    if (!['pending_payment', 'rejected'].includes(lockedBooking.status)) {
+      const stateError = new Error('สถานะรายการจองเปลี่ยนไปแล้ว ไม่สามารถยืนยันการชำระเงินได้');
+      stateError.status = 409;
+      throw stateError;
+    }
+
+    const lockedBaseTime = lockedBooking.status === 'rejected'
+      ? lockedBooking.updated_at
+      : lockedBooking.created_at;
+    const lockedTimeDiff = (new Date() - new Date(lockedBaseTime)) / 1000 / 60;
+
+    if (lockedTimeDiff > 15) {
+      await connection.query(
+        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status IN ('pending_payment', 'rejected')",
+        [booking_id]
+      );
+      await connection.commit();
+      transactionStarted = false;
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(409).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
+    }
+
+    if (transferredAmount !== parseFloat(lockedBooking.total_price)) {
+      const stateError = new Error('ยอดจองมีการเปลี่ยนแปลง กรุณาตรวจสอบรายการใหม่');
+      stateError.status = 409;
+      throw stateError;
+    }
+
+    const [existingPayments] = await connection.query(
+      `SELECT id FROM payments
+       WHERE booking_id = ? OR transaction_ref = ?
+       FOR UPDATE`,
+      [booking_id, transactionRef]
+    );
+
+    if (existingPayments.length > 0) {
+      const duplicateError = new Error('รายการจองหรือสลิปนี้ถูกดำเนินการไปแล้ว');
+      duplicateError.status = 409;
+      throw duplicateError;
+    }
+
+    // บันทึก Payment และอนุมัติ Booking ใน Transaction เดียวกัน
+    await connection.query(
+      `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
+       VALUES (?, ?, ?, ?)`,
+      [booking_id, normalizedPath, formattedTransferTime, transactionRef]
+    );
+
+    const [updateResult] = await connection.query(
+      `UPDATE bookings
+       SET status = 'approved', reject_reason = NULL
+       WHERE id = ? AND status IN ('pending_payment', 'rejected')`,
+      [booking_id]
+    );
+
+    if (updateResult.affectedRows !== 1) {
+      const stateError = new Error('สถานะรายการจองเปลี่ยนไประหว่างดำเนินการ กรุณาตรวจสอบอีกครั้ง');
+      stateError.status = 409;
+      throw stateError;
+    }
+
+    await connection.commit();
+    transactionStarted = false;
+
     res.json({ message: 'ชำระเงินสำเร็จเรียบร้อยแล้ว! ระบบอนุมัติการจองของท่านอัตโนมัติ' });
   } catch (error) {
+    if (connection && transactionStarted) {
+      await connection.rollback();
+      transactionStarted = false;
+    }
     logger.error('SubmitPayment Unexpected Error: ' + (error.stack || error));
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ' });
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'รายการจองหรือสลิปนี้ถูกดำเนินการไปแล้ว' });
+    }
+    res.status(error.status || 500).json({
+      message: error.status
+        ? error.message
+        : 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน กรุณาติดต่อแอดมินเพื่อขอความช่วยเหลือ'
+    });
+  } finally {
+    if (connection) connection.release();
   }
 };
 
