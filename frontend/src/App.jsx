@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
@@ -7,20 +7,20 @@ import Footer from './components/layout/Footer';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import HomePage from './pages/customer/HomePage';
+import MyBookingsPage from './pages/customer/MyBookingsPage';
 import { ProtectedRoute, AdminRoute, GuestRoute } from './components/layout/ProtectedRoute';
-import { Phone, MapPin } from 'lucide-react';
 
-function App() {
+const AppLayout = () => {
+  const location = useLocation();
+  const isBookingsDashboard = location.pathname === '/my-bookings';
+
   return (
-    <AuthProvider>
-      <Router>
-        <Toaster position="top-center" reverseOrder={false} />
-        <div className="min-h-screen bg-[#F8FAF9] text-gray-900 flex flex-col justify-between font-['Kanit',sans-serif]">
+        <div className={`min-h-screen bg-[#F8FAF9] text-gray-900 flex flex-col justify-between font-['Kanit',sans-serif] ${isBookingsDashboard ? 'overflow-x-hidden' : ''}`}>
           {/* แถบเมนูส่วนหัว 100% ตรงตามภาพตัวอย่าง Design Theme */}
           <Navbar />
 
           {/* ส่วนเนื้อหาหลักและ Routing */}
-          <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 lg:p-5">
+          <main className={isBookingsDashboard ? 'w-full flex-1' : 'mx-auto w-full max-w-7xl flex-1 p-3 sm:p-4 lg:p-5'}>
             <Routes>
               {/* หน้าแรก (HomePage 100% Match Page-Home.png) */}
               <Route path="/" element={<HomePage />} />
@@ -51,10 +51,7 @@ function App() {
                 path="/my-bookings"
                 element={
                   <ProtectedRoute>
-                    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xs my-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">ประวัติการจองของฉัน</h2>
-                      <p className="text-gray-600">ยินดีต้อนรับ! หน้านี้สำหรับดูรายการจองสนามของคุณ</p>
-                    </div>
+                    <MyBookingsPage />
                   </ProtectedRoute>
                 }
               />
@@ -100,8 +97,17 @@ function App() {
           </main>
 
           {/* ฟุตเตอร์ส่วนท้าย (ตรงตามภาพ Page-Home.png 100%) */}
-          <Footer />
+          {!isBookingsDashboard && <Footer />}
         </div>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Toaster position="top-center" reverseOrder={false} />
+        <AppLayout />
       </Router>
     </AuthProvider>
   );

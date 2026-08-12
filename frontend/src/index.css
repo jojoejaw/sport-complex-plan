@@ -352,3 +352,31 @@ button:disabled {
     font-size: 13px;
   }
 }
+/* Scalloped ticket edge used only by booking status cards. */
+.booking-status-ticket {
+  -webkit-mask:
+    radial-gradient(circle at 0 9px, transparent 7px, #000 7.5px) left -9px / 12px 18px repeat-y,
+    radial-gradient(circle at 100% 9px, transparent 7px, #000 7.5px) right -9px / 12px 18px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 20px) 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 9px, transparent 7px, #000 7.5px) left -9px / 12px 18px repeat-y,
+    radial-gradient(circle at 100% 9px, transparent 7px, #000 7.5px) right -9px / 12px 18px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 20px) 100% no-repeat;
+}
+
+.member-ticket {
+  -webkit-mask:
+    radial-gradient(circle at 0 14px, transparent 9px, #000 9.5px) left -14px / 15px 28px repeat-y,
+    radial-gradient(circle at 100% 14px, transparent 9px, #000 9.5px) right -14px / 15px 28px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 26px) 100% no-repeat,
+    linear-gradient(#000 0 0) center bottom / 100% 50% no-repeat;
+  mask:
+    radial-gradient(circle at 0 14px, transparent 9px, #000 9.5px) left -14px / 15px 28px repeat-y,
+    radial-gradient(circle at 100% 14px, transparent 9px, #000 9.5px) right -14px / 15px 28px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 26px) 100% no-repeat,
+    linear-gradient(#000 0 0) center bottom / 100% 50% no-repeat;
+}
+
+.help-ticket {
+  clip-path: polygon(5% 0, 95% 0, 100% 12%, 100% 88%, 95% 100%, 5% 100%, 0 88%, 0 12%);
+}

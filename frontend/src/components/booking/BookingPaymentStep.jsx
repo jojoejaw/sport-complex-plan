@@ -18,14 +18,14 @@ import AlertModal from '../common/AlertModal';
 
 const PAYMENT_SECONDS = 15 * 60;
 
-const BookingPaymentStep = ({ bookingResult, onClose }) => {
+const BookingPaymentStep = ({ bookingResult, onClose, initialSeconds = PAYMENT_SECONDS }) => {
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [slipFile, setSlipFile] = useState(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [paid, setPaid] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(PAYMENT_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(() => Math.max(0, Math.min(PAYMENT_SECONDS, initialSeconds)));
 
   useEffect(() => {
     let active = true;

@@ -291,7 +291,7 @@ exports.getMyBookings = async (req, res) => {
 
   try {
     const [myBookings] = await db.query(
-      `SELECT b.*, c.name AS court_name, s.name AS sport_name, p.slip_image_path, p.transfer_time
+      `SELECT b.*, c.name AS court_name, c.image_url, s.name AS sport_name, p.slip_image_path, p.transfer_time
        FROM bookings b
        INNER JOIN courts c ON b.court_id = c.id
        INNER JOIN sports s ON c.sport_id = s.id
@@ -300,7 +300,10 @@ exports.getMyBookings = async (req, res) => {
        ORDER BY b.created_at DESC`,
       [user_id]
     );
-    res.json(myBookings);
+    res.json({
+      bookings: myBookings,
+      server_time: new Date().toISOString()
+    });
   } catch (error) {
     logger.error('getMyBookings Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงประวัติการจอง' });
@@ -315,37 +318,64 @@ exports.cancelBooking = async (req, res) => {
   const { id } = req.params;
   const user_id = req.user.id;
   const user_role = req.user.role;
+  let connection;
 
   try {
-    // --- ขั้นที่ 1: ค้นหารายการจอง ---
-    const [bookings] = await db.query('SELECT status, user_id FROM bookings WHERE id = ?', [id]);
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // --- ขั้นที่ 1: ล็อกแถวรายการจอง ป้องกันการชำระเงินและยกเลิกพร้อมกัน ---
+    const [bookings] = await connection.query(
+      'SELECT status, user_id FROM bookings WHERE id = ? FOR UPDATE',
+      [id]
+    );
     if (bookings.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
     }
 
     // --- ขั้นที่ 2: กรณีแอดมิน — ยกเลิกได้ทุกสถานะ (ยกเว้นที่ยกเลิกแล้ว) ---
     if (user_role === 'admin') {
       if (bookings[0].status === 'cancelled') {
+        await connection.rollback();
         return res.status(400).json({ message: 'รายการจองนี้ถูกยกเลิกไปก่อนหน้านี้แล้ว' });
       }
-      await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
+      await connection.query("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status != 'cancelled'", [id]);
+      await connection.commit();
       return res.json({ message: 'แอดมินยกเลิกรายการจองสำเร็จ (คืนสิทธิ์สนามว่างเรียบร้อย)' });
     }
 
     // --- ขั้นที่ 3: กรณีลูกค้า — ต้องเป็นเจ้าของและสถานะ pending_payment เท่านั้น ---
     if (bookings[0].user_id !== user_id) {
+      await connection.rollback();
       return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ยกเลิกใบจองนี้' });
     }
 
     if (bookings[0].status !== 'pending_payment') {
+      await connection.rollback();
       return res.status(400).json({ message: 'ไม่สามารถยกเลิกได้ เนื่องจากมีการชำระเงินหรือสถานะเปลี่ยนไปแล้ว' });
     }
 
-    await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
+    const [updateResult] = await connection.query(
+      `UPDATE bookings
+       SET status = 'cancelled'
+       WHERE id = ? AND user_id = ? AND status = 'pending_payment'`,
+      [id, user_id]
+    );
+
+    if (updateResult.affectedRows !== 1) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'สถานะรายการจองเปลี่ยนไปแล้ว ไม่สามารถยกเลิกได้' });
+    }
+
+    await connection.commit();
     res.json({ message: 'ยกเลิกรายการจองสำเร็จแล้ว คืนสิทธิ์สนามว่างเรียบร้อย' });
   } catch (error) {
+    if (connection) await connection.rollback();
     logger.error('CancelBooking Error: ' + (error.stack || error));
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยกเลิกการจอง' });
+  } finally {
+    if (connection) connection.release();
   }
 };
 

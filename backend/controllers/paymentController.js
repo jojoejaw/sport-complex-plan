@@ -89,20 +89,19 @@ exports.submitPayment = async (req, res) => {
       return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ทำรายการในใบจองนี้' });
     }
 
-    // --- ขั้นที่ 4: ตรวจสอบสถานะการจอง (ต้องอยู่ในสถานะค้างชำระเงิน หรือ ถูกปฏิเสธสลิปเก่า) ---
-    if (booking.status !== 'pending_payment' && booking.status !== 'rejected') {
+    // --- ขั้นที่ 4: Flow อัตโนมัติรับชำระเฉพาะรายการที่กำลังรอชำระเงิน ---
+    if (booking.status !== 'pending_payment') {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'รายการจองนี้ได้รับการชำระเงินหรืออนุมัติไปแล้ว' });
     }
 
     // --- ขั้นที่ 5: ตรวจสอบเวลาหมดอายุ 15 นาที ---
-    const baseTime = booking.status === 'rejected' ? booking.updated_at : booking.created_at;
-    const timeDiff = (new Date() - new Date(baseTime)) / 1000 / 60;
+    const timeDiff = (new Date() - new Date(booking.created_at)) / 1000 / 60;
 
     if (timeDiff > 15) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       await db.query(
-        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status IN ('pending_payment', 'rejected')",
+        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'pending_payment'",
         [booking_id]
       );
       return res.status(400).json({ message: 'เกินเวลากำหนดชำระเงิน 15 นาทีแล้ว รายการนี้ถูกยกเลิกโดยอัตโนมัติ' });
@@ -229,20 +228,17 @@ exports.submitPayment = async (req, res) => {
       throw stateError;
     }
 
-    if (!['pending_payment', 'rejected'].includes(lockedBooking.status)) {
+    if (lockedBooking.status !== 'pending_payment') {
       const stateError = new Error('สถานะรายการจองเปลี่ยนไปแล้ว ไม่สามารถยืนยันการชำระเงินได้');
       stateError.status = 409;
       throw stateError;
     }
 
-    const lockedBaseTime = lockedBooking.status === 'rejected'
-      ? lockedBooking.updated_at
-      : lockedBooking.created_at;
-    const lockedTimeDiff = (new Date() - new Date(lockedBaseTime)) / 1000 / 60;
+    const lockedTimeDiff = (new Date() - new Date(lockedBooking.created_at)) / 1000 / 60;
 
     if (lockedTimeDiff > 15) {
       await connection.query(
-        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status IN ('pending_payment', 'rejected')",
+        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'pending_payment'",
         [booking_id]
       );
       await connection.commit();
@@ -280,7 +276,7 @@ exports.submitPayment = async (req, res) => {
     const [updateResult] = await connection.query(
       `UPDATE bookings
        SET status = 'approved', reject_reason = NULL
-       WHERE id = ? AND status IN ('pending_payment', 'rejected')`,
+       WHERE id = ? AND status = 'pending_payment'`,
       [booking_id]
     );
 
