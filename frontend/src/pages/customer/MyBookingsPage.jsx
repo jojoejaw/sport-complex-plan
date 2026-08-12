@@ -233,10 +233,10 @@ const MyBookingsPage = () => {
       <ConfirmModal isOpen={Boolean(cancelTarget)} title="ยืนยันยกเลิกการจอง" message="คุณแน่ใจหรือไม่ว่าต้องการยกเลิกรายการนี้?" confirmText="ยืนยันการยกเลิก" cancelText="กลับไป" confirmDisabled={cancelling} onConfirm={confirmCancel} onCancel={() => !cancelling && setCancelTarget(null)} />
       <AlertModal isOpen={alert.isOpen} type={alert.type} title={alert.title} message={alert.message} confirmText="รับทราบ" onClose={() => setAlert((current) => ({ ...current, isOpen: false }))} />
       {paymentBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[2px]">
-          <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="booking-modal flex max-h-[calc(100dvh-24px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[22px] bg-[#fffefb] shadow-[0_18px_42px_rgba(0,0,0,0.22)]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[2px] max-sm:p-0">
+          <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="booking-modal flex max-h-[calc(100dvh-24px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[22px] bg-[#fffefb] shadow-[0_18px_42px_rgba(0,0,0,0.22)] max-sm:max-h-dvh max-sm:h-dvh max-sm:rounded-none">
             <BookingModalHeader courtName={paymentBooking.court_name} pricePerHour={Number(paymentBooking.total_price) / Math.max(1, Number(String(paymentBooking.end_time).slice(0, 2)) - Number(String(paymentBooking.start_time).slice(0, 2)))} currentStep={3} onClose={closePayment} />
-            <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-2 overflow-hidden p-4" style={{ backgroundImage: `linear-gradient(rgba(224,241,230,.28),rgba(194,224,205,.38)),url(${reviewBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-2 overflow-hidden p-4 max-sm:block max-sm:overflow-y-auto max-sm:p-2" style={{ backgroundImage: `linear-gradient(rgba(224,241,230,.28),rgba(194,224,205,.38)),url(${reviewBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
               <BookingPaymentStep bookingResult={{ bookingId: paymentBooking.id, total_price: paymentBooking.total_price }} initialSeconds={getRemainingSeconds(paymentBooking, Date.now() + serverTimeOffset)} onClose={closePayment} />
             </div>
           </div>

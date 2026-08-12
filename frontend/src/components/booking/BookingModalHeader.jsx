@@ -9,7 +9,7 @@ const BookingModalHeader = ({
   onClose,
   closeDisabled = false,
 }) => (
-  <header className={`booking-modal-header flex border-b border-[#e3e8ef] bg-white px-6 max-lg:px-5 max-md:py-4 ${currentStep === 3 ? 'relative min-h-[126px] items-start pt-4' : 'min-h-[76px] items-center max-md:items-start'}`}>
+  <header className={`booking-modal-header flex border-b border-[#e3e8ef] bg-white px-6 max-lg:px-5 max-md:py-4 ${currentStep === 3 ? 'relative min-h-[126px] items-start pt-4 max-sm:min-h-[88px] max-sm:items-center max-sm:py-3' : 'min-h-[76px] items-center max-md:items-start'}`}>
     <div className="flex min-w-[350px] items-center gap-3 max-lg:min-w-0 max-lg:flex-1">
       <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-[#c8ead6] bg-[#08752e] text-2xl shadow-inner">⚽</div>
       <div>

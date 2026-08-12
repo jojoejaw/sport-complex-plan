@@ -94,8 +94,8 @@ const BookingPaymentStep = ({ bookingResult, onClose, initialSeconds = PAYMENT_S
 
   return (
     <>
-    <main className="booking-step-enter col-span-2 min-h-0 overflow-hidden bg-transparent p-2 max-lg:col-span-1 max-lg:overflow-y-auto max-sm:p-1">
-      <form onSubmit={submitSlip} className="mx-auto grid h-full max-h-full w-full max-w-[1050px] grid-cols-[1.1fr_0.9fr] gap-2.5 rounded-[20px] border border-transparent bg-transparent p-3 shadow-none max-lg:h-auto max-lg:grid-cols-1 max-sm:p-2">
+    <main className="booking-step-enter col-span-2 min-h-0 min-w-0 overflow-hidden bg-transparent p-2 max-lg:col-span-1 max-lg:overflow-y-auto max-sm:overflow-visible max-sm:p-0">
+      <form onSubmit={submitSlip} className="mx-auto grid h-full max-h-full min-w-0 w-full max-w-[1050px] grid-cols-[1.1fr_0.9fr] gap-2.5 rounded-[20px] border border-transparent bg-transparent p-3 shadow-none max-lg:h-auto max-lg:grid-cols-1 max-sm:gap-3 max-sm:p-1">
         <div className="flex min-w-0 flex-col gap-2">
           <section className="relative overflow-hidden rounded-[17px] bg-[#06151c] px-5 py-3.5 text-white shadow-md">
             <div className="absolute -right-12 -top-14 h-40 w-40 rounded-full border-[18px] border-[#9be522]/20" />
@@ -109,10 +109,10 @@ const BookingPaymentStep = ({ bookingResult, onClose, initialSeconds = PAYMENT_S
             </div>
           </section>
 
-          <section className="flex items-center gap-3 rounded-[15px] border border-[#e0e6df] bg-white p-3 shadow-sm">
+          <section className="flex items-center gap-3 rounded-[15px] border border-[#e0e6df] bg-white p-3 shadow-sm max-sm:flex-wrap">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#071820] text-[#a9e92d]"><Phone className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1"><p className="text-xs text-[#5f6b65]">โอนเงินพร้อมเพย์</p>{loadingConfig ? <p className="font-semibold">กำลังโหลดข้อมูล...</p> : <><strong className="block truncate text-xl text-[#133d23]">{paymentConfig?.promptpayId || '-'}</strong><p className="truncate text-xs text-[#66736c]">{paymentConfig?.promptpayName || '-'}</p></>}</div>
-            <button type="button" onClick={copyPromptPay} disabled={!paymentConfig} className="flex h-9 items-center gap-2 rounded-full border border-[#ccd8ce] px-4 text-sm font-semibold text-[#183d28] hover:bg-[#f1f7ef] disabled:opacity-40"><span>คัดลอก</span><Copy className="h-4 w-4" /></button>
+            <button type="button" onClick={copyPromptPay} disabled={!paymentConfig} className="flex h-9 items-center gap-2 rounded-full border border-[#ccd8ce] px-4 text-sm font-semibold text-[#183d28] hover:bg-[#f1f7ef] disabled:opacity-40 max-sm:ml-[52px]"><span>คัดลอก</span><Copy className="h-4 w-4" /></button>
           </section>
 
           <section className="flex items-center gap-3 rounded-[15px] border border-[#e0e6df] bg-white p-3 shadow-sm">
@@ -121,20 +121,20 @@ const BookingPaymentStep = ({ bookingResult, onClose, initialSeconds = PAYMENT_S
             <div className="grid h-10 w-10 place-items-center rounded-full border-4 border-[#a4db31] text-[#4d7910]"><Clock3 className="h-5 w-5" /></div>
           </section>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-[15px] border border-[#e0e6df] bg-white p-3 shadow-sm hover:border-[#93c629] hover:bg-[#fbfef6]">
+          <label className="flex cursor-pointer items-center gap-3 rounded-[15px] border border-[#e0e6df] bg-white p-3 shadow-sm hover:border-[#93c629] hover:bg-[#fbfef6] max-sm:flex-wrap">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#071820] text-[#a9e92d]"><Upload className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1"><p className="font-semibold text-[#17231d]">อัปโหลดสลิปการชำระเงิน</p><p className="truncate text-xs text-[#66736c]">{slipFile ? slipFile.name : 'รองรับไฟล์ JPG, JPEG, PNG ขนาดไม่เกิน 5MB'}</p></div>
-            <span className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-[#ccd8ce] px-4 text-sm font-semibold"><FileImage className="h-4 w-4" />เลือกไฟล์</span>
+            <span className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-[#ccd8ce] px-4 text-sm font-semibold max-sm:ml-[52px]"><FileImage className="h-4 w-4" />เลือกไฟล์</span>
             <input type="file" accept="image/jpeg,image/png" className="sr-only" onChange={selectSlip} />
           </label>
 
           <section className="rounded-[15px] bg-[#f2f7ed] px-3 py-2.5 text-sm text-[#26352d]">
             <h4 className="mb-1 flex items-center gap-2 font-bold"><Info className="h-4 w-4 text-[#101d17]" />หมายเหตุ</h4>
-            <div className="grid grid-cols-[0.9fr_1.1fr] gap-x-1 gap-y-1 text-[11px] font-semibold leading-tight max-sm:grid-cols-1"><p className="whitespace-nowrap">✓ ชำระตามยอดที่แสดงเท่านั้น</p><p className="whitespace-nowrap">✓ ระบบตรวจสอบสลิปอัตโนมัติ</p><p className="whitespace-nowrap">✓ ไม่ต้องใส่หมายเหตุการโอน</p><p className="whitespace-nowrap">✓ ไม่ได้รับการยืนยัน โปรดติดต่อบริการลูกค้า</p></div>
+            <div className="grid grid-cols-[0.9fr_1.1fr] gap-x-1 gap-y-1 text-[11px] font-semibold leading-tight max-sm:grid-cols-1"><p className="whitespace-nowrap max-sm:whitespace-normal">✓ ชำระตามยอดที่แสดงเท่านั้น</p><p className="whitespace-nowrap max-sm:whitespace-normal">✓ ระบบตรวจสอบสลิปอัตโนมัติ</p><p className="whitespace-nowrap max-sm:whitespace-normal">✓ ไม่ต้องใส่หมายเหตุการโอน</p><p className="whitespace-nowrap max-sm:whitespace-normal">✓ ไม่ได้รับการยืนยัน โปรดติดต่อบริการลูกค้า</p></div>
           </section>
         </div>
 
-        <aside className="relative flex min-h-[450px] flex-col items-center overflow-hidden rounded-[17px] bg-[#06151c] p-3.5 text-white shadow-md max-lg:min-h-0">
+        <aside className="relative flex min-h-[450px] flex-col items-center overflow-hidden rounded-[17px] bg-[#06151c] p-3.5 text-white shadow-md max-lg:min-h-0 max-sm:py-4">
           <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_75%_20%,#a7eb24_0,transparent_27%),linear-gradient(135deg,transparent_45%,#8bc51e_46%,transparent_47%)]" />
           <div className="relative flex items-center gap-2"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#a8eb27]/15 text-[#a8eb27]"><Zap className="h-6 w-6 fill-current" /></span><div><h3 className="text-xl font-bold"><span className="text-[#a8eb27]">สแกน</span>เพื่อชำระเงิน</h3><p className="text-xs text-center text-white/80">พร้อมเพย์ <span className="rounded bg-[#174b83] px-2 py-0.5 font-semibold">PromptPay</span></p></div></div>
           <div className="relative mt-2.5 grid w-full max-w-[245px] flex-1 place-items-center rounded-[18px] border-[3px] border-[#8cc621] bg-white p-3 shadow-[0_0_18px_rgba(154,224,31,0.24)] max-lg:flex-none">
