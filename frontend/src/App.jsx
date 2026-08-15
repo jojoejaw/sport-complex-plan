@@ -8,19 +8,21 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import HomePage from './pages/customer/HomePage';
 import MyBookingsPage from './pages/customer/MyBookingsPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import { ProtectedRoute, AdminRoute, GuestRoute } from './components/layout/ProtectedRoute';
 
 const AppLayout = () => {
   const location = useLocation();
   const isBookingsDashboard = location.pathname === '/my-bookings';
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
-        <div className={`min-h-screen bg-[#F8FAF9] text-gray-900 flex flex-col justify-between font-['Kanit',sans-serif] ${isBookingsDashboard ? 'overflow-x-hidden' : ''}`}>
+        <div className={`min-h-screen bg-[#F8FAF9] text-gray-900 flex flex-col justify-between font-['Kanit',sans-serif] ${isBookingsDashboard || isAdminPage ? 'overflow-x-hidden' : ''}`}>
           {/* แถบเมนูส่วนหัว 100% ตรงตามภาพตัวอย่าง Design Theme */}
           <Navbar />
 
           {/* ส่วนเนื้อหาหลักและ Routing */}
-          <main className={isBookingsDashboard ? 'w-full flex-1' : 'mx-auto w-full max-w-7xl flex-1 p-3 sm:p-4 lg:p-5'}>
+          <main className={isBookingsDashboard || isAdminPage ? 'w-full flex-1' : 'mx-auto w-full max-w-7xl flex-1 p-3 sm:p-4 lg:p-5'}>
             <Routes>
               {/* หน้าแรก (HomePage 100% Match Page-Home.png) */}
               <Route path="/" element={<HomePage />} />
@@ -61,10 +63,7 @@ const AppLayout = () => {
                 path="/admin"
                 element={
                   <AdminRoute>
-                    <div className="bg-white rounded-2xl p-8 border border-amber-200 bg-amber-50/20 shadow-xs my-8">
-                      <h2 className="text-2xl font-bold text-amber-900 mb-2">แดชบอร์ดแอดมิน (Admin Dashboard)</h2>
-                      <p className="text-amber-800">หน้านี้สำหรับแอดมินตรวจสลิป อนุมัติการจอง และจัดการสนาม</p>
-                    </div>
+                    <AdminDashboard />
                   </AdminRoute>
                 }
               />
@@ -97,7 +96,7 @@ const AppLayout = () => {
           </main>
 
           {/* ฟุตเตอร์ส่วนท้าย (ตรงตามภาพ Page-Home.png 100%) */}
-          {!isBookingsDashboard && <Footer />}
+          {!isBookingsDashboard && !isAdminPage && <Footer />}
         </div>
   );
 };

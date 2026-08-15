@@ -95,7 +95,7 @@ exports.updateCourt = async (req, res) => {
   }
   
   const { id } = req.params;
-  const { name, description, price_per_hour, status, image_url } = req.body;
+  const { sport_id, name, description, price_per_hour, status, image_url } = req.body;
 
   try {
     // --- ขั้นที่ 1: ตรวจสอบว่ามีสนาม ID นี้ในระบบและดึงข้อมูลเดิม ---
@@ -112,6 +112,10 @@ exports.updateCourt = async (req, res) => {
     }
 
     // --- ขั้นที่ 2: รองรับ Partial Update (หากไม่ได้ส่งฟิลด์ใดมา ให้ใช้ค่าเดิมของสนามนั้น) ---
+    const updatedSportId = sport_id !== undefined && sport_id !== null && sport_id !== ''
+      ? sport_id
+      : currentCourt.sport_id;
+
     const updatedName = name !== undefined && name !== null && String(name).trim() !== '' 
       ? name 
       : currentCourt.name;
@@ -134,14 +138,19 @@ exports.updateCourt = async (req, res) => {
 
     // --- ขั้นที่ 3: อัปเดตข้อมูลสนามด้วยค่าใหม่ที่รวมกับค่าเดิมแล้ว ---
     await db.query(
-      'UPDATE courts SET name = ?, description = ?, price_per_hour = ?, status = ?, image_url = ? WHERE id = ?',
-      [updatedName, updatedDescription, updatedPrice, updatedStatus, updatedImageUrl, id]
+      'UPDATE courts SET sport_id = ?, name = ?, description = ?, price_per_hour = ?, status = ?, image_url = ? WHERE id = ?',
+      [updatedSportId, updatedName, updatedDescription, updatedPrice, updatedStatus, updatedImageUrl, id]
     );
 
     // --- ขั้นที่ 4: ตอบกลับสำเร็จ ---
     res.json({ message: 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว!' });
   } catch (error) {
     logger.error('updateCourt Error: ' + (error.stack || error));
+
+    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.code === 'ER_NO_REFERENCED_ROW') {
+      return res.status(400).json({ message: 'ไม่พบประเภทกีฬานี้ในระบบ (sport_id ไม่ถูกต้อง)' });
+    }
+
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลสนาม' });
   }
 };
