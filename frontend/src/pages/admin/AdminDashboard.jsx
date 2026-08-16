@@ -8,11 +8,13 @@ import {
 import bookingService from '../../services/bookingService';
 import courtService from '../../services/courtService';
 import AdminCourtsPanel from './AdminCourtsPanel';
+import AdminBookingsPanel from './AdminBookingsPanel';
+import AdminBookingManagementModal from './AdminBookingManagementModal';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'courts', label: 'จัดการสนาม', icon: Grid2X2 },
-  { label: 'รายการจอง', icon: CalendarDays },
+  { id: 'bookings', label: 'รายการจอง', icon: CalendarDays },
   { label: 'การชำระเงิน', icon: WalletCards },
   { label: 'ผู้ใช้งาน', icon: UsersRound },
   { label: 'รายงาน', icon: FileBarChart },
@@ -83,6 +85,7 @@ const AdminDashboard = () => {
   const [now, setNow] = useState(new Date());
   const [dashboardPeriod, setDashboardPeriod] = useState('daily');
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [selectedDashboardBooking, setSelectedDashboardBooking] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -94,6 +97,12 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(timer); }, []);
+
+  useEffect(() => {
+    const syncBooking = (event) => setBookings((current) => current.map((item) => item.id === event.detail.id ? event.detail : item));
+    window.addEventListener('admin-booking-status-updated', syncBooking);
+    return () => window.removeEventListener('admin-booking-status-updated', syncBooking);
+  }, []);
 
   const dashboard = useMemo(() => {
     const bangkokToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
@@ -157,12 +166,20 @@ const AdminDashboard = () => {
         <button type="button" onClick={() => setSidebarOpen(false)} className="mt-3 flex h-12 items-center justify-center gap-3 rounded-xl border border-[#dce3ea] font-semibold"><ChevronLeft className="h-5 w-5" />ย่อเมนู</button>
       </aside>
 
-      <div className={`h-full min-h-0 rounded-[22px] border border-[#e4ebe6] bg-[#f7f9fc] shadow-[0_12px_34px_rgba(20,50,30,0.08)] max-lg:h-auto max-lg:overflow-visible ${activeSection === 'courts' ? 'overflow-y-auto [scrollbar-gutter:stable]' : 'overflow-hidden'}`}>
-        <main className="p-2.5 lg:p-3">
+      <div className={`h-full min-h-0 rounded-[22px] border border-[#e4ebe6] bg-[#f7f9fc] shadow-[0_12px_34px_rgba(20,50,30,0.08)] max-lg:h-auto max-lg:overflow-visible ${activeSection === 'dashboard' ? 'overflow-hidden' : 'overflow-y-auto [scrollbar-gutter:stable]'}`}>
+        <main className="p-2.5 lg:p-3" onClick={(event) => {
+          const button = event.target.closest('button');
+          const section = button?.closest('section');
+          if (activeSection === 'dashboard' && button?.textContent.includes('ดูทั้งหมด') && section?.textContent.includes('รายการจองล่าสุด')) setActiveSection('bookings');
+          if (activeSection === 'dashboard' && button?.textContent.includes('ดูรายละเอียด')) {
+            const bookingId = Number(button.closest('tr')?.querySelector('td')?.textContent);
+            setSelectedDashboardBooking(bookings.find((item) => Number(item.id) === bookingId) || null);
+          }
+        }}>
           <button type="button" aria-label="เปิดเมนูผู้ดูแลระบบ" className="mb-3 grid h-11 w-11 place-items-center rounded-xl border border-[#dce4df] bg-white shadow-sm lg:hidden" onClick={() => setSidebarOpen(true)}><Menu /></button>
           {loading && <div className="mb-4 h-1.5 animate-pulse rounded-full bg-gradient-to-r from-[#0a9644] via-[#8cdaa9] to-[#0a9644]" />}
           {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {activeSection === 'courts' ? <AdminCourtsPanel courts={courts} setCourts={setCourts} loading={loading} /> : <><div className="mb-3 flex h-[43px] justify-end"><div className="grid h-[43px] w-[330px] grid-cols-4 rounded-xl border border-[#dce5df] bg-white p-1 shadow-sm">{[['total','สรุปผลรวม'], ['daily','รายวัน'], ['monthly','รายเดือน'], ['yearly','รายปี']].map(([value, label]) => <button key={value} type="button" aria-pressed={dashboardPeriod === value} onClick={() => setDashboardPeriod(value)} className={`h-[33px] min-w-0 whitespace-nowrap rounded-lg px-2 text-xs font-semibold transition-colors ${dashboardPeriod === value ? 'bg-[#07883d] text-white shadow-sm' : 'text-[#4c586b] hover:bg-[#eef7f1]'}`}>{label}</button>)}</div></div><div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+          {activeSection === 'bookings' ? <AdminBookingsPanel bookings={bookings} loading={loading} /> : activeSection === 'courts' ? <AdminCourtsPanel courts={courts} setCourts={setCourts} loading={loading} /> : <><div className="mb-3 flex h-[43px] justify-end"><div className="grid h-[43px] w-[330px] grid-cols-4 rounded-xl border border-[#dce5df] bg-white p-1 shadow-sm">{[['total','สรุปผลรวม'], ['daily','รายวัน'], ['monthly','รายเดือน'], ['yearly','รายปี']].map(([value, label]) => <button key={value} type="button" aria-pressed={dashboardPeriod === value} onClick={() => setDashboardPeriod(value)} className={`h-[33px] min-w-0 whitespace-nowrap rounded-lg px-2 text-xs font-semibold transition-colors ${dashboardPeriod === value ? 'bg-[#07883d] text-white shadow-sm' : 'text-[#4c586b] hover:bg-[#eef7f1]'}`}>{label}</button>)}</div></div><div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
             <SummaryCard icon={CalendarDays} title={`การจอง${periodText}`} value={dashboard.periodBookings.length} color="#0aa04a" soft="#e7f7ed" />
             <SummaryCard icon={X} title={`รายการจอง${periodText}ที่ยกเลิก`} value={dashboard.cancelled.length} color="#ef3e4e" soft="#ffe9eb" />
             <SummaryCard icon={Clock3} title={`รอชำระเงิน${periodText}`} value={dashboard.pending.length} color="#f29300" soft="#fff1dc" />
@@ -176,6 +193,7 @@ const AdminDashboard = () => {
           </div>
 
           <section className="mt-3 min-h-[245px] overflow-hidden rounded-[16px] border border-[#e3e8ed] bg-white shadow-[0_4px_13px_rgba(28,44,68,0.07)]"><div className="flex items-center justify-between border-b border-[#e6eaee] px-4 py-3"><h2 className="font-semibold">รายการจองล่าสุด ({periodText})</h2><button type="button" className="flex items-center gap-1 rounded-lg border border-[#dce3e8] px-3 py-1.5 text-xs">ดูทั้งหมด <ChevronRight className="h-4 w-4" /></button></div><div className="overflow-x-auto"><table className="w-full min-w-[900px] text-xs"><thead className="bg-[#f8faf9] text-[#596376]"><tr>{['Booking ID','ชื่อลูกค้า','สนาม','วันที่ใช้งาน','ช่วงเวลา','ยอดชำระ','สถานะ','ดำเนินการ'].map((title) => <th key={title} className="px-3 py-2 text-center font-medium">{title}</th>)}</tr></thead><tbody>{dashboard.periodBookings.slice(0,5).map((booking) => { const meta = bookingStatus[booking.status] || bookingStatus.cancelled; return <tr key={booking.id} className="border-t border-[#edf0f2]"><td className="px-3 py-2.5 text-center font-semibold text-[#079143]">{booking.id}</td><td className="px-3 py-2.5 text-center">{booking.username}</td><td className="px-3 py-2.5 text-center">{booking.court_name}</td><td className="px-3 py-2.5 text-center">{formatDate(booking.booking_date)}</td><td className="px-3 py-2.5 text-center">{shortTime(booking.start_time)} - {shortTime(booking.end_time)}</td><td className="px-3 py-2.5 text-center">{formatMoney(booking.total_price)}</td><td className="px-3 py-2.5 text-center"><span className={`rounded-md px-2.5 py-1 ${meta[1]}`}>{meta[0]}</span></td><td className="px-3 py-2.5 text-center"><button type="button" className="inline-flex items-center gap-1 rounded-md border border-[#dce3e8] px-2.5 py-1"><Eye className="h-3.5 w-3.5" />ดูรายละเอียด</button></td></tr>; })}{!loading && dashboard.periodBookings.length === 0 && <tr><td colSpan="8" className="h-[150px] text-center text-[#697386]">ยังไม่มีรายการจองในช่วงเวลานี้</td></tr>}</tbody></table></div></section></>}
+          {selectedDashboardBooking && <AdminBookingManagementModal booking={selectedDashboardBooking} onClose={() => setSelectedDashboardBooking(null)} />}
         </main>
       </div>
       </div>
