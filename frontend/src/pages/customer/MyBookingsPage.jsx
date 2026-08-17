@@ -17,7 +17,7 @@ import {
   CalendarX2,
   XCircle,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContextStore';
 import bookingService from '../../services/bookingService';
 import courtPanorama from '../../assets/court-panorama.png';
 import ConfirmModal from '../../components/common/ConfirmModal';

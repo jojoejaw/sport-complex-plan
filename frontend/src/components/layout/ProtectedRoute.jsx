@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContextStore';
 import toast from 'react-hot-toast';
 
 // 1. Loading Spinner Component ขณะที่กำลังตรวจสอบ Token

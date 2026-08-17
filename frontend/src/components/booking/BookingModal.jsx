@@ -18,7 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import bookingService from '../../services/bookingService';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContextStore';
 import ConfirmModal from '../common/ConfirmModal';
 import AlertModal from '../common/AlertModal';
 import BookingPaymentStep from './BookingPaymentStep';

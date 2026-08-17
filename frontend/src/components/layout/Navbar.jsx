@@ -8,7 +8,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContextStore';
 
 const links = [
   { name: 'หน้าแรก', path: '/' },

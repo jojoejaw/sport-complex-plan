@@ -1,7 +1,6 @@
-import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
-
-const AuthContext = createContext(null);
+import { AuthContext } from './authContextStore';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -47,13 +46,7 @@ export const AuthProvider = ({ children }) => {
   }, [logout]);
 
   // ฟังก์ชันเข้าสู่ระบบ
-  const login = async (username, password) => {
-    try {
-      return await authService.login(username, password);
-    } catch (error) {
-      throw error;
-    }
-  };
+  const login = (username, password) => authService.login(username, password);
 
   const completeLogin = (data) => {
     if (!data?.token || !data?.user) return false;
@@ -65,14 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ฟังก์ชันสมัครสมาชิกใหม่
-  const register = async (username, email, password) => {
-    try {
-      const data = await authService.register(username, email, password);
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
+  const register = (username, email, password) => authService.register(username, email, password);
 
   const value = {
     user,
@@ -89,14 +75,3 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-// Custom Hook สำหรับเรียกใช้ AuthContext ได้ง่าย
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default AuthContext;
