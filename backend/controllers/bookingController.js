@@ -453,7 +453,17 @@ exports.getAdminBookings = async (req, res) => {
       `SELECT b.*, 
               u.username, u.email, 
               c.name AS court_name, s.name AS sport_name, 
-              p.slip_image_path, p.transfer_time, p.uploaded_at
+              p.slip_image_path, p.transfer_time, p.uploaded_at,
+              CASE
+                WHEN p.id IS NOT NULL THEN 'promptpay'
+                WHEN b.status = 'approved' THEN 'cash'
+                ELSE NULL
+              END AS payment_method,
+              CASE
+                WHEN p.id IS NOT NULL THEN COALESCE(p.transfer_time, p.uploaded_at)
+                WHEN b.status = 'approved' THEN b.updated_at
+                ELSE NULL
+              END AS paid_at
        FROM bookings b
        INNER JOIN users u ON b.user_id = u.id
        INNER JOIN courts c ON b.court_id = c.id

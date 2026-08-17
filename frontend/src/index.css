@@ -380,3 +380,94 @@ button:disabled {
 .help-ticket {
   clip-path: polygon(5% 0, 95% 0, 100% 12%, 100% 88%, 95% 100%, 5% 100%, 0 88%, 0 12%);
 }
+/* Admin ticket menu: repeated semicircle cuts like the menu reference artwork. */
+.admin-menu-ticket {
+  border-radius: 3px;
+  -webkit-mask:
+    radial-gradient(circle 6px at 0 0, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 9px at 0 50%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 0 100%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 100% 0, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 9px at 100% 50%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 100% 100%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle 6px at 0 0, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 9px at 0 50%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 0 100%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 100% 0, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 9px at 100% 50%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 6px at 100% 100%, transparent 97%, #000) 0 0 / 100% 100% no-repeat,
+    linear-gradient(#000 0 0);
+  mask-composite: intersect;
+}
+
+.admin-date-ticket {
+  margin-bottom: 2rem;
+  border-radius: 3px;
+  clip-path: polygon(
+    7px 0, calc(100% - 7px) 0,
+    100% 7px, 100% calc(100% - 7px),
+    calc(100% - 7px) 100%, 7px 100%,
+    0 calc(100% - 7px), 0 7px
+  );
+  -webkit-mask:
+    radial-gradient(circle 4px at 0 8px, transparent 97%, #000) 0 0 / 100% 16px repeat-y,
+    radial-gradient(circle 4px at 100% 8px, transparent 97%, #000) 0 0 / 100% 16px repeat-y,
+    radial-gradient(circle 3px at 8px 0, transparent 97%, #000) 0 0 / 16px 100% repeat-x,
+    radial-gradient(circle 3px at 8px 100%, transparent 97%, #000) 0 0 / 16px 100% repeat-x,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle 4px at 0 8px, transparent 97%, #000) 0 0 / 100% 16px repeat-y,
+    radial-gradient(circle 4px at 100% 8px, transparent 97%, #000) 0 0 / 100% 16px repeat-y,
+    radial-gradient(circle 3px at 8px 0, transparent 97%, #000) 0 0 / 16px 100% repeat-x,
+    radial-gradient(circle 3px at 8px 100%, transparent 97%, #000) 0 0 / 16px 100% repeat-x,
+    linear-gradient(#000 0 0);
+  mask-composite: intersect;
+}
+
+.admin-menu-header-ticket {
+  isolation: isolate;
+}
+
+.admin-menu-header-ticket::before {
+  position: absolute;
+  z-index: 2;
+  top: -7px;
+  left: 8px;
+  right: 8px;
+  height: 15px;
+  pointer-events: none;
+  content: '';
+  background-image: radial-gradient(circle at center, #f7f9fc 0 7px, transparent 7.5px);
+  background-position: left top;
+  background-size: 18px 15px;
+  background-repeat: repeat-x;
+}
+
+.admin-menu-header-ticket::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    radial-gradient(circle at left bottom, #f7f9fc 0 12px, transparent 12.5px) left bottom / 25px 25px no-repeat,
+    radial-gradient(circle at right bottom, #f7f9fc 0 12px, transparent 12.5px) right bottom / 25px 25px no-repeat;
+}
+
+.admin-menu-logo-ticket {
+  border-radius: 3px;
+  -webkit-mask:
+    radial-gradient(circle 3px at 0 6px, transparent 97%, #000) 0 0 / 100% 12px repeat-y,
+    radial-gradient(circle 3px at 100% 6px, transparent 97%, #000) 0 0 / 100% 12px repeat-y,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle 3px at 0 6px, transparent 97%, #000) 0 0 / 100% 12px repeat-y,
+    radial-gradient(circle 3px at 100% 6px, transparent 97%, #000) 0 0 / 100% 12px repeat-y,
+    linear-gradient(#000 0 0);
+  mask-composite: intersect;
+}

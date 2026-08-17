@@ -188,7 +188,7 @@ const MyBookingsPage = () => {
               <div className="mt-3"><p className="font-bold tracking-wider text-[#8aea2b]">MOVE • PLAY • WIN</p><p className="mt-1 text-[10px] leading-4 tracking-wide">LET'S MAKE EVERY MATCH<br />YOUR BEST MOMENT</p></div>
             </div>
           </div>
-          <div className="help-ticket relative flex items-center justify-center gap-4 overflow-hidden bg-[#071a27] px-5 text-white shadow-lg"><div className="absolute inset-[7px] border border-[#8aea2b]/70" /><Headphones className="relative h-11 w-11 text-[#8aea2b]" /><div className="relative"><p className="font-bold text-[#8aea2b]">Need Help?</p><p className="text-lg font-semibold">02-123-4567</p><p>09:00 - 22:00 น.</p></div></div>
+          <div className="help-ticket relative flex items-center justify-center gap-4 overflow-hidden bg-[#071a27] px-5 text-white shadow-lg"><div className="absolute inset-[7px] border border-[#8aea2b]/70" /><Headphones className="relative h-11 w-11 text-[#8aea2b]" /><div className="relative"><p className="font-bold text-[#8aea2b]">Need Help?</p><a href="tel:0902214698" className="block text-lg font-semibold transition hover:text-[#8aea2b]">090-221-4698</a><p>10:00 - 22:00 น.</p></div></div>
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col rounded-[22px] border border-[#e4ebe6] bg-white/90 p-3 shadow-[0_12px_34px_rgba(20,50,30,0.09)] backdrop-blur-sm sm:p-4">

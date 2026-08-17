@@ -8,6 +8,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import HomePage from './pages/customer/HomePage';
 import MyBookingsPage from './pages/customer/MyBookingsPage';
+import ContactPage from './pages/customer/ContactPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import { ProtectedRoute, AdminRoute, GuestRoute } from './components/layout/ProtectedRoute';
 
@@ -68,16 +69,9 @@ const AppLayout = () => {
                 }
               />
 
-              {/* หน้าเกี่ยวกับเรา */}
-              <Route
-                path="/about"
-                element={
-                  <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xs my-8 text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">เกี่ยวกับเรา</h2>
-                    <p className="text-gray-600">SPORT COMPLEX ให้บริการสนามฟุตบอล บาสเกตบอล แบดมินตัน และวอลเลย์บอลมาตรฐาน</p>
-                  </div>
-                }
-              />
+              {/* หน้าติดต่อเรา และเส้นทางเดิมสำหรับลิงก์เก่า */}
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/about" element={<ContactPage />} />
 
               {/* หน้า 404 */}
               <Route

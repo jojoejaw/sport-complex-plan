@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  CalendarDays, ChevronLeft, ChevronRight,
-  Clock3, CreditCard, Eye, FileBarChart, Grid2X2, LayoutDashboard,
-  Menu, Settings, ShieldCheck, UsersRound, WalletCards,
+  CalendarDays, ChevronRight,
+  Clock3, CreditCard, Eye, Grid2X2, LayoutDashboard,
+  Menu, ShieldCheck,
   X,
 } from 'lucide-react';
 import bookingService from '../../services/bookingService';
@@ -12,13 +12,9 @@ import AdminBookingsPanel from './AdminBookingsPanel';
 import AdminBookingManagementModal from './AdminBookingManagementModal';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'courts', label: 'จัดการสนาม', icon: Grid2X2 },
-  { id: 'bookings', label: 'รายการจอง', icon: CalendarDays },
-  { label: 'การชำระเงิน', icon: WalletCards },
-  { label: 'ผู้ใช้งาน', icon: UsersRound },
-  { label: 'รายงาน', icon: FileBarChart },
-  { label: 'ตั้งค่าระบบ', icon: Settings },
+  { id: 'dashboard', label: 'Dashboard', description: 'ภาพรวมระบบ', icon: LayoutDashboard },
+  { id: 'courts', label: 'จัดการสนาม', description: 'เพิ่ม / แก้ไข / ลบสนาม', icon: Grid2X2 },
+  { id: 'bookings', label: 'รายการจอง', description: 'จัดการการจองทั้งหมด', icon: CalendarDays },
 ];
 
 const toNumber = (value) => Number(value || 0);
@@ -159,11 +155,10 @@ const AdminDashboard = () => {
     <div className="admin-dashboard-page mt-3 h-[calc(100vh-94px)] overflow-hidden bg-[#f7f9fc] p-2.5 text-[#101a33] max-lg:h-auto max-lg:min-h-[calc(100vh-94px)] max-lg:overflow-visible">
       {sidebarOpen && <button type="button" aria-label="ปิดเมนู" className="fixed inset-0 z-40 bg-[#07111e]/45 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       <div className="mx-auto grid h-full max-w-[1500px] grid-cols-[232px_minmax(0,1fr)] gap-5 max-lg:block max-lg:h-auto">
-      <aside className={`relative z-40 flex h-full w-[232px] flex-col overflow-hidden rounded-[22px] border border-[#e2e7ee] bg-white px-3 py-5 shadow-[0_12px_34px_rgba(20,50,30,0.08)] transition-transform lg:translate-x-0 max-lg:fixed max-lg:bottom-0 max-lg:left-0 max-lg:top-[84px] max-lg:h-auto max-lg:rounded-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex items-center gap-3 px-2"><span className="grid h-12 w-12 place-items-center rounded-[14px] border-[5px] border-[#07823a] text-[#0d1b38]"><ShieldCheck className="h-7 w-7" /></span><div><strong className="block text-[20px] leading-5">SPORT<br />COMPLEX</strong><small className="text-[10px] font-semibold text-[#07913f]">ADMIN PANEL</small></div><button type="button" className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X /></button></div>
-        <nav className="mt-7 space-y-2">{menuItems.map(({ id, label, icon: Icon }) => { const active = id === activeSection; return <button type="button" key={label} onClick={() => { if (id) setActiveSection(id); setSidebarOpen(false); }} className={`flex h-[54px] w-full items-center gap-4 rounded-xl px-4 text-left text-[15px] font-medium transition ${active ? 'bg-gradient-to-r from-[#071b30] to-[#13a24d] text-white shadow-md' : 'text-[#101b34] hover:bg-[#eef7f1]'}`}><Icon className="h-6 w-6" />{label}</button>; })}</nav>
-        <div className="mt-auto rounded-[14px] border border-[#dfe7e2] bg-gradient-to-b from-white to-[#e6f7eb] p-4"><div className="flex gap-3"><CalendarDays className="text-[#0aa04a]" /><div><strong className="text-sm">{now.toLocaleDateString('th-TH', { dateStyle: 'long' })}</strong><p className="text-xs text-[#566276]">{now.toLocaleDateString('th-TH', { weekday: 'long' })}</p></div></div><div className="mt-4 flex gap-3"><Clock3 className="text-[#0aa04a]" /><strong className="text-xl">{now.toLocaleTimeString('th-TH', { hour12: false })}</strong></div></div>
-        <button type="button" onClick={() => setSidebarOpen(false)} className="mt-3 flex h-12 items-center justify-center gap-3 rounded-xl border border-[#dce3ea] font-semibold"><ChevronLeft className="h-5 w-5" />ย่อเมนู</button>
+      <aside className={`relative z-40 flex h-full w-[232px] flex-col overflow-hidden rounded-[22px] border border-[#dce7df] bg-[#fbfcfa] shadow-[0_12px_34px_rgba(20,50,30,0.12)] transition-transform lg:translate-x-0 max-lg:fixed max-lg:bottom-0 max-lg:left-0 max-lg:top-[84px] max-lg:h-auto max-lg:rounded-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="admin-menu-header-ticket relative flex min-h-[112px] items-center gap-3 overflow-hidden border-b border-dashed border-[#9fb4a6] bg-white/80 px-5 pt-3"><span className="admin-menu-logo-ticket grid h-[54px] w-[54px] shrink-0 place-items-center border-[5px] border-[#07823a] bg-white text-[#10213b] shadow-sm"><ShieldCheck className="h-8 w-8" /></span><div><strong className="block text-[21px] leading-[19px] text-[#10213b]">SPORT<br /><span className="text-[#07883d]">COMPLEX</span></strong><small className="mt-1 block text-[10px] font-black tracking-[.12em] text-[#10213b]">/// ADMIN PANEL</small></div><button type="button" aria-label="ปิดเมนู" className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}><X /></button></div>
+        <nav className="space-y-2.5 px-3 py-4">{menuItems.map(({ id, label, description, icon: Icon }) => { const active = id === activeSection; return <button type="button" key={label} onClick={() => { if (id) setActiveSection(id); setSidebarOpen(false); }} className={`admin-menu-ticket group relative flex h-[72px] w-full items-center gap-3 overflow-hidden border px-4 text-left transition-colors ${active ? 'border-[#087b3b] bg-gradient-to-r from-[#092b39] to-[#09a149] text-white shadow-[0_7px_16px_rgba(4,99,48,.2)]' : 'border-[#e0e8e2] bg-white/90 text-[#10213b] shadow-[0_5px_14px_rgba(22,49,34,.08)] hover:border-[#8bc8a5]'}`}><span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border ${active ? 'border-white/35 bg-white text-[#087c3b]' : 'border-[#dce9e0] bg-[#f7fbf8] text-[#087c3b]'}`}><Icon className="h-6 w-6" /></span><span className="min-w-0 flex-1 border-l border-dashed border-current/30 pl-3"><strong className="block truncate text-[15px] leading-5">{label}</strong><small className={`block truncate text-[11px] ${active ? 'text-white/75' : 'text-[#778094]'}`}>{description}</small></span>{!active && <ChevronRight className="h-5 w-5 shrink-0 text-[#087c3b]" />}</button>; })}</nav>
+        <div className="admin-date-ticket mx-3 mt-auto border border-[#a9d4b8] bg-[#eff9ed]/90 px-4 py-4 shadow-inner"><div className="flex items-center gap-3 border-b border-dashed border-[#9dbca8] pb-2"><span className="grid h-9 w-9 place-items-center rounded-full border border-[#afd4bb] text-[#07883d]"><CalendarDays className="h-5 w-5" /></span><div><strong className="block text-[12px] text-[#10213b]">{now.toLocaleDateString('th-TH', { dateStyle: 'long' })}</strong><p className="text-[10px] text-[#687487]">{now.toLocaleDateString('th-TH', { weekday: 'long' })}</p></div></div><div className="flex items-center gap-3 pt-2"><span className="grid h-9 w-9 place-items-center rounded-full border border-[#afd4bb] text-[#07883d]"><Clock3 className="h-5 w-5" /></span><div><strong className="block text-[18px] leading-5 text-[#10213b]">{now.toLocaleTimeString('th-TH', { hour12: false })}</strong><p className="text-[10px] text-[#687487]">เวลาปัจจุบัน</p></div></div></div>
       </aside>
 
       <div className={`h-full min-h-0 rounded-[22px] border border-[#e4ebe6] bg-[#f7f9fc] shadow-[0_12px_34px_rgba(20,50,30,0.08)] max-lg:h-auto max-lg:overflow-visible ${activeSection === 'dashboard' ? 'overflow-hidden' : 'overflow-y-auto [scrollbar-gutter:stable]'}`}>

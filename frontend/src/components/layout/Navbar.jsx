@@ -14,7 +14,7 @@ const links = [
   { name: 'หน้าแรก', path: '/' },
   { name: 'จองสนาม', path: '/#courts-section' },
   { name: 'ประวัติการจองของฉัน', path: '/my-bookings' },
-  { name: 'เกี่ยวกับเรา', path: '/about' },
+  { name: 'ติดต่อเรา', path: '/contact' },
 ];
 
 
