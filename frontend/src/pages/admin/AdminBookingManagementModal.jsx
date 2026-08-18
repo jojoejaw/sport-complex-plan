@@ -42,15 +42,11 @@ const AdminBookingManagementModal = ({ booking, onClose }) => {
     if (updating) return;
     setUpdating(true); setErrorMessage('');
     try {
-      await bookingService.updateBookingStatusAdmin(current.id, nextStatus);
-      const updated = {
-        ...current,
-        status: nextStatus,
-        reject_reason: null,
-        ...(nextStatus === 'approved' && !current.slip_image_path
-          ? { payment_method: 'cash', paid_at: new Date().toISOString() }
-          : {}),
-      };
+      const isCashApproval = nextStatus === 'approved' && current.status === 'pending_payment';
+      const result = isCashApproval
+        ? await bookingService.approveCashBooking(current.id)
+        : await bookingService.updateBookingStatusAdmin(current.id, nextStatus);
+      const updated = result.booking || { ...current, status: nextStatus, reject_reason: null };
       setCurrent(updated);
       window.dispatchEvent(new CustomEvent('admin-booking-status-updated', { detail: updated }));
       setConfirmAction('');

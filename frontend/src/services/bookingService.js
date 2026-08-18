@@ -50,6 +50,12 @@ export const bookingService = {
       reject_reason: rejectReason
     });
     return response.data;
+  },
+
+  // แอดมินรับเงินสดหน้าร้าน: Backend จะบันทึก Payment และอนุมัติ Booking พร้อมกัน
+  approveCashBooking: async (bookingId) => {
+    const response = await api.put(`/bookings/${bookingId}/approve-cash`);
+    return response.data;
   }
 };
 

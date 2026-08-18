@@ -385,7 +385,7 @@ exports.cancelBooking = async (req, res) => {
 // =============================================================================
 exports.verifyBooking = async (req, res) => {
   const { id } = req.params;
-  const { status, reject_reason } = req.body;
+  const { status } = req.body;
   const admin_role = req.user.role;
 
   // --- ขั้นที่ 1: ตรวจสอบสิทธิ์และข้อมูลที่ส่งมา ---
@@ -393,45 +393,167 @@ exports.verifyBooking = async (req, res) => {
     return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
   }
 
-  const validStatuses = ['approved', 'rejected', 'pending_payment', 'pending_approval', 'cancelled'];
+  const validStatuses = ['approved', 'cancelled'];
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({ message: 'กรุณาระบุสถานะที่ถูกต้อง (' + validStatuses.join(', ') + ')' });
   }
 
-  if (status === 'rejected' && !reject_reason) {
-    return res.status(400).json({ message: 'หากปฏิเสธการจอง กรุณากรอกเหตุผลด้วยครับ' });
-  }
-
+  let connection;
   try {
-    // --- ขั้นที่ 2: ค้นหาใบจอง ---
-    const [bookings] = await db.query('SELECT status FROM bookings WHERE id = ?', [id]);
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // ล็อกใบจองเพื่อไม่ให้คำขออื่นเปลี่ยนสถานะพร้อมกัน
+    const [bookings] = await connection.query('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [id]);
     if (bookings.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
     }
 
-    // --- ขั้นที่ 3: อัปเดตสถานะตามที่แอดมินเลือก ---
-    if (status === 'approved') {
-      await db.query("UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ?", [id]);
-      res.json({ message: 'อนุมัติการจองสำเร็จและแจ้งสิทธิ์การใช้งานแล้ว!' });
-    } else if (status === 'rejected') {
-      await db.query(
-        "UPDATE bookings SET status = 'rejected', reject_reason = ? WHERE id = ?",
-        [reject_reason, id]
-      );
-      res.json({ message: 'ปฏิเสธการจองและบันทึกเหตุผลเรียบร้อยแล้ว' });
-    } else if (status === 'pending_payment') {
-      await db.query("UPDATE bookings SET status = 'pending_payment', reject_reason = NULL WHERE id = ?", [id]);
-      res.json({ message: 'เปลี่ยนสถานะเป็นค้างชำระเงินเรียบร้อยแล้ว' });
-    } else if (status === 'pending_approval') {
-      await db.query("UPDATE bookings SET status = 'pending_approval', reject_reason = NULL WHERE id = ?", [id]);
-      res.json({ message: 'เปลี่ยนสถานะเป็นรอตรวจสลิปเรียบร้อยแล้ว' });
-    } else if (status === 'cancelled') {
-      await db.query("UPDATE bookings SET status = 'cancelled', reject_reason = NULL WHERE id = ?", [id]);
-      res.json({ message: 'ยกเลิกการจองสำเร็จ คืนสิทธิ์สนามว่างเรียบร้อย' });
+    const booking = bookings[0];
+    const allowedTransitions = {
+      pending_payment: ['cancelled'],
+      pending_approval: ['approved', 'cancelled'],
+      rejected: ['cancelled'],
+      approved: ['cancelled'],
+      cancelled: [],
+    };
+
+    if (!(allowedTransitions[booking.status] || []).includes(status)) {
+      await connection.rollback();
+      return res.status(409).json({
+        message: `ไม่สามารถเปลี่ยนสถานะจาก ${booking.status} เป็น ${status} ได้ กรุณาโหลดข้อมูลล่าสุด`,
+      });
     }
+
+    // การอนุมัติทั่วไปต้องมีหลักฐาน Payment แล้ว หากรับเงินสดให้ใช้ endpoint approve-cash
+    if (status === 'approved') {
+      const [payments] = await connection.query('SELECT id FROM payments WHERE booking_id = ? FOR UPDATE', [id]);
+      if (payments.length === 0) {
+        await connection.rollback();
+        return res.status(409).json({ message: 'ยังไม่พบข้อมูลการชำระเงิน หากรับเงินสดกรุณาใช้ปุ่มอนุมัติรับเงินสด' });
+      }
+
+      const [conflicts] = await connection.query(
+        `SELECT id FROM bookings
+         WHERE court_id = ? AND booking_date = ? AND id <> ?
+           AND status = 'approved' AND start_time < ? AND end_time > ?
+         FOR UPDATE`,
+        [booking.court_id, booking.booking_date, id, booking.end_time, booking.start_time]
+      );
+      if (conflicts.length > 0) {
+        await connection.rollback();
+        return res.status(409).json({ message: 'ไม่สามารถอนุมัติได้ เนื่องจากมีรายการอื่นใช้สนามและช่วงเวลานี้แล้ว' });
+      }
+    }
+
+    const [updateResult] = await connection.query(
+      'UPDATE bookings SET status = ?, reject_reason = ? WHERE id = ? AND status = ?',
+      [status, null, id, booking.status]
+    );
+    if (updateResult.affectedRows !== 1) {
+      throw Object.assign(new Error('สถานะรายการถูกเปลี่ยนโดยคำขออื่น กรุณาลองใหม่'), { status: 409 });
+    }
+
+    await connection.commit();
+    res.json({ message: status === 'cancelled' ? 'ยกเลิกการจองสำเร็จ คืนสิทธิ์สนามว่างเรียบร้อย' : 'อัปเดตสถานะรายการจองสำเร็จ' });
   } catch (error) {
+    if (connection) await connection.rollback();
     logger.error('VerifyBooking Error: ' + (error.stack || error));
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ' });
+    res.status(error.status || 500).json({ message: error.status ? error.message : 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ' });
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
+// แอดมินรับเงินสดหน้าร้าน: บันทึก Payment และอนุมัติ Booking แบบ Atomic
+exports.approveCashBooking = async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันของแอดมิน' });
+  }
+
+  const { id } = req.params;
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [id]);
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'ไม่พบรายการจองนี้' });
+    }
+
+    const booking = rows[0];
+    if (booking.status !== 'pending_payment') {
+      await connection.rollback();
+      return res.status(409).json({ message: 'รายการนี้ไม่ได้อยู่ในสถานะรอชำระเงิน กรุณาโหลดข้อมูลล่าสุด' });
+    }
+
+    const ageMinutes = (Date.now() - new Date(booking.created_at).getTime()) / 60000;
+    if (ageMinutes > 15) {
+      await connection.query(
+        "UPDATE bookings SET status = 'cancelled' WHERE id = ? AND status = 'pending_payment'",
+        [id]
+      );
+      await connection.commit();
+      return res.status(409).json({ message: 'รายการจองหมดเวลาชำระเงิน 15 นาทีและถูกยกเลิกแล้ว' });
+    }
+
+    const [conflicts] = await connection.query(
+      `SELECT id FROM bookings
+       WHERE court_id = ? AND booking_date = ? AND id <> ?
+         AND status = 'approved' AND start_time < ? AND end_time > ?
+       FOR UPDATE`,
+      [booking.court_id, booking.booking_date, id, booking.end_time, booking.start_time]
+    );
+    if (conflicts.length > 0) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'ไม่สามารถอนุมัติได้ เนื่องจากมีรายการอื่นใช้สนามและช่วงเวลานี้แล้ว' });
+    }
+
+    const [existingPayments] = await connection.query('SELECT id FROM payments WHERE booking_id = ? FOR UPDATE', [id]);
+    if (existingPayments.length > 0) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'รายการนี้มีข้อมูลการชำระเงินอยู่แล้ว กรุณาโหลดข้อมูลล่าสุด' });
+    }
+
+    await connection.query(
+      `INSERT INTO payments
+         (booking_id, payment_method, amount, slip_image_path, transfer_time, paid_at, received_by, transaction_ref)
+       VALUES (?, 'cash', ?, NULL, NULL, NOW(), ?, NULL)`,
+      [id, booking.total_price, req.user.id]
+    );
+
+    const [updateResult] = await connection.query(
+      "UPDATE bookings SET status = 'approved', reject_reason = NULL WHERE id = ? AND status = 'pending_payment'",
+      [id]
+    );
+    if (updateResult.affectedRows !== 1) {
+      throw Object.assign(new Error('สถานะรายการถูกเปลี่ยนระหว่างดำเนินการ กรุณาลองใหม่'), { status: 409 });
+    }
+
+    const [updatedRows] = await connection.query(
+      `SELECT b.*, u.username, u.email, c.name AS court_name, s.name AS sport_name,
+              p.slip_image_path, p.transfer_time, p.uploaded_at,
+              p.payment_method, p.paid_at, p.amount AS paid_amount, p.received_by
+       FROM bookings b
+       INNER JOIN users u ON b.user_id = u.id
+       INNER JOIN courts c ON b.court_id = c.id
+       INNER JOIN sports s ON c.sport_id = s.id
+       LEFT JOIN payments p ON b.id = p.booking_id
+       WHERE b.id = ?`,
+      [id]
+    );
+
+    await connection.commit();
+    res.json({ message: 'บันทึกรับเงินสดและอนุมัติการจองเรียบร้อยแล้ว', booking: updatedRows[0] });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    logger.error('ApproveCashBooking Error: ' + (error.stack || error));
+    res.status(error.status || 500).json({ message: error.status ? error.message : 'เกิดข้อผิดพลาดในการรับชำระเงินสด' });
+  } finally {
+    if (connection) connection.release();
   }
 };
 
@@ -454,16 +576,7 @@ exports.getAdminBookings = async (req, res) => {
               u.username, u.email, 
               c.name AS court_name, s.name AS sport_name, 
               p.slip_image_path, p.transfer_time, p.uploaded_at,
-              CASE
-                WHEN p.id IS NOT NULL THEN 'promptpay'
-                WHEN b.status = 'approved' THEN 'cash'
-                ELSE NULL
-              END AS payment_method,
-              CASE
-                WHEN p.id IS NOT NULL THEN COALESCE(p.transfer_time, p.uploaded_at)
-                WHEN b.status = 'approved' THEN b.updated_at
-                ELSE NULL
-              END AS paid_at
+              p.payment_method, p.paid_at, p.amount AS paid_amount, p.received_by
        FROM bookings b
        INNER JOIN users u ON b.user_id = u.id
        INNER JOIN courts c ON b.court_id = c.id

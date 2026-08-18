@@ -262,7 +262,7 @@ router.put('/:id/cancel', auth, bookingController.cancelBooking);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [approved, rejected, pending_payment, pending_approval, cancelled]
+ *                 enum: [approved, cancelled]
  *                 description: สถานะที่แอดมินต้องการปรับเปลี่ยน
  *                 example: approved
  *               reject_reason:
@@ -280,6 +280,9 @@ router.put('/:id/cancel', auth, bookingController.cancelBooking);
  *         description: ข้อผิดพลาดภายในเซิร์ฟเวอร์
  */
 router.put('/:id/verify', auth, bookingController.verifyBooking);
+
+// แอดมินรับชำระเงินสดหน้าร้านและอนุมัติรายการภายใน Transaction เดียว
+router.put('/:id/approve-cash', auth, bookingController.approveCashBooking);
 
 /**
  * @swagger

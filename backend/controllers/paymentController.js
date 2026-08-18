@@ -268,9 +268,10 @@ exports.submitPayment = async (req, res) => {
 
     // บันทึก Payment และอนุมัติ Booking ใน Transaction เดียวกัน
     await connection.query(
-      `INSERT INTO payments (booking_id, slip_image_path, transfer_time, transaction_ref) 
-       VALUES (?, ?, ?, ?)`,
-      [booking_id, normalizedPath, formattedTransferTime, transactionRef]
+      `INSERT INTO payments
+         (booking_id, payment_method, amount, slip_image_path, transfer_time, paid_at, transaction_ref)
+       VALUES (?, 'promptpay', ?, ?, ?, ?, ?)`,
+      [booking_id, lockedBooking.total_price, normalizedPath, formattedTransferTime, formattedTransferTime, transactionRef]
     );
 
     const [updateResult] = await connection.query(

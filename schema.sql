@@ -58,11 +58,16 @@ CREATE TABLE IF NOT EXISTS `bookings` (
 CREATE TABLE IF NOT EXISTS `payments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `booking_id` INT NOT NULL UNIQUE,
-  `slip_image_path` VARCHAR(255) NOT NULL,
-  `transfer_time` DATETIME NOT NULL,
+  `payment_method` ENUM('promptpay', 'cash') NOT NULL DEFAULT 'promptpay',
+  `amount` DECIMAL(10, 2) NOT NULL,
+  `slip_image_path` VARCHAR(255) NULL,
+  `transfer_time` DATETIME NULL,
+  `paid_at` DATETIME NOT NULL,
+  `received_by` INT NULL,
   `transaction_ref` VARCHAR(100) NULL UNIQUE,
   `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`received_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------------
