@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CalendarDays,
   CheckCircle2,
@@ -104,6 +104,7 @@ const MyBookingsPage = () => {
   const [cancelling, setCancelling] = useState(false);
   const [alert, setAlert] = useState({ isOpen: false, type: 'info', title: '', message: '' });
   const [paymentBooking, setPaymentBooking] = useState(null);
+  const paymentModalRef = useRef(null);
   const [now, setNow] = useState(new Date());
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
@@ -147,6 +148,24 @@ const MyBookingsPage = () => {
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
+
+  useEffect(() => {
+    if (!paymentBooking) return undefined;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousRootOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousRootOverflow;
+    };
+  }, [paymentBooking]);
+
+  const handlePaymentWheel = (event) => {
+    if (window.innerWidth > 1024 || !paymentModalRef.current) return;
+    event.preventDefault();
+    paymentModalRef.current.scrollTop += event.deltaY;
+  };
 
   const confirmCancel = async () => {
     if (!cancelTarget) return;
@@ -233,10 +252,10 @@ const MyBookingsPage = () => {
       <ConfirmModal isOpen={Boolean(cancelTarget)} title="ยืนยันยกเลิกการจอง" message="คุณแน่ใจหรือไม่ว่าต้องการยกเลิกรายการนี้?" confirmText="ยืนยันการยกเลิก" cancelText="กลับไป" confirmDisabled={cancelling} onConfirm={confirmCancel} onCancel={() => !cancelling && setCancelTarget(null)} />
       <AlertModal isOpen={alert.isOpen} type={alert.type} title={alert.title} message={alert.message} confirmText="รับทราบ" onClose={() => setAlert((current) => ({ ...current, isOpen: false }))} />
       {paymentBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111e]/80 p-4 backdrop-blur-[2px] max-sm:p-0">
-          <div role="dialog" aria-modal="true" aria-labelledby="booking-title" className="booking-modal flex max-h-[calc(100dvh-24px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[22px] bg-[#fffefb] shadow-[0_18px_42px_rgba(0,0,0,0.22)] max-sm:max-h-dvh max-sm:h-dvh max-sm:rounded-none">
+        <div onWheel={handlePaymentWheel} className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-[#07111e]/80 p-4 backdrop-blur-[2px] max-lg:items-start max-lg:p-0">
+          <div ref={paymentModalRef} role="dialog" aria-modal="true" aria-labelledby="booking-title" className="booking-modal flex max-h-[calc(100dvh-24px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[22px] bg-[#fffefb] shadow-[0_18px_42px_rgba(0,0,0,0.22)] max-lg:h-dvh max-lg:max-h-dvh max-lg:overflow-y-auto max-lg:overscroll-contain max-lg:rounded-none">
             <BookingModalHeader courtName={paymentBooking.court_name} pricePerHour={Number(paymentBooking.total_price) / Math.max(1, Number(String(paymentBooking.end_time).slice(0, 2)) - Number(String(paymentBooking.start_time).slice(0, 2)))} currentStep={3} onClose={closePayment} />
-            <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-2 overflow-hidden p-4 max-sm:block max-sm:overflow-y-auto max-sm:p-2" style={{ backgroundImage: `linear-gradient(rgba(224,241,230,.28),rgba(194,224,205,.38)),url(${reviewBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <div className="booking-modal-content grid min-h-0 flex-auto grid-cols-2 overflow-hidden p-4 max-lg:flex max-lg:flex-none max-lg:flex-col max-lg:overflow-visible max-sm:p-2" style={{ backgroundImage: `linear-gradient(rgba(224,241,230,.28),rgba(194,224,205,.38)),url(${reviewBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
               <BookingPaymentStep bookingResult={{ bookingId: paymentBooking.id, total_price: paymentBooking.total_price }} initialSeconds={getRemainingSeconds(paymentBooking, Date.now() + serverTimeOffset)} onClose={closePayment} />
             </div>
           </div>
