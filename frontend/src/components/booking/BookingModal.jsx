@@ -6,7 +6,6 @@ import {
   Check,
   CheckCircle2,
   CircleDollarSign,
-  CircleDot,
   Clock3,
   Info,
   MapPin,
@@ -212,10 +211,16 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
   const handleNextStep = () => {
     if (selectedSlots.length === 0) return;
     setSubmitError('');
+    if (modalRef.current) {
+      modalRef.current.scrollTop = 0;
+    }
     setShowProceedConfirm(true);
   };
 
   const handleConfirmProceed = () => {
+    if (modalRef.current) {
+      modalRef.current.scrollTop = 0;
+    }
     setShowProceedConfirm(false);
     setShowConfirm(true);
   };
@@ -227,6 +232,9 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
 
   const handleConfirmNextStep = () => {
     if (!/^\d{10}$/.test(contactPhone)) return;
+    if (modalRef.current) {
+      modalRef.current.scrollTop = 0;
+    }
     setShowConfirm(false);
     setCurrentStep(2);
   };
@@ -290,7 +298,7 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
         style={{
           transform: modalEntered ? 'translate3d(0, 0, 0)' : 'translate3d(0, 18px, 0)',
         }}
-        className={`booking-modal mx-auto flex h-auto max-h-[calc(100dvh-32px)] w-full min-w-0 flex-col overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity] motion-reduce:transition-none max-lg:overflow-y-auto max-lg:overscroll-contain max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none ${modalEntered ? 'opacity-100' : 'opacity-0'} ${currentStep === 3 ? 'max-w-[800px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}
+        className={`booking-modal mx-auto flex h-auto max-h-[calc(100dvh-32px)] w-full min-w-0 flex-col overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity] motion-reduce:transition-none max-lg:overflow-y-auto max-lg:overscroll-contain max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none ${modalEntered ? 'opacity-100' : 'opacity-0'} ${currentStep === 3 ? 'max-w-[920px] bg-[#fffefb]' : 'max-w-[1430px] bg-[#f7f9fc]'}`}
       >
         <BookingModalHeader
           courtName={court.name}
@@ -396,7 +404,6 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
                 </section>
 
                 <section className="booking-notes relative shrink-0 overflow-hidden rounded-[16px] border border-[#d8e9df] bg-gradient-to-r from-[#f7fcf9] to-[#f1f8f4] px-7 py-4">
-                  <CircleDot className="pointer-events-none absolute -bottom-16 right-5 h-44 w-44 rotate-[-18deg] text-[#c8d9cf]/35" strokeWidth={1} />
                   <div className="relative z-10">
                     <h3 className="mb-2 flex items-center gap-3 text-[16px] font-semibold text-[#08752e]"><ShieldCheck className="h-6 w-6 fill-[#08752e] text-white" />หมายเหตุการจอง</h3>
                     <div className="grid grid-cols-[minmax(0,35fr)_minmax(0,65fr)] gap-x-1 gap-y-2 text-[13px] text-[#17221b] max-md:grid-cols-1">
@@ -492,8 +499,9 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
             />
           )}
         </div>
-        <ConfirmModal
-          isOpen={showProceedConfirm}
+      </div>
+      <ConfirmModal
+        isOpen={showProceedConfirm}
           title="ยืนยันดำเนินการต่อ"
           message="คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
           confirmText="ยืนยันและดำเนินการต่อ"
@@ -532,9 +540,8 @@ const BookingModal = ({ court, fallbackImage, onClose }) => {
           onClose={() => setBookingAlert((current) => ({ ...current, isOpen: false }))}
         />
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 const SummaryRow = ({ icon: Icon, label, value, highlight = false }) => (
   <div className="grid grid-cols-[24px_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-2 py-1.5">

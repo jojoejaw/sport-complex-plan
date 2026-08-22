@@ -336,6 +336,136 @@ button:disabled {
     height: 38px;
     font-size: 14px;
   }
+
+  /* My Bookings Page Laptop Scaling (< 920px height) */
+  .my-bookings-page {
+    margin-top: 4px;
+    height: calc(100vh - 84px);
+    padding: 6px;
+  }
+
+  /* Admin Dashboard Laptop Scaling (< 920px height) */
+  .admin-dashboard-page {
+    margin-top: 2px;
+    height: calc(100vh - 84px);
+    padding: 4px;
+  }
+
+  .admin-dashboard-page > div {
+    grid-template-columns: 215px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .admin-menu-header-ticket {
+    min-height: 94px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .admin-menu-logo-ticket {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-menu-ticket {
+    height: 58px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .admin-menu-ticket strong {
+    font-size: 13px;
+  }
+
+  .admin-date-ticket {
+    padding: 10px;
+  }
+
+  .my-bookings-page .member-ticket-title {
+    font-size: 30px !important;
+  }
+
+  .my-bookings-page .member-ticket-ball {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 20px !important;
+  }
+
+  .my-bookings-page .member-ticket-banner {
+    width: 140px !important;
+    font-size: 11px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  .my-bookings-page > div {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .my-bookings-page section:first-of-type {
+    padding: 10px 12px;
+  }
+
+  .my-bookings-page section:first-of-type header {
+    padding-bottom: 6px;
+  }
+
+  .my-bookings-page section:first-of-type header h1 {
+    font-size: 20px;
+  }
+
+  .my-bookings-page section:first-of-type nav:first-of-type button {
+    height: 34px;
+    min-width: 105px;
+    font-size: 13px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .my-bookings-page article {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    grid-template-columns: 135px minmax(150px, 1.2fr) minmax(155px, 1.1fr) 80px 1.25fr;
+  }
+
+  .my-bookings-page article h2 {
+    font-size: 14px;
+  }
+
+  .my-bookings-page article > div {
+    padding: 3px 10px;
+  }
+
+  .my-bookings-page article .booking-price-amount {
+    font-size: 20px;
+  }
+
+  .my-bookings-page .booking-status-ticket {
+    padding: 4px 8px;
+  }
+
+  .my-bookings-page .booking-status-ticket h3 {
+    font-size: 13px;
+  }
+
+  .my-bookings-page .booking-status-ticket .booking-status-timer {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .my-bookings-page .booking-status-ticket button {
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .my-bookings-page footer {
+    margin-top: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 10px;
+  }
 }
 
 /* Extra compact styling for 15.6" laptops at 150% scaling or small vertical height viewports (< 740px) */
@@ -406,6 +536,57 @@ button:disabled {
   .booking-summary-footer > button {
     height: 34px;
     font-size: 13px;
+  }
+
+  /* My Bookings Page Extra Compact Laptop Scaling (< 740px height) */
+  .my-bookings-page {
+    margin-top: 2px;
+    height: calc(100vh - 78px);
+    padding: 4px;
+  }
+
+  .my-bookings-page > div {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .my-bookings-page section:first-of-type header h1 {
+    font-size: 18px;
+  }
+
+  .my-bookings-page section:first-of-type nav:first-of-type button {
+    height: 30px;
+    min-width: 90px;
+    font-size: 12px;
+  }
+
+  .my-bookings-page article {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    grid-template-columns: 120px minmax(140px, 1.2fr) minmax(150px, 1.1fr) 75px 1.25fr;
+  }
+
+  .my-bookings-page article h2 {
+    font-size: 13px;
+  }
+
+  .my-bookings-page article .booking-price-amount {
+    font-size: 18px;
+  }
+
+  .my-bookings-page .booking-status-ticket h3 {
+    font-size: 12px;
+  }
+
+  .my-bookings-page .booking-status-ticket .booking-status-timer {
+    font-size: 11px;
+    line-height: 14px;
+  }
+
+  .my-bookings-page .booking-status-ticket button {
+    height: 22px;
+    font-size: 10px;
   }
 }
 
